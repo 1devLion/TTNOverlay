@@ -3,7 +3,8 @@
 
   # TTNOverlay
 
-  A multi-function Twitch overlay for Windows: live chat, event alerts, viewer count, and in-app moderation — transparent, click-through, and more.
+  Live chat, event alerts, viewer count, and in-app moderation. Drawn as a transparent, click-through window right on top of whatever you're playing. Chat works with no login at all. Sign in only for viewer count, badges, and moderation.
+
 
 </div>
 
@@ -25,47 +26,28 @@
 
 ## Features
 
-- **Chat**: Twitch emotes, badges, and third-party emotes (BTTV/FFZ/7TV)
-- **Events**: subs, resubs, raids, and announcements from IRC; donations/follows/hosts/merch from Streamlabs if connected, deduplicated when both sources report the same event
-- **Moderation panel**: timeout, ban, warn, unban — requires logging in with a moderator/broadcaster Twitch account
-- **Viewer count** and **chat badges**, shown once logged in
-- Configurable **sound and flash alerts** for messages and events
-- Dark/Light theme, switchable live
-- English/Spanish UI
-- Borderless mode + click-through, so mouse input passes through to whatever's underneath
-- Fully configurable from an in-app settings panel (General, Hotkeys, Twitch API, Streamlabs, Alerts, Audio, About)
+- **Chat**: Twitch emotes, badges, and third-party emotes from BTTV, FFZ, and 7TV
+- **Event alerts**: subs, resubs, raids, and announcements straight from IRC. Donations, follows, hosts, and merch from Streamlabs if you connect it. Events reported by both sources get merged, not shown twice
+- **In-app moderation**: timeout, ban, warn, and unban without ever tabbing out of your game (needs a moderator or broadcaster login)
+- **Viewer count & badges**: shown once you sign in through the Twitch Helix API
+- **Sound & flash alerts**: every event type gets its own color and can trigger a sound or a screen flash
+- **Custom alert colors**: pick any RGB for each visual alert
+- **Custom event colors**: color the event box per event type *and* per source (Streamlabs vs IRC)
+- **Custom event GIFs**: swap in your own GIF for any event type, right from Settings
+- **Custom alert sounds**: default presets included, or bring your own
+- **Streamlabs integration**: unlock its alert box events (donations, custom messages, GIFs) via Widget Token + Socket API Token. One-click login coming soon
+- **Dark/Light theme**, switchable live
+- Multi-language support **(EN/ES/PT/DE/FR/JA/ZH/RU)**
 
-## Global hotkeys
+---
 
-Configurable in Settings → Hotkeys. Defaults:
+### Get it
 
-| Hotkey            | Action                         |
-| ----------------- | ------------------------------ |
-| **Ctrl+Shift+F7** | Toggle borders / click-through |
-| **Ctrl+Shift+F8** | Toggle chat ↔ events dashboard |
-| **Ctrl+Shift+F9** | Toggle chat ↔ moderation panel |
-
-Registered via Win32 `RegisterHotKey`, so they work even while a game has focus.
-
-## Twitch login (optional)
-
-Only needed for viewer count, badges, and moderation — chat itself works anonymously. Log in from Settings → Twitch API or from the moderation panel.
-
-## Build & run
-
-```powershell
-dotnet run
-```
-
-Or open `TTNOverlay.sln` in Visual Studio 2022+ and build with F5.
-
-### Publish a portable .exe
+A portable `.exe` available to download in Releases or, if you want to build it yourself (Needs the .NET 10 SDK): 
 
 ```powershell
 dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
 ```
-
-Self-contained: no .NET runtime required on the end user's machine.
 
 ## Structure
 
@@ -75,5 +57,7 @@ Twitch/             IRC client, Helix API, OAuth
 Streamlabs/         Socket API client + event mapping
 Services/           settings, moderation, theming, localization, caching, audio, logging
 Models/             chat message and color models
-Native/              Win32 interop (hotkeys, DWM)
+Native/             Win32 interop (hotkeys)
 ```
+
+MIT licensed. If you like it, [buy me a coffee on Ko-fi](https://ko-fi.com/1devlion/donate) ☕
