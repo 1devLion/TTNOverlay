@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="meta_title">TTNOverlay | Native Twitch overlay for Windows</title>
+  <meta name="description" data-i18n="meta_description"
+    content="A transparent, click-through Twitch overlay for Windows.">
+  <link rel="icon" type="image/webp" href="img/logo_nobg.webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+
+  <a class="skip-link" href="#main" data-i18n="skip_link">Skip to content</a>
+
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="brand" href="#top">
+        <img class="brand-logo" data-theme-src-dark="img/logo_nobg.webp"
+          data-theme-src-light="img/logo_blue_nobg.webp" src="img/logo_nobg.webp" alt="" width="32" height="32">
+        <span class="brand-name">TTNOverlay</span>
+      </a>
+
+      <nav class="site-nav" aria-label="Primary">
+        <a href="#features" data-i18n="nav_features">Features</a>
+        <a href="#screenshots" data-i18n="nav_screenshots">Screenshots</a>
+        <a href="#download" data-i18n="nav_download">Download</a>
+      </nav>
+
+      <div class="header-controls">
+        <div class="lang-switch">
+          <label class="sr-only" for="lang-select" data-i18n="lang_label">Language</label>
+          <select id="lang-select" aria-label="Language"></select>
+        </div>
+        <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false">
+          <span class="theme-toggle-track">
+            <span class="theme-toggle-thumb" aria-hidden="true"></span>
+          </span>
+          <span class="sr-only" id="theme-toggle-label" data-i18n="theme_toggle_label">Switch to light theme</span>
+        </button>
+        <a class="btn btn-ghost btn-small header-gh" href="#" data-repo-link="source" target="_blank" rel="noopener"
+          aria-label="GitHub">
+          <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true">
+            <path fill="currentColor"
+              d="M8 0C3.58 0 0 3.64 0 8.13c0 3.6 2.29 6.65 5.47 7.73.4.08.55-.17.55-.39 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.5-2.69-.95-.09-.23-.48-.95-.82-1.14-.28-.15-.68-.52-.01-.53.63-.01 1.08.59 1.23.83.72 1.22 1.87.88 2.33.67.07-.52.28-.88.51-1.08-1.78-.2-3.64-.91-3.64-4.02 0-.89.31-1.61.82-2.18-.08-.2-.36-1.03.08-2.14 0 0 .67-.22 2.2.83.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.06 2.2-.83 2.2-.83.44 1.11.16 1.94.08 2.14.51.57.82 1.28.82 2.18 0 3.12-1.87 3.82-3.65 4.02.29.26.54.75.54 1.53 0 1.11-.01 1.99-.01 2.27 0 .22.15.48.55.39A8.13 8.13 0 0 0 16 8.13C16 3.64 12.42 0 8 0Z" />
+          </svg>
+        </a>
+      </div>
+
+      <button id="nav-toggle" class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav-mobile">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+
+    <nav id="site-nav-mobile" class="site-nav-mobile" aria-label="Primary mobile">
+      <a href="#features" data-i18n="nav_features">Features</a>
+      <a href="#screenshots" data-i18n="nav_screenshots">Screenshots</a>
+      <a href="#download" data-i18n="nav_download">Download</a>
+    </nav>
+  </header>
+
+  <main id="main">
+
+    <!-- HERO -->
+    <section class="hero" id="top">
+      <div class="wrap hero-grid">
+        <div class="hero-copy">
+          <p class="eyebrow" data-i18n="hero_eyebrow">Windows · Free &amp; open source</p>
+          <h1>
+            <span data-i18n="hero_title_1">A Twitch overlay</span><br>
+            <span class="accent" data-i18n="hero_title_2">that stays out of your way.</span>
+          </h1>
+          <p class="hero-subtitle" data-i18n="hero_subtitle">Live chat, event alerts, viewer count and in-app
+            moderation, drawn as a transparent, click-through window on top of whatever you're playing.</p>
+          <div class="hero-ctas">
+            <a class="btn btn-accent" href="#" data-repo-link="release" data-i18n="hero_cta_download">Download for
+              Windows</a>
+            <a class="btn btn-ghost" href="#" data-repo-link="source" target="_blank" rel="noopener"
+              data-i18n="hero_cta_source">View source on GitHub</a>
+          </div>
+          <p class="hero-note" data-i18n="hero_note">Chat works with no login at all. Sign in only for viewer count,
+            badges and moderation.</p>
+        </div>
+
+        <div class="hero-visual">
+          <div class="hero-shot" data-hero-shot>
+            <img data-theme-src-dark="img/screenshots/hero_dark.webp"
+              data-theme-src-light="img/screenshots/hero_light.webp" src="img/screenshots/hero_dark.webp"
+              alt="TTNOverlay">
+            <div class="hero-shot-placeholder">
+              <span data-i18n="feat_image_pending">Add a screenshot</span>
+              <code data-hero-placeholder-name>hero_dark.webp</code>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section class="features" id="features">
+      <div class="wrap">
+        <p class="eyebrow center" data-i18n="features_eyebrow">Everything in one overlay</p>
+        <h2 class="center" data-i18n="features_title">Built for streaming, not for browsing.</h2>
+
+        <div class="feature-grid">
+
+          <article class="feature-item feature-item-media">
+            <div class="feature-media">
+              <img src="img/features/streamlabs_feature.webp" alt="" loading="lazy">
+              <div class="feature-media-placeholder">
+                <span data-i18n="feat_image_pending">Add a screenshot</span>
+                <code>streamlabs_feature.webp</code>
+              </div>
+            </div>
+            <h3 data-i18n="feat_streamlabs_title">Streamlabs integration</h3>
+            <p data-i18n="feat_streamlabs_body">Sign in with Streamlabs to unlock its custom alert box events, from GIFs
+              to messages. Currently connects with a Widget Token and a Socket API Token. A one-click login like
+              Twitch's is coming soon.</p>
+          </article>
+
+          <article class="feature-item feature-item-media">
+            <div class="feature-media">
+              <img src="img/features/events_feature.webp" alt="" loading="lazy">
+              <div class="feature-media-placeholder">
+                <span data-i18n="feat_image_pending">Add a screenshot</span>
+                <code>events_feature.webp</code>
+              </div>
+            </div>
+            <h3 data-i18n="feat_events_title">Event alerts</h3>
+            <p data-i18n="feat_events_body">Subs, resubs, raids and announcements straight from IRC. Donations, follows,
+              hosts and merch from Streamlabs if you connect it. Events reported by both sources are merged instead of
+              shown twice.</p>
+          </article>
+
+          <article class="feature-item feature-item-media">
+            <div class="feature-media">
+              <img src="img/features/modpanel_feature.webp" alt="" loading="lazy">
+              <div class="feature-media-placeholder">
+                <span data-i18n="feat_image_pending">Add a screenshot</span>
+                <code>modpanel_feature.webp</code>
+              </div>
+            </div>
+            <h3 data-i18n="feat_mod_title">In-app moderation</h3>
+            <p data-i18n="feat_mod_body">Timeout, ban, warn and unban without tabbing out of your game. Requires signing
+              in with a moderator or broadcaster account.</p>
+          </article>
+
+          <article class="feature-item feature-item-media">
+            <div class="feature-media">
+              <img src="img/features/alerts_feature.webp" alt="" loading="lazy">
+              <div class="feature-media-placeholder">
+                <span data-i18n="feat_image_pending">Add a screenshot</span>
+                <code>alerts_feature.webp</code>
+              </div>
+            </div>
+            <h3 data-i18n="feat_alerts_title">Sound &amp; flash alerts</h3>
+            <p data-i18n="feat_alerts_body">Every event type gets its own color and can trigger a sound or a screen
+              flash, fully configurable.</p>
+          </article>
+
+          <article class="feature-item feature-item-media">
+            <div class="feature-media">
+              <img src="img/features/viewers_feature.webp" alt="" loading="lazy">
+              <div class="feature-media-placeholder">
+                <span data-i18n="feat_image_pending">Add a screenshot</span>
+                <code>viewers_feature.webp</code>
+              </div>
+            </div>
+            <h3 data-i18n="feat_viewers_title">Viewer count &amp; badges</h3>
+            <p data-i18n="feat_viewers_body">Shown once you sign in with your Twitch account through the Helix API.</p>
+          </article>
+
+          <article class="feature-item feature-item-media">
+            <div class="feature-media">
+              <img src="img/features/alerts_visualalertcolor_customizable_feature.webp" alt="" loading="lazy">
+              <div class="feature-media-placeholder">
+                <span data-i18n="feat_image_pending">Add a screenshot</span>
+                <code>alerts_visualalertcolor_customizable_feature.webp</code>
+              </div>
+            </div>
+            <h3 data-i18n="feat_alertcolor_title">Custom alert colors</h3>
+            <p data-i18n="feat_alertcolor_body">Pick the color of each visual alert with an RGB color picker.</p>
+          </article>
+
+          <article class="feature-item feature-item-media">
+            <div class="feature-media">
+              <img src="img/features/events_customizable_box_feature.webp" alt="" loading="lazy">
+              <div class="feature-media-placeholder">
+                <span data-i18n="feat_image_pending">Add a screenshot</span>
+                <code>events_customizable_box_feature.webp</code>
+              </div>
+            </div>
+            <h3 data-i18n="feat_eventbox_title">Custom event colors</h3>
+            <p data-i18n="feat_eventbox_body">Color the event box per event type and source &mdash; Streamlabs or IRC.
+            </p>
+          </article>
+
+          <article class="feature-item feature-item-media">
+            <div class="feature-media">
+              <img src="img/features/events_customizable_gif_feature.webp" alt="" loading="lazy">
+              <div class="feature-media-placeholder">
+                <span data-i18n="feat_image_pending">Add a screenshot</span>
+                <code>events_customizable_gif_feature.webp</code>
+              </div>
+            </div>
+            <h3 data-i18n="feat_eventgif_title">Custom event GIFs</h3>
+            <p data-i18n="feat_eventgif_body">Add or swap the GIFs shown for each event type, right from the settings
+              panel.</p>
+          </article>
+
+          <article class="feature-item feature-item-media">
+            <div class="feature-media">
+              <img src="img/features/alerts_audio_customizable_feature.webp" alt="" loading="lazy">
+              <div class="feature-media-placeholder">
+                <span data-i18n="feat_image_pending">Add a screenshot</span>
+                <code>alerts_audio_customizable_feature.webp</code>
+              </div>
+            </div>
+            <h3 data-i18n="feat_alertsound_title">Custom alert sounds</h3>
+            <p data-i18n="feat_alertsound_body">A short sound plays for messages and events like subs and donations.
+              Comes with default presets, or use your own.</p>
+          </article>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- SCREENSHOTS -->
+    <section class="screenshots" id="screenshots">
+      <div class="wrap">
+        <p class="eyebrow center" data-i18n="screenshots_eyebrow">See it in action</p>
+        <h2 class="center" data-i18n="screenshots_title">Screenshots</h2>
+        <p class="section-subtitle center" data-i18n="screenshots_subtitle">Drop image files into img/screenshots/ using
+          the names below and they'll show up here automatically.</p>
+
+        <div class="shot-grid">
+          <figure class="shot">
+            <div class="shot-media">
+              <img src="img/screenshots/chat_finished.jpg" alt="" loading="lazy">
+              <div class="shot-placeholder">
+                <span class="shot-placeholder-hint"><span data-i18n="shot_placeholder_hint">Place</span>
+                  <code>chat_finished.jpg</code> <span data-i18n="shot_placeholder_hint_2">in
+                    img/screenshots/</span></span>
+              </div>
+            </div>
+            <figcaption data-i18n="shot_chat_caption">Chat overlay</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <div class="shot-media">
+              <img src="img/screenshots/events_finished.jpg" alt="" loading="lazy">
+              <div class="shot-placeholder">
+                <span class="shot-placeholder-hint"><span data-i18n="shot_placeholder_hint">Place</span>
+                  <code>events_finished.jpg</code> <span data-i18n="shot_placeholder_hint_2">in
+                    img/screenshots/</span></span>
+              </div>
+            </div>
+            <figcaption data-i18n="shot_events_caption">Event alerts</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <div class="shot-media">
+              <img src="img/screenshots/modpanel_finished.jpg" alt="" loading="lazy">
+              <div class="shot-placeholder">
+                <span class="shot-placeholder-hint"><span data-i18n="shot_placeholder_hint">Place</span>
+                  <code>modpanel_finished.jpg</code> <span data-i18n="shot_placeholder_hint_2">in
+                    img/screenshots/</span></span>
+              </div>
+            </div>
+            <figcaption data-i18n="shot_modpanel_caption">Moderation panel</figcaption>
+          </figure>
+
+          <figure class="shot">
+            <div class="shot-media">
+              <img src="img/screenshots/visualalert_finished.jpg" alt="" loading="lazy">
+              <div class="shot-placeholder">
+                <span class="shot-placeholder-hint"><span data-i18n="shot_placeholder_hint">Place</span>
+                  <code>visualalert_finished.jpg</code> <span data-i18n="shot_placeholder_hint_2">in
+                    img/screenshots/</span></span>
+              </div>
+            </div>
+            <figcaption data-i18n="shot_alert_caption">Visual alert</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <!-- DOWNLOAD -->
+    <section class="download" id="download">
+      <div class="wrap download-grid">
+        <div class="download-copy">
+          <p class="eyebrow" data-i18n="download_eyebrow">Get it</p>
+          <h2 data-i18n="download_title">Download TTNOverlay</h2>
+          <p data-i18n="download_body">A portable .exe. That's it.</p>
+          <div class="hero-ctas">
+            <a class="btn btn-accent" href="#" data-repo-link="release" data-i18n="download_cta_release">Download latest
+              release</a>
+            <a class="btn btn-ghost" href="#" data-repo-link="source" target="_blank" rel="noopener"
+              data-i18n="download_cta_source">Browse the source</a>
+          </div>
+        </div>
+
+        <div class="build-card">
+          <h3 data-i18n="download_build_title">Build it yourself</h3>
+          <p data-i18n="download_build_body">Needs the .NET 10 SDK and Visual Studio 2022+ (or just the dotnet CLI).</p>
+
+          <p class="build-label" data-i18n="download_build_run">Run it:</p>
+          <div class="code-block-wrap">
+            <pre class="code-block"><code>dotnet run</code></pre>
+            <button class="copy-btn" type="button" data-copy-btn aria-label="Copy">
+              <svg class="copy-btn-icon icon-copy" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                <path fill="currentColor"
+                  d="M4 1.5A1.5 1.5 0 0 1 5.5 0h6A1.5 1.5 0 0 1 13 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 4 10.5v-9Zm1.5-.5a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-6ZM2 4a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5V13H2.5a1.5 1.5 0 0 1-1.5-1.5v-8H2Z" />
+              </svg>
+              <svg class="copy-btn-icon icon-check" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                <path fill="currentColor"
+                  d="M13.7 3.3a1 1 0 0 1 0 1.4l-7 7a1 1 0 0 1-1.4 0l-3-3a1 1 0 1 1 1.4-1.4L6 9.6l6.3-6.3a1 1 0 0 1 1.4 0Z" />
+              </svg>
+              <span class="sr-only copy-btn-text" data-i18n="copy_button_label">Copy</span>
+            </button>
+          </div>
+
+          <p class="build-label" data-i18n="download_build_publish">Publish a portable .exe:</p>
+          <div class="code-block-wrap">
+            <pre class="code-block"><code data-copy-text="dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true">dotnet publish -c Release -r win-x64 \
+  --self-contained true \
+  -p:PublishSingleFile=true \
+  -p:IncludeNativeLibrariesForSelfExtract=true</code></pre>
+            <button class="copy-btn" type="button" data-copy-btn aria-label="Copy">
+              <svg class="copy-btn-icon icon-copy" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                <path fill="currentColor"
+                  d="M4 1.5A1.5 1.5 0 0 1 5.5 0h6A1.5 1.5 0 0 1 13 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 4 10.5v-9Zm1.5-.5a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-6ZM2 4a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5V13H2.5a1.5 1.5 0 0 1-1.5-1.5v-8H2Z" />
+              </svg>
+              <svg class="copy-btn-icon icon-check" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+                <path fill="currentColor"
+                  d="M13.7 3.3a1 1 0 0 1 0 1.4l-7 7a1 1 0 0 1-1.4 0l-3-3a1 1 0 1 1 1.4-1.4L6 9.6l6.3-6.3a1 1 0 0 1 1.4 0Z" />
+              </svg>
+              <span class="sr-only copy-btn-text" data-i18n="copy_button_label">Copy</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap footer-grid">
+      <div class="footer-brand">
+        <a class="brand" href="#top">
+          <img class="brand-logo" data-theme-src-dark="img/logo_nobg.webp"
+            data-theme-src-light="img/logo_blue_nobg.webp" src="img/logo_nobg.webp" alt="" width="28" height="28">
+          <span class="brand-name">TTNOverlay</span>
+        </a>
+        <p data-i18n="footer_tagline">A Twitch overlay for Windows.</p>
+      </div>
+
+      <div class="footer-links">
+        <a href="#" data-repo-link="source" target="_blank" rel="noopener">GitHub</a>
+        <a href="#" data-repo-link="releases" target="_blank" rel="noopener" data-i18n="nav_download">Download</a>
+        <a href="https://ko-fi.com/1devlion/donate" target="_blank" rel="noopener" data-i18n="footer_support">Support
+          the project</a>
+      </div>
+
+      <p class="footer-license">
+        <span data-i18n="footer_license">Licensed under the MIT License.</span>
+        <a href="#" data-repo-link="license" target="_blank" rel="noopener" data-i18n="footer_license_link">View
+          LICENSE</a>
+      </p>
+    </div>
+  </footer>
+
+  <script src="js/i18n.js"></script>
+  <script src="js/main.js"></script>
+</body>
+
+</html>

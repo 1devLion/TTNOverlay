@@ -1,0 +1,35 @@
+# Build outputs
+bin/
+obj/
+publish/
+*.pdb
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.userprefs
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+*.zip
+
+# VS Code
+.vscode/
+
+# Publish profiles (pueden tener rutas/tokens locales)
+Properties/PublishProfiles/*.pubxml.user
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs y capturas de debugging locales
+*.log
+
+# Contiene el APP_SHARED_KEY del Worker de auth — nunca debe subirse.
+Source/Generated/AppKeyProvider.cs
