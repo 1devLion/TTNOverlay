@@ -336,7 +336,15 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
     }
 
     public void ShowConfirmDialog(string title, string message, string? confirmText, Action<bool> callback)
-        => PostToUiThread(() => ConfirmDialogWindow.Show(Hwnd, PostToUiThread, title, message, confirmText, callback));
+    {
+        DebugLog.Write($"ShowConfirmDialog: llamado desde hilo {Environment.CurrentManagedThreadId} (UI thread={OverlayWindowBase.IsOnUiThread})");
+        PostToUiThread(() =>
+        {
+            DebugLog.Write("ShowConfirmDialog: dentro de PostToUiThread, por llamar a ConfirmDialogWindow.Show");
+            ConfirmDialogWindow.Show(Hwnd, PostToUiThread, title, message, confirmText, callback);
+            DebugLog.Write("ShowConfirmDialog: ConfirmDialogWindow.Show retornó");
+        });
+    }
     public UpdateProgressDialogWindow ShowUpdateProgressDialog(string title)
     => UpdateProgressDialogWindow.Show(Hwnd, PostToUiThread, title);
     public void ShowReleaseNotesDialog(string title, string notes)

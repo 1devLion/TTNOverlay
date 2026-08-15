@@ -71,17 +71,23 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
         string? confirmText,
         Action<bool> callback)
     {
+        DebugLog.Write($"ConfirmDialogWindow.Show: entrando, message.Length={message?.Length ?? -1}");
+
         int x = 100, y = 100;
         if (Win32.GetWindowRect(ownerHwnd, out var ownerRect))
         {
             x = ownerRect.Left + ((ownerRect.Right - ownerRect.Left) - FixedWidth) / 2;
             y = ownerRect.Top + ((ownerRect.Bottom - ownerRect.Top) - 180) / 2;
         }
+        DebugLog.Write($"ConfirmDialogWindow.Show: GetWindowRect ok, x={x} y={y}");
 
         var wnd = new ConfirmDialogWindow(title, message, confirmText, ownerHwnd);
         wnd.ResultReady += callback;
         wnd.Destroyed += () => postToOwnerUiThread(wnd.Dispose);
+
+        DebugLog.Write("ConfirmDialogWindow.Show: por llamar a wnd.Create");
         wnd.Create(Strings.Get("WindowTitle_Confirm", LocalizationService.Instance.CurrentLanguage), x, y, FixedWidth, 180);
+        DebugLog.Write("ConfirmDialogWindow.Show: wnd.Create retornó");
     }
 
     private void PositionOverOwner()
@@ -113,19 +119,29 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
 
     protected override void OnCreated()
     {
+        DebugLog.Write("ConfirmDialogWindow.OnCreated: entrando");
+
         Win32.EnableWindow(_ownerHwnd, false);
+        DebugLog.Write("ConfirmDialogWindow.OnCreated: EnableWindow(false) hecho");
 
         using var probeFormat = DWriteFactory.CreateTextFormat("Segoe UI", FontWeight.Normal, Vortice.DirectWrite.FontStyle.Normal, 13f);
         probeFormat.WordWrapping = Vortice.DirectWrite.WordWrapping.Wrap;
         float messageWidth = FixedWidth - Padding * 2f;
-        using (var probe = DWriteFactory.CreateTextLayout(_message, probeFormat, messageWidth, 500f))
+        DebugLog.Write($"ConfirmDialogWindow.OnCreated: por medir texto, messageWidth={messageWidth}, _message.Length={_message?.Length ?? -1}");
+
+        using (var probe = DWriteFactory.CreateTextLayout(_message, probeFormat, messageWidth, float.MaxValue))
             _messageHeight = probe.Metrics.Height;
+        DebugLog.Write($"ConfirmDialogWindow.OnCreated: texto medido, _messageHeight={_messageHeight}");
 
         _computedHeight = (int)(Padding + TitleHeight + TitleGap + _messageHeight + MessageGap + ButtonHeight + Padding);
-        Resize(FixedWidth, _computedHeight);
-        PositionOverOwner();
-    }
+        DebugLog.Write($"ConfirmDialogWindow.OnCreated: _computedHeight={_computedHeight}, por llamar a Resize");
 
+        Resize(FixedWidth, _computedHeight);
+        DebugLog.Write("ConfirmDialogWindow.OnCreated: Resize retornó, por llamar a PositionOverOwner");
+
+        PositionOverOwner();
+        DebugLog.Write("ConfirmDialogWindow.OnCreated: PositionOverOwner retornó, saliendo de OnCreated");
+    }
     protected override void OnRender(ID2D1DCRenderTarget target)
     {
         if (_lastKnownIsDark != ThemeService.IsDark)

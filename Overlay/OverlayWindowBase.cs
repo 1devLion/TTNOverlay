@@ -42,6 +42,10 @@ public abstract class OverlayWindowBase : IDisposable
 
     public IntPtr Hwnd { get; private set; }
 
+    /// <summary>Managed thread id of the app's single UI/message-loop thread. Set once, by whichever overlay window is created first.</summary>
+    private static int? _uiThreadId;
+    public static bool IsOnUiThread => _uiThreadId is int id && Environment.CurrentManagedThreadId == id;
+
     private bool _inLiveResize;
     private DateTime _lastLiveResizeRenderUtc = DateTime.MinValue;
     private static readonly TimeSpan LiveResizeRenderInterval = TimeSpan.FromMilliseconds(50);
@@ -58,6 +62,7 @@ public abstract class OverlayWindowBase : IDisposable
 
     public void Create(string title, int x, int y, int width, int height)
     {
+        _uiThreadId ??= Environment.CurrentManagedThreadId;
 
         _hInstance = Marshal.GetHINSTANCE(GetType().Module);
 
@@ -102,6 +107,8 @@ public abstract class OverlayWindowBase : IDisposable
 
         StartRenderLoop();
         OnCreated();
+
+        Win32.SetFocus(Hwnd);
         RequestRender();
     }
 
