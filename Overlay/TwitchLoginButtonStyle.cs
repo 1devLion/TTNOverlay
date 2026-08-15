@@ -6,13 +6,8 @@ using Vortice.Mathematics;
 namespace TTNOverlay.Overlay;
 
 /// <summary>
-/// Single visual definition for every "Log in with Twitch" / "Log out" button in the app: the
-/// welcome guide message, the moderation panel header, and Settings -> Twitch API. Each call site
-/// still owns its own ID2D1 brushes, IDWriteTextFormat, and icon ID2D1Bitmap -- Direct2D resources
-/// are bound to a single render target, and ChatRenderWindow and SettingsRenderWindow are separate
-/// native windows with separate targets, so none of that can literally be shared across them. What
-/// lives here once, instead of three times, is the sizing, the colors, and the measure/draw logic,
-/// so the three buttons can't visually drift apart again.
+/// Visual definition (sizing, colors, measure/draw logic) for every "Log in with Twitch" /
+/// "Log out" button in the app.
 /// </summary>
 internal static class TwitchLoginButtonStyle
 {
@@ -25,12 +20,12 @@ internal static class TwitchLoginButtonStyle
 
     public static Color4 IconBackgroundColor => new(0x85 / 255f, 0x57 / 255f, 0xDE / 255f, 1f);
 
-    /// <summary>Twitch-brand fill for the "Log in with Twitch" (primary) state -- matches IconBackgroundColor exactly, see above.</summary>
+    /// <summary>Twitch-brand fill for the "Log in with Twitch" (primary) state.</summary>
     public static Color4 PrimaryFill => IconBackgroundColor;
     public static Color4 PrimaryFillHover => new(0x9D / 255f, 0x6F / 255f, 0xF6 / 255f, 1f);
     public static Color4 PrimaryText => new(1f, 1f, 1f, 1f);
 
-    /// <summary>Neutral outline for the "Log out" (secondary) state -- theme-aware.</summary>
+    /// <summary>Neutral outline for the "Log out" (secondary) state.</summary> 
     public static Color4 SecondaryFill(bool isDark) => isDark ? new Color4(1f, 1f, 1f, 0.08f) : new Color4(0f, 0f, 0f, 0.05f);
     public static Color4 SecondaryFillHover(bool isDark) => isDark ? new Color4(1f, 1f, 1f, 0.14f) : new Color4(0f, 0f, 0f, 0.09f);
     public static Color4 SecondaryBorder(bool isDark) => isDark ? new Color4(1f, 1f, 1f, 0.35f) : new Color4(0f, 0f, 0f, 0.30f);

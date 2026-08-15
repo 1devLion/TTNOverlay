@@ -164,28 +164,44 @@ internal sealed partial class SettingsRenderWindow
     private ID2D1SolidColorBrush? _twitchLoginSecondaryBorderBrush;
     private ID2D1SolidColorBrush? _twitchLoginSecondaryTextBrush;
 
-    private ID2D1Bitmap? _twitchLoginIconBitmap;
-    private bool _twitchLoginIconLoadAttempted;
+    private ID2D1Bitmap? _twitchLoginIconWhiteBitmap;
+    private bool _twitchLoginIconWhiteLoadAttempted;
+    private ID2D1Bitmap? _twitchLoginIconDarkBitmap;
+    private bool _twitchLoginIconDarkLoadAttempted;
 
-    private ID2D1Bitmap? GetOrCreateTwitchLoginIconBitmap(ID2D1DCRenderTarget target)
+    private ID2D1Bitmap? GetOrCreateTwitchLoginIconBitmap(ID2D1DCRenderTarget target, TwitchIconLoader.Variant variant)
     {
-        if (_twitchLoginIconBitmap is not null || _twitchLoginIconLoadAttempted)
-            return _twitchLoginIconBitmap;
-        _twitchLoginIconLoadAttempted = true;
+        if (variant == TwitchIconLoader.Variant.Dark)
+        {
+            if (_twitchLoginIconDarkBitmap is not null || _twitchLoginIconDarkLoadAttempted)
+                return _twitchLoginIconDarkBitmap;
+            _twitchLoginIconDarkLoadAttempted = true;
 
-        var decoded = TwitchIconLoader.GetDecodedIcon();
+            var decodedDark = TwitchIconLoader.GetDecodedIcon(TwitchIconLoader.Variant.Dark);
+            if (decodedDark is null)
+                return null;
+            try { _twitchLoginIconDarkBitmap = D2DBitmapLoader.CreateBitmap(target, decodedDark.Value, "TwitchIconDark"); }
+            catch { }
+            return _twitchLoginIconDarkBitmap;
+        }
+
+        if (_twitchLoginIconWhiteBitmap is not null || _twitchLoginIconWhiteLoadAttempted)
+            return _twitchLoginIconWhiteBitmap;
+        _twitchLoginIconWhiteLoadAttempted = true;
+
+        var decoded = TwitchIconLoader.GetDecodedIcon(TwitchIconLoader.Variant.White);
         if (decoded is null)
             return null;
 
         try
         {
-            _twitchLoginIconBitmap = D2DBitmapLoader.CreateBitmap(target, decoded.Value, "TwitchIcon");
+            _twitchLoginIconWhiteBitmap = D2DBitmapLoader.CreateBitmap(target, decoded.Value, "TwitchIconWhite");
         }
         catch
         {
 
         }
-        return _twitchLoginIconBitmap;
+        return _twitchLoginIconWhiteBitmap;
     }
 
     private void DrawTwitchLoginButton(ID2D1DCRenderTarget target, float x, float y)
@@ -213,7 +229,7 @@ internal sealed partial class SettingsRenderWindow
                 actionLabelLayout,
                 hovered ? _twitchLoginPrimaryFillHoverBrush : _twitchLoginPrimaryFillBrush,
                 _twitchLoginPrimaryTextBrush,
-                GetOrCreateTwitchLoginIconBitmap(target)
+                GetOrCreateTwitchLoginIconBitmap(target, TwitchIconLoader.Variant.White)
             );
             return;
         }
@@ -229,7 +245,7 @@ internal sealed partial class SettingsRenderWindow
             hovered ? _twitchLoginSecondaryFillHoverBrush : _twitchLoginSecondaryFillBrush,
             _twitchLoginSecondaryBorderBrush,
             _enableTwitchApi ? _twitchLoginSecondaryTextBrush : _secondaryBrush!,
-            GetOrCreateTwitchLoginIconBitmap(target)
+            GetOrCreateTwitchLoginIconBitmap(target, ThemeService.IsDark ? TwitchIconLoader.Variant.White : TwitchIconLoader.Variant.Dark)
         );
     }
 
@@ -251,9 +267,12 @@ internal sealed partial class SettingsRenderWindow
         _twitchLoginSecondaryBorderBrush = null;
         _twitchLoginSecondaryTextBrush?.Dispose();
         _twitchLoginSecondaryTextBrush = null;
-        _twitchLoginIconBitmap?.Dispose();
-        _twitchLoginIconBitmap = null;
-        _twitchLoginIconLoadAttempted = false;
+        _twitchLoginIconWhiteBitmap?.Dispose();
+        _twitchLoginIconWhiteBitmap = null;
+        _twitchLoginIconWhiteLoadAttempted = false;
+        _twitchLoginIconDarkBitmap?.Dispose();
+        _twitchLoginIconDarkBitmap = null;
+        _twitchLoginIconDarkLoadAttempted = false;
     }
 
     private async void HandleTwitchLoginAction()

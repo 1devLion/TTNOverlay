@@ -136,7 +136,7 @@ internal sealed partial class ChatRenderWindow
                         actionLabelLayout,
                         GetOrCreateTwitchButtonPrimaryFillBrush(target, _moderationLoginButtonHovered),
                         GetOrCreateTwitchButtonTextBrush(target),
-                        GetOrCreateTwitchButtonIconBitmap(target)
+                        GetOrCreateTwitchButtonIconBitmap(target, TwitchIconLoader.Variant.White)
                     );
                 else
                     TwitchLoginButtonStyle.DrawSecondary(
@@ -146,7 +146,7 @@ internal sealed partial class ChatRenderWindow
                         GetOrCreateTwitchButtonSecondaryFillBrush(target, _moderationLoginButtonHovered),
                         GetOrCreateTwitchButtonSecondaryBorderBrush(target),
                         GetOrCreateTwitchButtonSecondaryTextBrush(target),
-                        GetOrCreateTwitchButtonIconBitmap(target)
+                        GetOrCreateTwitchButtonIconBitmap(target, ThemeService.IsDark ? TwitchIconLoader.Variant.White : TwitchIconLoader.Variant.Dark)
                     );
 
                 _moderationLoginActionRect = actionRect;

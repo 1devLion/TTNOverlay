@@ -7,12 +7,7 @@ namespace TTNOverlay.Overlay;
 
 /// <summary>
 /// ChatRenderWindow partial: the "Log in with Twitch" button rendered inside the first-run welcome
-/// guide message (see SeedWelcomeGuide in ChatRenderWindow.MessageList.cs), so a new user can connect
-/// their account without having to open Settings first. Hides itself once the user is logged in.
-/// Shares its ID2D1 brushes/format with the moderation panel's login button (see
-/// ChatRenderWindow.Moderation.Render.cs) since both live on the same render target; the visual
-/// definition itself (colors, sizing, draw logic) lives once in TwitchLoginButtonStyle, also shared
-/// with Settings -> Twitch API's login button.
+/// guide message. Hides itself once the user is logged in.
 /// </summary>
 internal sealed partial class ChatRenderWindow
 {
@@ -30,8 +25,10 @@ internal sealed partial class ChatRenderWindow
     private ID2D1SolidColorBrush? _twitchButtonSecondaryTextBrush;
     private IDWriteTextFormat? _twitchButtonFormat;
 
-    private ID2D1Bitmap? _twitchButtonIconBitmap;
-    private bool _twitchButtonIconLoadAttempted;
+    private ID2D1Bitmap? _twitchButtonIconWhiteBitmap;
+    private bool _twitchButtonIconWhiteLoadAttempted;
+    private ID2D1Bitmap? _twitchButtonIconDarkBitmap;
+    private bool _twitchButtonIconDarkLoadAttempted;
 
     private ID2D1SolidColorBrush GetOrCreateTwitchButtonPrimaryFillBrush(ID2D1DCRenderTarget target, bool hovered) =>
         hovered
@@ -55,31 +52,44 @@ internal sealed partial class ChatRenderWindow
     private IDWriteTextFormat GetOrCreateTwitchButtonFormat() =>
         _twitchButtonFormat ??= TwitchLoginButtonStyle.CreateFormat(DWriteFactory, (float)(_settings.FontSize * 0.9));
 
-    private ID2D1Bitmap? GetOrCreateTwitchButtonIconBitmap(ID2D1DCRenderTarget target)
+    private ID2D1Bitmap? GetOrCreateTwitchButtonIconBitmap(ID2D1DCRenderTarget target, TwitchIconLoader.Variant variant)
     {
-        if (_twitchButtonIconBitmap is not null || _twitchButtonIconLoadAttempted)
-            return _twitchButtonIconBitmap;
-        _twitchButtonIconLoadAttempted = true;
+        if (variant == TwitchIconLoader.Variant.Dark)
+        {
+            if (_twitchButtonIconDarkBitmap is not null || _twitchButtonIconDarkLoadAttempted)
+                return _twitchButtonIconDarkBitmap;
+            _twitchButtonIconDarkLoadAttempted = true;
 
-        var decoded = TwitchIconLoader.GetDecodedIcon();
+            var decodedDark = TwitchIconLoader.GetDecodedIcon(TwitchIconLoader.Variant.Dark);
+            if (decodedDark is null)
+                return null;
+            try { _twitchButtonIconDarkBitmap = D2DBitmapLoader.CreateBitmap(target, decodedDark.Value, "TwitchIconDark"); }
+            catch { }
+            return _twitchButtonIconDarkBitmap;
+        }
+
+        if (_twitchButtonIconWhiteBitmap is not null || _twitchButtonIconWhiteLoadAttempted)
+            return _twitchButtonIconWhiteBitmap;
+        _twitchButtonIconWhiteLoadAttempted = true;
+
+        var decoded = TwitchIconLoader.GetDecodedIcon(TwitchIconLoader.Variant.White);
         if (decoded is null)
             return null;
 
         try
         {
-            _twitchButtonIconBitmap = D2DBitmapLoader.CreateBitmap(target, decoded.Value, "TwitchIcon");
+            _twitchButtonIconWhiteBitmap = D2DBitmapLoader.CreateBitmap(target, decoded.Value, "TwitchIconWhite");
         }
         catch
         {
 
         }
-        return _twitchButtonIconBitmap;
+        return _twitchButtonIconWhiteBitmap;
     }
 
     /// <summary>
     /// Draws (or, when draw is false, just measures) the login button right below a system message's
-    /// text and returns the new content bottom -- same draw/measure-in-one contract as DrawMessage's
-    /// other helpers, so it composes cleanly with GetOrMeasureHeight's cached-height pass.
+    /// text and returns the new content bottom.
     /// </summary>
     private float DrawWelcomeTwitchLoginButton(ID2D1DCRenderTarget target, float x, float y, bool draw)
     {
@@ -101,7 +111,7 @@ internal sealed partial class ChatRenderWindow
                 labelLayout,
                 GetOrCreateTwitchButtonPrimaryFillBrush(target, _welcomeLoginButtonHovered),
                 GetOrCreateTwitchButtonTextBrush(target),
-                GetOrCreateTwitchButtonIconBitmap(target)
+                GetOrCreateTwitchButtonIconBitmap(target, TwitchIconLoader.Variant.White)
             );
             _welcomeLoginButtonRect = rect;
         }
@@ -133,8 +143,11 @@ internal sealed partial class ChatRenderWindow
         _twitchButtonSecondaryTextBrush = null;
         _twitchButtonFormat?.Dispose();
         _twitchButtonFormat = null;
-        _twitchButtonIconBitmap?.Dispose();
-        _twitchButtonIconBitmap = null;
-        _twitchButtonIconLoadAttempted = false;
+        _twitchButtonIconWhiteBitmap?.Dispose();
+        _twitchButtonIconWhiteBitmap = null;
+        _twitchButtonIconWhiteLoadAttempted = false;
+        _twitchButtonIconDarkBitmap?.Dispose();
+        _twitchButtonIconDarkBitmap = null;
+        _twitchButtonIconDarkLoadAttempted = false;
     }
 }
