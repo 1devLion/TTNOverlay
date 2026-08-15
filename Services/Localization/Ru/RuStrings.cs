@@ -2,8 +2,7 @@ namespace TTNOverlay.Services;
 
 /// <summary>
 /// Russian UI strings, assembled from the per-section files in this folder (Common.ru.cs,
-/// ModerationPanel.ru.cs, SettingsAlerts.ru.cs, etc.). This table is intended to be complete
-/// for all keys used in the application; missing keys fall back to English (see Strings.Get).
+/// ModerationPanel.ru.cs, SettingsAlerts.ru.cs, etc.).
 /// </summary>
 internal static partial class RuStrings
 {

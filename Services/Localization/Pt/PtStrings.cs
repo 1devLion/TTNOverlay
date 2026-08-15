@@ -2,8 +2,7 @@ namespace TTNOverlay.Services;
 
 /// <summary>
 /// Portuguese UI strings, assembled from the per-section files in this folder (Common.cs,
-/// ModerationPanel.cs, SettingsAlerts.cs, etc.), mirroring the same section names as En/. Any key
-/// missing here falls back to English automatically (see Strings.Get).
+/// ModerationPanel.cs, SettingsAlerts.cs, etc.).
 /// </summary>
 internal static partial class PtStrings
 {

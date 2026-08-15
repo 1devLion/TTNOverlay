@@ -186,12 +186,6 @@ public abstract class OverlayWindowBase : IDisposable
         }
         catch (Exception ex)
         {
-            // IMPORTANTE: WndProc es invocado directamente por Windows a través de un puntero de
-            // función nativo. Una excepción managed que intenta desenrollar la pila cruzando ese
-            // límite nativo/managed no llega al try/catch de Program.cs -- el runtime hace fail-fast
-            // y mata el proceso al instante (sin diálogo de error, sin "no responde"). Por eso NUNCA
-            // relanzamos acá: logueamos con el máximo contexto posible y dejamos que la ventana siga
-            // viva, devolviendo el resultado por defecto de Windows para este mensaje puntual.
             DebugLog.Write($"WndProc: excepción no controlada en msg=0x{msg:X4} -- {ex}");
             DebugLog.FlushNow();
             return Win32.DefWindowProc(hWnd, msg, wParam, lParam);
@@ -345,10 +339,6 @@ public abstract class OverlayWindowBase : IDisposable
                     }
                     catch (Exception ex)
                     {
-                        // Aislamos cada acción para que una falla puntual (p. ej. un estado que
-                        // quedó desactualizado por una carrera, o una excepción durante un render
-                        // puntual) no tire abajo el resto del lote ni deje acciones ya encoladas
-                        // esperando a que otro PostToUiThread externo dispare el próximo drenado.
                         DebugLog.Write($"WM_UI_THREAD_CALLBACK: excepción en acción encolada -- {ex}");
                     }
                     System.Threading.Interlocked.Decrement(ref _pendingUiActionCount);

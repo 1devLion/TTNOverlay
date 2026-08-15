@@ -94,14 +94,6 @@ public class AppSettings
 
     public string Language { get; set; } = "English";
 
-    /// <summary>
-    /// Devuelve una copia profunda e independiente (diccionarios incluidos). Se usa para entregarle
-    /// a la ventana de Settings -- que corre en su propio hilo con su propio message loop -- un
-    /// snapshot editable que no comparte referencias mutables con la instancia que el hilo principal
-    /// lee en cada frame de render/click. Va por serialización JSON (mismo contexto que persistencia
-    /// a disco) para no tener que mantener a mano una lista de asignaciones que se desincronice cada
-    /// vez que se agregue un campo nuevo a AppSettings.
-    /// </summary>
     public AppSettings Clone()
     {
         var json = JsonSerializer.Serialize(this, SettingsJsonContext.Default.AppSettings);

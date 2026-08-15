@@ -12,21 +12,36 @@ internal sealed partial class ChatRenderWindow
     private readonly ITwitchIrcClient _irc = new TwitchIrcClient();
 
     private string _connectionStatusText = string.Empty;
+    private string? _connectionStatusKey;
+    private string? _connectionStatusArg;
+
+    private void SetConnectionStatus(string localizationKey, string? arg = null)
+    {
+        _connectionStatusKey = localizationKey;
+        _connectionStatusArg = arg;
+        RebuildConnectionStatusText();
+    }
+
+    private void RebuildConnectionStatusText()
+    {
+        if (_connectionStatusKey is null)
+            return;
+        _connectionStatusText = _connectionStatusArg is null
+            ? LocalizationService.T(_connectionStatusKey)
+            : string.Format(LocalizationService.T(_connectionStatusKey), _connectionStatusArg);
+    }
 
     private void ConnectFeed()
     {
         if (string.IsNullOrWhiteSpace(_settings.Channel))
         {
             DebugLog.Write("ConnectFeed: no channel configured -- showing welcome guide");
-            _connectionStatusText = LocalizationService.T("MainWindow_FirstTime");
+            SetConnectionStatus("MainWindow_FirstTime");
             SeedWelcomeGuide();
             return;
         }
 
-        _connectionStatusText = string.Format(
-            LocalizationService.T("MainWindow_Connecting"),
-            _settings.Channel
-        );
+        SetConnectionStatus("MainWindow_Connecting", _settings.Channel);
 
         _irc.MessageReceived += OnIrcMessageReceived;
         _irc.Connected += OnIrcConnected;
@@ -43,10 +58,7 @@ internal sealed partial class ChatRenderWindow
     private void OnIrcConnected(string channel) =>
         PostToUiThread(() =>
         {
-            _connectionStatusText = string.Format(
-                LocalizationService.T("MainWindow_ChannelConnected"),
-                channel
-            );
+            SetConnectionStatus("MainWindow_ChannelConnected", channel);
             DebugLog.Write($"ConnectFeed: conectado a #{channel}");
             RequestRender();
         });
@@ -54,10 +66,7 @@ internal sealed partial class ChatRenderWindow
     private void OnIrcDisconnected(string reason) =>
         PostToUiThread(() =>
         {
-            _connectionStatusText = string.Format(
-                LocalizationService.T("MainWindow_Disconnected"),
-                reason
-            );
+            SetConnectionStatus("MainWindow_Disconnected", reason);
             DebugLog.Write($"ConnectFeed: desconectado ({reason})");
             RequestRender();
         });
@@ -65,10 +74,7 @@ internal sealed partial class ChatRenderWindow
     private void OnIrcError(Exception ex) =>
         PostToUiThread(() =>
         {
-            _connectionStatusText = string.Format(
-                LocalizationService.T("MainWindow_ErrorLabel"),
-                ex.Message
-            );
+            SetConnectionStatus("MainWindow_ErrorLabel", ex.Message);
             DebugLog.WriteException("ConnectFeed._irc.Error", ex);
             RequestRender();
         });
@@ -86,10 +92,7 @@ internal sealed partial class ChatRenderWindow
             DebugLog.WriteException("TryConnectIrcAsync", ex);
             PostToUiThread(() =>
             {
-                _connectionStatusText = string.Format(
-                    LocalizationService.T("MainWindow_ErrorLabel"),
-                    ex.Message
-                );
+                SetConnectionStatus("MainWindow_ErrorLabel", ex.Message);
                 RequestRender();
             });
         }

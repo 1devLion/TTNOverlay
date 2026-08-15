@@ -2,9 +2,7 @@ namespace TTNOverlay.Services;
 
 /// <summary>
 /// English UI strings, assembled from the per-section files in this folder (Common.cs,
-/// ModerationPanel.cs, SettingsAlerts.cs, etc.). English is the fallback language every other
-/// language's missing keys resolve to (see Strings.Get), so this table is expected to always be
-/// complete.
+/// ModerationPanel.cs, SettingsAlerts.cs, etc.).
 /// </summary>
 internal static partial class EnStrings
 {

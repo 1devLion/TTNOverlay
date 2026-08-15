@@ -117,7 +117,15 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
         ConnectTrayAndHotkeys();
         EnsureExpirySweepTimerRunning();
         EnsureMediaStatsTimerRunning();
+
+        LocalizationService.Instance.LanguageChanged += OnLanguageChanged;
     }
+
+    private void OnLanguageChanged() => PostToUiThread(() =>
+    {
+        RebuildConnectionStatusText();
+        RequestRender();
+    });
 
     private System.Threading.Timer? _mediaStatsTimer;
 
@@ -267,6 +275,7 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
 
     protected override void OnDestroyed()
     {
+        LocalizationService.Instance.LanguageChanged -= OnLanguageChanged;
         DisconnectFeed();
         DisconnectTrayAndHotkeys();
         DisconnectDashboard();

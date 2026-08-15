@@ -124,8 +124,6 @@ internal sealed partial class ChatRenderWindow
 
         var title = Strings.Get("WindowTitle_Settings", LocalizationService.Instance.CurrentLanguage);
 
-        // Snapshot independiente: a partir de acá la ventana de Settings edita su propia copia,
-        // no la instancia que el render loop y los click handlers leen en el hilo principal.
         var editableSettings = _settings.Clone();
 
         var settingsThread = new System.Threading.Thread(() => RunSettingsWindow(
@@ -155,14 +153,8 @@ internal sealed partial class ChatRenderWindow
             {
                 _settingsWindowOpen = false;
 
-                // Publicamos el snapshot editado como la nueva _settings de una sola vez, en el
-                // hilo de UI. De acá en más toda esta lógica sigue leyendo de _settings como antes.
                 _settings = editableSettings;
 
-                // _moderation guarda internamente la referencia a AppSettings que tenía en el
-                // momento en que se creó (lazy, "??="). Si no la reseteamos acá, se queda apuntando
-                // al objeto viejo (login/tokens de moderador desactualizados) después de este swap.
-                // Se vuelve a crear sola, con _settings ya actualizado, la próxima vez que se use.
                 DisconnectModeration();
 
                 SettingsService.Save(_settings);

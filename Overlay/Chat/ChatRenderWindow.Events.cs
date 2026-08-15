@@ -115,14 +115,10 @@ internal sealed partial class ChatRenderWindow
         {
             if (frames is not null)
             {
-                // Animación con 2+ frames: usarla.
                 bitmap = frames[_animationState.TryGetValue(key, out var st) ? st.Index : 0].Bitmap;
             }
             else
             {
-                // La carga animada ya resolvió y confirmó que NO es una animación (frames<2):
-                // recién ahí tiene sentido pedir la imagen estática, en vez de duplicar la
-                // descarga/decodificación mientras la carga animada todavía está en vuelo.
                 bitmap = GetOrLoadImageBitmap(key, url, DecodeTargetSize((int)size));
             }
         }

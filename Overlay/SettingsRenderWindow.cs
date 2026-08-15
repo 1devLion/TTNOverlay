@@ -91,9 +91,6 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
     private IDWriteTextFormat? _titleBarFormat;
     private IDWriteTextFormat? _sidebarFormat;
 
-    // Runs on its own thread with its own RunMessageLoop (see ChatRenderWindow.TrayHotkeys.OpenNativeSettings),
-    // so on WM_DESTROY it must post WM_QUIT to exit *that* loop. PostQuitMessage only affects the calling
-    // thread's queue, so this can't quit the chat window's loop, even though the name suggests otherwise.
     protected override bool QuitApplicationOnDestroy => true;
 
     protected override int TitleBarHeight => 34;
@@ -464,14 +461,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
     }
 
     /// <summary>
-    /// True while any of the 7 dropdowns in this window has its item list expanded. The list is
-    /// drawn on top of whatever field happens to sit underneath it, but mouse-down hit-testing for
-    /// those fields didn't know that -- a click on a dropdown item that visually overlapped a
-    /// textbox/slider/checkbox would fire on mouse-down against the field underneath (giving it
-    /// focus, moving a slider, etc.) *and then* on mouse-up against the dropdown item itself,
-    /// effectively "clicking through" the open list. Guarding LButtonDown with this check makes
-    /// mouse-down a no-op whenever a dropdown is open, so only the mouse-up handler (which already
-    /// checks dropdowns first, see OnClientLButtonUp) decides what got clicked.
+    /// True while any of the 7 dropdowns in this window has its item list expanded.
     /// </summary>
     private bool AnyDropdownOpen() =>
         _themeDropdown.IsOpen || _languageDropdown.IsOpen || _eventAlertSourceDropdown.IsOpen

@@ -30,11 +30,7 @@ internal sealed partial class ChatRenderWindow
     private readonly LinkedList<string> _usernameBrushCacheOrder = new();
 
     /// <summary>
-    /// Running totals kept in sync with _imageCache / _animatedImageCache on every insert and evict,
-    /// so TouchImageCache/TouchAnimatedCache don't have to re-sum the whole cache (LINQ over every
-    /// bitmap) on every single new image -- that used to run on the UI thread for every badge/emote
-    /// first seen in a busy chat, which is exactly the kind of per-message work that made everything
-    /// else on the UI thread (hover, clicks, Settings) feel laggy under high viewer/message load.
+    /// Running totals kept in sync with _imageCache / _animatedImageCache on every insert and evict.
     /// </summary>
     private long _imageCacheBytes;
     private int _animatedFrameCount;
