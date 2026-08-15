@@ -25,6 +25,7 @@ internal sealed partial class SettingsRenderWindow
     private ID2D1Bitmap? _aboutIconBitmap;
     private bool _aboutIconLoadAttempted;
 
+    private Rect _debugModeCheckboxRect;
     private ID2D1Bitmap? GetOrCreateAboutIconBitmap(ID2D1DCRenderTarget target)
     {
         if (_aboutIconBitmap is not null || _aboutIconLoadAttempted)
@@ -50,6 +51,7 @@ internal sealed partial class SettingsRenderWindow
     private IDWriteTextFormat? _aboutCenterFormat;
     private IDWriteTextFormat? _aboutBoldCenterFormat;
     private IDWriteTextFormat? _aboutSmallCenterFormat;
+    private ID2D1SolidColorBrush? _warningBrush;
 
     private static string AppVersionText
     {
@@ -60,8 +62,9 @@ internal sealed partial class SettingsRenderWindow
         }
     }
 
-private void DrawAboutSection(ID2D1DCRenderTarget target, float x, float width, float windowHeight)
+    private void DrawAboutSection(ID2D1DCRenderTarget target, float x, float width, float windowHeight)
     {
+        _checkboxRects.Clear();
         _aboutTitleFormat ??= DWriteFactory.CreateTextFormat("Segoe UI", FontWeight.Bold, Vortice.DirectWrite.FontStyle.Normal, 26f);
         _aboutTitleFormat.TextAlignment = Vortice.DirectWrite.TextAlignment.Center;
 
@@ -82,6 +85,11 @@ private void DrawAboutSection(ID2D1DCRenderTarget target, float x, float width, 
         using (var probe = DWriteFactory.CreateTextLayout(LocalizationService.T("Settings_About_LicenseText"), _aboutSmallCenterFormat!, licenseTextWidth, 200f))
             licenseTextHeight = probe.Metrics.Height;
 
+        float debugWarningWidth = System.Math.Min(width, AboutLicenseTextMaxWidth);
+        float debugWarningHeight;
+        using (var probe = DWriteFactory.CreateTextLayout(LocalizationService.T("Settings_About_DebugModeWarning"), _aboutSmallCenterFormat!, debugWarningWidth, 200f))
+            debugWarningHeight = probe.Metrics.Height;
+
         float contentHeight =
             AboutIconSize + 16f +
             32f + 4f +
@@ -90,7 +98,8 @@ private void DrawAboutSection(ID2D1DCRenderTarget target, float x, float width, 
             20f +
             (22f + 6f) * 2 +
             6f +
-            licenseTextHeight;
+            licenseTextHeight +
+            20f + CheckboxSize + FieldGap + 6f + debugWarningHeight;
 
         float availableTop = TitleBarHeight;
         float availableBottom = windowHeight - FooterHeight;
@@ -145,6 +154,17 @@ private void DrawAboutSection(ID2D1DCRenderTarget target, float x, float width, 
         float licenseTextX = x + (width - licenseTextWidth) / 2f;
         using (var licenseText = DWriteFactory.CreateTextLayout(LocalizationService.T("Settings_About_LicenseText"), _aboutSmallCenterFormat!, licenseTextWidth, 90f))
             target.DrawTextLayout(new System.Numerics.Vector2(licenseTextX, y), licenseText, _secondaryBrush!);
+        y += licenseTextHeight + 20f;
+
+        float debugLabelWidth = MeasureAboutText(LocalizationService.T("Settings_About_DebugMode"), _labelFormat!);
+        float debugFieldWidth = CheckboxSize + CheckboxLabelGap + debugLabelWidth;
+        float checkboxRowX = x + (width - debugFieldWidth) / 2f;
+        y = DrawCheckboxField(target, checkboxRowX, debugFieldWidth, y, "Settings_About_DebugMode", _debugMode, "DebugMode");
+        _debugModeCheckboxRect = _checkboxRects[^1].Bounds;
+
+        float warningX = x + (width - debugWarningWidth) / 2f;
+        using (var warningText = DWriteFactory.CreateTextLayout(LocalizationService.T("Settings_About_DebugModeWarning"), _aboutSmallCenterFormat!, debugWarningWidth, debugWarningHeight + 4f))
+            target.DrawTextLayout(new System.Numerics.Vector2(warningX, y), warningText, _warningBrush ??= target.CreateSolidColorBrush(new Color4(0.85f, 0.55f, 0.15f, 1f)));
     }
 
     private void DrawAboutCenteredLine(ID2D1DCRenderTarget target, float x, float width, ref float y, string label, string value)
@@ -170,7 +190,20 @@ private void DrawAboutSection(ID2D1DCRenderTarget target, float x, float width, 
     private void HandleAboutSectionClick(int clientX, int clientY)
     {
         if (Contains(_supportButtonRect, clientX, clientY))
+        {
             OpenSupportLink();
+            return;
+        }
+
+        foreach (var (bounds, field) in _checkboxRects)
+        {
+            if (Contains(bounds, clientX, clientY))
+            {
+                ToggleCheckbox(field);
+                RequestRender();
+                return;
+            }
+        }
     }
 
     private static void OpenSupportLink()

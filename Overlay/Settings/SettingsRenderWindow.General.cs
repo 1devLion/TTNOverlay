@@ -111,7 +111,6 @@ internal sealed partial class SettingsRenderWindow
 
         _checkboxRects.Clear();
         y = DrawCheckboxField(target, x, width, y, "Settings_General_ClickThrough", _clickThrough, "ClickThrough");
-        y = DrawCheckboxField(target, x, width, y, "Settings_General_DebugMode", _debugMode, "DebugMode");
         y = DrawCheckboxField(target, x, width, y, "Settings_General_ThirdPartyEmotes", _thirdPartyEmotes, "ThirdPartyEmotes");
         y = DrawCheckboxField(target, x, width, y, "Settings_General_EnableEventsPanel", _eventsPanel, "EventsPanel");
         y = DrawCheckboxField(target, x, width, y, "Settings_General_EnableModerationPanel", _moderationPanel, "ModerationPanel");
