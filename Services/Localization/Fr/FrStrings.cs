@@ -32,5 +32,6 @@ internal static partial class FrStrings
         EventTypesEntries,
         EventMessagesEntries,
         StreamlabsMessagesEntries,
+        UpdateEntries,
     };
 }

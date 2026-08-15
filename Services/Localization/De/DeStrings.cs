@@ -33,5 +33,6 @@ internal static partial class DeStrings
         EventTypesEntries,
         EventMessagesEntries,
         StreamlabsMessagesEntries,
+        UpdateEntries,
     };
 }

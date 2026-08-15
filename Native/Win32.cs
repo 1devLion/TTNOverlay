@@ -539,7 +539,10 @@ internal static class Win32
     public static extern bool PostMessage(IntPtr hWnd, uint msg, IntPtr wParam, IntPtr lParam);
 
     public const uint MB_OK = 0x0000_0000;
+    public const uint MB_YESNO = 0x0000_0004;
     public const uint MB_ICONERROR = 0x0000_0010;
+    public const uint MB_ICONQUESTION = 0x0000_0020;
+    public const int IDYES = 6;
 
     [DllImport("user32.dll", CharSet = CharSet.Unicode)]
     public static extern int MessageBoxW(IntPtr hWnd, string lpText, string lpCaption, uint uType);

@@ -32,5 +32,6 @@ internal static partial class JaStrings
         EventTypesEntries,
         EventMessagesEntries,
         StreamlabsMessagesEntries,
+        UpdateEntries,
     };
 }

@@ -39,5 +39,6 @@ internal static partial class EnStrings
         EventTypesEntries,
         EventMessagesEntries,
         StreamlabsMessagesEntries,
+        UpdateEntries,
     };
 }

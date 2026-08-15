@@ -327,4 +327,11 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
 
         DisposeImageCaches();
     }
+
+    public void ShowConfirmDialog(string title, string message, string? confirmText, Action<bool> callback)
+    => ConfirmDialogWindow.Show(Hwnd, PostToUiThread, title, message, confirmText, callback);
+    public UpdateProgressDialogWindow ShowUpdateProgressDialog(string title)
+    => UpdateProgressDialogWindow.Show(Hwnd, PostToUiThread, title);
+    public void ShowReleaseNotesDialog(string title, string notes)
+    => ReleaseNotesDialogWindow.Show(Hwnd, PostToUiThread, title, notes, LocalizationService.T("Update_CloseButton"));
 }

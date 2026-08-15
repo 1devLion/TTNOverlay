@@ -33,5 +33,6 @@ internal static partial class ZhStrings
         EventTypesEntries,
         EventMessagesEntries,
         StreamlabsMessagesEntries,
+        UpdateEntries,
     };
 }

@@ -1,3 +1,4 @@
+using Velopack;
 using TTNOverlay.Overlay;
 using TTNOverlay.Services;
 
@@ -11,6 +12,8 @@ internal static class Program
     [STAThread]
     private static void Main()
     {
+        VelopackApp.Build().Run();
+
         DebugLog.Write("App starting. Log in: " + DebugLog.FilePath);
 
         AppDomain.CurrentDomain.UnhandledException += (_, args) =>
@@ -42,6 +45,8 @@ internal static class Program
                 (int)settings.WindowWidth,
                 (int)settings.WindowHeight
             );
+            UpdateService.CheckForPendingReleaseNotesAndShow(chatRenderWindow.ShowReleaseNotesDialog);
+            _ = UpdateService.CheckForUpdateAndPromptAsync(chatRenderWindow.ShowConfirmDialog, chatRenderWindow.ShowUpdateProgressDialog);
             chatRenderWindow.RunMessageLoop();
         }
         catch (Exception ex)
