@@ -185,7 +185,7 @@ internal sealed partial class SettingsRenderWindow
             foreach (var (key, locKey, defaultHex) in AllEventTypesForColor)
                 y = DrawColorListItemRow(target, x, width, y, key, LocalizationService.T(locKey), defaultHex);
 
-            _resetAllColorsButtonRect = new Rect(x, y, 160f, FooterButtonHeight);
+            _resetAllColorsButtonRect = MeasureButtonRect(LocalizationService.T("Settings_Alerts_ResetAllColors"), x, y, FooterButtonHeight, minWidth: 160f);
             DrawFooterButton(target, _resetAllColorsButtonRect, LocalizationService.T("Settings_Alerts_ResetAllColors"), primary: false);
             y += FooterButtonHeight + FieldGap;
         }
