@@ -43,6 +43,17 @@
       el.textContent = value;
     });
 
+    document.querySelectorAll("[data-i18n-placeholder]").forEach(function (el) {
+      var key = el.getAttribute("data-i18n-placeholder");
+      var value = dict[key] || fallback[key];
+      if (value == null) return;
+      el.setAttribute("placeholder", value);
+    });
+
+    document.querySelectorAll(".lang-switch select").forEach(function (sel) {
+      if (sel.value !== lang) sel.value = lang;
+    });
+
     var metaDesc = document.querySelector('meta[name="description"]');
     if (metaDesc && dict.meta_description) metaDesc.setAttribute("content", dict.meta_description);
 
@@ -58,17 +69,20 @@
   }
 
   function buildLangSwitch() {
-    var select = document.getElementById("lang-select");
-    if (!select) return;
-    SUPPORTED.forEach(function (code) {
-      var opt = document.createElement("option");
-      opt.value = code;
-      opt.textContent = window.LANG_META[code].name;
-      select.appendChild(opt);
-    });
-    select.value = detectLang();
-    select.addEventListener("change", function () {
-      applyLang(select.value);
+    var selects = document.querySelectorAll("#lang-select, #lang-select-mobile");
+    if (!selects.length) return;
+    var current = detectLang();
+    selects.forEach(function (select) {
+      SUPPORTED.forEach(function (code) {
+        var opt = document.createElement("option");
+        opt.value = code;
+        opt.textContent = window.LANG_META[code].name;
+        select.appendChild(opt);
+      });
+      select.value = current;
+      select.addEventListener("change", function () {
+        applyLang(select.value);
+      });
     });
   }
 
@@ -96,7 +110,7 @@
       if (src && img.getAttribute("src") !== src) img.setAttribute("src", src);
     });
 
-    var select = document.getElementById("lang-select");
+    var select = document.querySelector(".lang-switch select");
     applyLang(select ? select.value : detectLang());
   }
 
@@ -183,6 +197,144 @@
     });
   });
 
-  var yearSlot = document.querySelector("[data-year]");
-  if (yearSlot) yearSlot.textContent = String(new Date().getFullYear());
+  /* ---------------- lightbox ---------------- */
+  var lightbox = document.getElementById("lightbox-overlay");
+  var lightboxImage = document.getElementById("lightbox-image");
+  var lightboxCaption = document.getElementById("lightbox-caption");
+  var lightboxClose = document.getElementById("lightbox-close");
+  var lightboxLastFocus = null;
+
+  function currentDict() {
+    var lang = document.documentElement.getAttribute("lang") || DEFAULT_LANG;
+    return window.I18N[lang] || window.I18N[DEFAULT_LANG];
+  }
+
+  function openLightbox(img) {
+    if (!lightbox || !lightboxImage) return;
+    var captionKey = img.getAttribute("data-lightbox-caption");
+    var dict = currentDict();
+    lightboxImage.src = img.currentSrc || img.src;
+    lightboxImage.alt = captionKey ? (dict[captionKey] || "") : "";
+    lightboxCaption.textContent = captionKey ? (dict[captionKey] || "") : "";
+    lightboxLastFocus = document.activeElement;
+    lightbox.classList.add("is-open");
+    lightbox.setAttribute("aria-hidden", "false");
+    document.body.style.overflow = "hidden";
+    if (lightboxClose) lightboxClose.focus();
+  }
+
+  function closeLightbox() {
+    if (!lightbox) return;
+    lightbox.classList.remove("is-open");
+    lightbox.setAttribute("aria-hidden", "true");
+    document.body.style.overflow = "";
+    if (lightboxImage) lightboxImage.src = "";
+    if (lightboxLastFocus && lightboxLastFocus.focus) lightboxLastFocus.focus();
+  }
+
+  document.querySelectorAll("img.zoomable").forEach(function (img) {
+    img.addEventListener("click", function () { openLightbox(img); });
+    img.addEventListener("keydown", function (e) {
+      if (e.key === "Enter" || e.key === " " || e.key === "Spacebar") {
+        e.preventDefault();
+        openLightbox(img);
+      }
+    });
+  });
+
+  if (lightboxClose) lightboxClose.addEventListener("click", closeLightbox);
+  if (lightbox) {
+    lightbox.addEventListener("click", function (e) {
+      if (e.target === lightbox) closeLightbox();
+    });
+  }
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape" && lightbox && lightbox.classList.contains("is-open")) closeLightbox();
+  });
+
+  /* ---------------- feedback -> GitHub issue ---------------- */
+  var feedbackForm = document.getElementById("feedback-form");
+  if (feedbackForm) {
+    feedbackForm.addEventListener("submit", function (e) {
+      e.preventDefault();
+      var dict = currentDict();
+      var titleField = document.getElementById("feedback-title");
+      var descField = document.getElementById("feedback-description");
+      var title = (titleField.value || "").trim();
+      var description = (descField.value || "").trim();
+
+      if (!title || !description) {
+        var msg = dict.feedback_error_required || window.I18N[DEFAULT_LANG].feedback_error_required;
+        (title ? descField : titleField).focus();
+        alert(msg);
+        return;
+      }
+
+      var url = "https://github.com/" + GITHUB_REPO + "/issues/new"
+        + "?title=" + encodeURIComponent(title)
+        + "&body=" + encodeURIComponent(description);
+
+      window.open(url, "_blank", "noopener");
+    });
+  }
+
+  document.querySelectorAll("[data-year]").forEach(function (el) {
+    el.textContent = String(new Date().getFullYear());
+  });
+
+  /* ---------------- latest version (GitHub API, cached) ---------------- */
+  (function () {
+    var wrap = document.getElementById("hero-version");
+    var tagEl = document.getElementById("hero-version-tag");
+    if (!wrap || !tagEl) return;
+
+    var CACHE_KEY = "ttno-latest-release";
+    var CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
+
+    function render(data) {
+      tagEl.textContent = data.tag;
+      tagEl.setAttribute("href", data.url);
+      wrap.hidden = false;
+    }
+
+    function readCache() {
+      try {
+        var raw = localStorage.getItem(CACHE_KEY);
+        if (!raw) return null;
+        var parsed = JSON.parse(raw);
+        if (!parsed || !parsed.data || !parsed.fetchedAt) return null;
+        if (Date.now() - parsed.fetchedAt > CACHE_TTL_MS) return null;
+        return parsed.data;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function writeCache(data) {
+      try {
+        localStorage.setItem(CACHE_KEY, JSON.stringify({ data: data, fetchedAt: Date.now() }));
+      } catch (e) {}
+    }
+
+    var cached = readCache();
+    if (cached) {
+      render(cached);
+      return;
+    }
+
+    fetch("https://api.github.com/repos/" + GITHUB_REPO + "/releases/latest", {
+      headers: { Accept: "application/vnd.github+json" }
+    })
+      .then(function (res) { return res.ok ? res.json() : Promise.reject(res.status); })
+      .then(function (json) {
+        var data = {
+          tag: json.tag_name || json.name || "",
+          url: json.html_url || REPO_LINKS.release
+        };
+        if (!data.tag) return;
+        writeCache(data);
+        render(data);
+      })
+      .catch(function () { /* stay hidden on failure */ });
+  })();
 })();

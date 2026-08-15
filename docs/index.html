@@ -32,6 +32,7 @@
         <a href="#features" data-i18n="nav_features">Features</a>
         <a href="#screenshots" data-i18n="nav_screenshots">Screenshots</a>
         <a href="#download" data-i18n="nav_download">Download</a>
+        <a href="#feedback" data-i18n="nav_feedback">Feedback</a>
       </nav>
 
       <div class="header-controls">
@@ -63,6 +64,11 @@
       <a href="#features" data-i18n="nav_features">Features</a>
       <a href="#screenshots" data-i18n="nav_screenshots">Screenshots</a>
       <a href="#download" data-i18n="nav_download">Download</a>
+      <a href="#feedback" data-i18n="nav_feedback">Feedback</a>
+      <div class="lang-switch">
+        <label class="sr-only" for="lang-select-mobile" data-i18n="lang_label">Language</label>
+        <select id="lang-select-mobile" class="lang-select" aria-label="Language"></select>
+      </div>
     </nav>
   </header>
 
@@ -72,7 +78,11 @@
     <section class="hero" id="top">
       <div class="wrap hero-grid">
         <div class="hero-copy">
-          <p class="eyebrow" data-i18n="hero_eyebrow">Windows · Free &amp; open source</p>
+          <p class="eyebrow">
+            <span data-i18n="hero_eyebrow">Windows · Free &amp; open source</span>
+            <span class="hero-version" id="hero-version" hidden> · <a href="#" data-repo-link="release"
+                target="_blank" rel="noopener" id="hero-version-tag"></a></span>
+          </p>
           <h1>
             <span data-i18n="hero_title_1">A Twitch overlay</span><br>
             <span class="accent" data-i18n="hero_title_2">that stays out of your way.</span>
@@ -113,7 +123,13 @@
 
           <article class="feature-item feature-item-media">
             <div class="feature-media">
-              <img src="img/features/streamlabs_feature.webp" alt="" loading="lazy">
+              <img class="zoomable" src="img/features/streamlabs_feature.webp" alt="" loading="lazy" tabindex="0"
+                role="button" data-lightbox-caption="feat_streamlabs_title">
+              <span class="zoom-hint" aria-hidden="true">
+                <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
+                    d="M7 1a6 6 0 1 0 3.76 10.66l3.79 3.78 1.06-1.06-3.78-3.79A6 6 0 0 0 7 1Zm0 1.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9ZM6.25 4.5v2h-2v1.5h2v2h1.5v-2h2V6.5h-2v-2h-1.5Z" />
+                  </svg>
+              </span>
               <div class="feature-media-placeholder">
                 <span data-i18n="feat_image_pending">Add a screenshot</span>
                 <code>streamlabs_feature.webp</code>
@@ -127,7 +143,13 @@
 
           <article class="feature-item feature-item-media">
             <div class="feature-media">
-              <img src="img/features/events_feature.webp" alt="" loading="lazy">
+              <img class="zoomable" src="img/features/events_feature.webp" alt="" loading="lazy" tabindex="0"
+                role="button" data-lightbox-caption="feat_events_title">
+              <span class="zoom-hint" aria-hidden="true">
+                <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
+                    d="M7 1a6 6 0 1 0 3.76 10.66l3.79 3.78 1.06-1.06-3.78-3.79A6 6 0 0 0 7 1Zm0 1.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9ZM6.25 4.5v2h-2v1.5h2v2h1.5v-2h2V6.5h-2v-2h-1.5Z" />
+                  </svg>
+              </span>
               <div class="feature-media-placeholder">
                 <span data-i18n="feat_image_pending">Add a screenshot</span>
                 <code>events_feature.webp</code>
@@ -141,7 +163,13 @@
 
           <article class="feature-item feature-item-media">
             <div class="feature-media">
-              <img src="img/features/modpanel_feature.webp" alt="" loading="lazy">
+              <img class="zoomable" src="img/features/modpanel_feature.webp" alt="" loading="lazy" tabindex="0"
+                role="button" data-lightbox-caption="feat_mod_title">
+              <span class="zoom-hint" aria-hidden="true">
+                <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
+                    d="M7 1a6 6 0 1 0 3.76 10.66l3.79 3.78 1.06-1.06-3.78-3.79A6 6 0 0 0 7 1Zm0 1.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9ZM6.25 4.5v2h-2v1.5h2v2h1.5v-2h2V6.5h-2v-2h-1.5Z" />
+                  </svg>
+              </span>
               <div class="feature-media-placeholder">
                 <span data-i18n="feat_image_pending">Add a screenshot</span>
                 <code>modpanel_feature.webp</code>
@@ -154,7 +182,13 @@
 
           <article class="feature-item feature-item-media">
             <div class="feature-media">
-              <img src="img/features/alerts_feature.webp" alt="" loading="lazy">
+              <img class="zoomable" src="img/features/alerts_feature.webp" alt="" loading="lazy" tabindex="0"
+                role="button" data-lightbox-caption="feat_alerts_title">
+              <span class="zoom-hint" aria-hidden="true">
+                <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
+                    d="M7 1a6 6 0 1 0 3.76 10.66l3.79 3.78 1.06-1.06-3.78-3.79A6 6 0 0 0 7 1Zm0 1.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9ZM6.25 4.5v2h-2v1.5h2v2h1.5v-2h2V6.5h-2v-2h-1.5Z" />
+                  </svg>
+              </span>
               <div class="feature-media-placeholder">
                 <span data-i18n="feat_image_pending">Add a screenshot</span>
                 <code>alerts_feature.webp</code>
@@ -167,7 +201,13 @@
 
           <article class="feature-item feature-item-media">
             <div class="feature-media">
-              <img src="img/features/viewers_feature.webp" alt="" loading="lazy">
+              <img class="zoomable" src="img/features/viewers_feature.webp" alt="" loading="lazy" tabindex="0"
+                role="button" data-lightbox-caption="feat_viewers_title">
+              <span class="zoom-hint" aria-hidden="true">
+                <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
+                    d="M7 1a6 6 0 1 0 3.76 10.66l3.79 3.78 1.06-1.06-3.78-3.79A6 6 0 0 0 7 1Zm0 1.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9ZM6.25 4.5v2h-2v1.5h2v2h1.5v-2h2V6.5h-2v-2h-1.5Z" />
+                  </svg>
+              </span>
               <div class="feature-media-placeholder">
                 <span data-i18n="feat_image_pending">Add a screenshot</span>
                 <code>viewers_feature.webp</code>
@@ -179,7 +219,13 @@
 
           <article class="feature-item feature-item-media">
             <div class="feature-media">
-              <img src="img/features/alerts_visualalertcolor_customizable_feature.webp" alt="" loading="lazy">
+              <img class="zoomable" src="img/features/alerts_visualalertcolor_customizable_feature.webp" alt="" loading="lazy" tabindex="0"
+                role="button" data-lightbox-caption="feat_alertcolor_title">
+              <span class="zoom-hint" aria-hidden="true">
+                <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
+                    d="M7 1a6 6 0 1 0 3.76 10.66l3.79 3.78 1.06-1.06-3.78-3.79A6 6 0 0 0 7 1Zm0 1.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9ZM6.25 4.5v2h-2v1.5h2v2h1.5v-2h2V6.5h-2v-2h-1.5Z" />
+                  </svg>
+              </span>
               <div class="feature-media-placeholder">
                 <span data-i18n="feat_image_pending">Add a screenshot</span>
                 <code>alerts_visualalertcolor_customizable_feature.webp</code>
@@ -191,7 +237,13 @@
 
           <article class="feature-item feature-item-media">
             <div class="feature-media">
-              <img src="img/features/events_customizable_box_feature.webp" alt="" loading="lazy">
+              <img class="zoomable" src="img/features/events_customizable_box_feature.webp" alt="" loading="lazy" tabindex="0"
+                role="button" data-lightbox-caption="feat_eventbox_title">
+              <span class="zoom-hint" aria-hidden="true">
+                <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
+                    d="M7 1a6 6 0 1 0 3.76 10.66l3.79 3.78 1.06-1.06-3.78-3.79A6 6 0 0 0 7 1Zm0 1.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9ZM6.25 4.5v2h-2v1.5h2v2h1.5v-2h2V6.5h-2v-2h-1.5Z" />
+                  </svg>
+              </span>
               <div class="feature-media-placeholder">
                 <span data-i18n="feat_image_pending">Add a screenshot</span>
                 <code>events_customizable_box_feature.webp</code>
@@ -204,7 +256,13 @@
 
           <article class="feature-item feature-item-media">
             <div class="feature-media">
-              <img src="img/features/events_customizable_gif_feature.webp" alt="" loading="lazy">
+              <img class="zoomable" src="img/features/events_customizable_gif_feature.webp" alt="" loading="lazy" tabindex="0"
+                role="button" data-lightbox-caption="feat_eventgif_title">
+              <span class="zoom-hint" aria-hidden="true">
+                <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
+                    d="M7 1a6 6 0 1 0 3.76 10.66l3.79 3.78 1.06-1.06-3.78-3.79A6 6 0 0 0 7 1Zm0 1.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9ZM6.25 4.5v2h-2v1.5h2v2h1.5v-2h2V6.5h-2v-2h-1.5Z" />
+                  </svg>
+              </span>
               <div class="feature-media-placeholder">
                 <span data-i18n="feat_image_pending">Add a screenshot</span>
                 <code>events_customizable_gif_feature.webp</code>
@@ -217,7 +275,13 @@
 
           <article class="feature-item feature-item-media">
             <div class="feature-media">
-              <img src="img/features/alerts_audio_customizable_feature.webp" alt="" loading="lazy">
+              <img class="zoomable" src="img/features/alerts_audio_customizable_feature.webp" alt="" loading="lazy" tabindex="0"
+                role="button" data-lightbox-caption="feat_alertsound_title">
+              <span class="zoom-hint" aria-hidden="true">
+                <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
+                    d="M7 1a6 6 0 1 0 3.76 10.66l3.79 3.78 1.06-1.06-3.78-3.79A6 6 0 0 0 7 1Zm0 1.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9ZM6.25 4.5v2h-2v1.5h2v2h1.5v-2h2V6.5h-2v-2h-1.5Z" />
+                  </svg>
+              </span>
               <div class="feature-media-placeholder">
                 <span data-i18n="feat_image_pending">Add a screenshot</span>
                 <code>alerts_audio_customizable_feature.webp</code>
@@ -243,10 +307,16 @@
         <div class="shot-grid">
           <figure class="shot">
             <div class="shot-media">
-              <img src="img/screenshots/chat_finished.jpg" alt="" loading="lazy">
+              <img class="zoomable" src="img/screenshots/chat_finished.webp" alt="" loading="lazy" tabindex="0"
+                role="button" data-lightbox-caption="shot_chat_caption">
+              <span class="zoom-hint" aria-hidden="true">
+                <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
+                    d="M7 1a6 6 0 1 0 3.76 10.66l3.79 3.78 1.06-1.06-3.78-3.79A6 6 0 0 0 7 1Zm0 1.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9ZM6.25 4.5v2h-2v1.5h2v2h1.5v-2h2V6.5h-2v-2h-1.5Z" />
+                  </svg>
+              </span>
               <div class="shot-placeholder">
                 <span class="shot-placeholder-hint"><span data-i18n="shot_placeholder_hint">Place</span>
-                  <code>chat_finished.jpg</code> <span data-i18n="shot_placeholder_hint_2">in
+                  <code>chat_finished.webp</code> <span data-i18n="shot_placeholder_hint_2">in
                     img/screenshots/</span></span>
               </div>
             </div>
@@ -255,10 +325,16 @@
 
           <figure class="shot">
             <div class="shot-media">
-              <img src="img/screenshots/events_finished.jpg" alt="" loading="lazy">
+              <img class="zoomable" src="img/screenshots/events_finished.webp" alt="" loading="lazy" tabindex="0"
+                role="button" data-lightbox-caption="shot_events_caption">
+              <span class="zoom-hint" aria-hidden="true">
+                <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
+                    d="M7 1a6 6 0 1 0 3.76 10.66l3.79 3.78 1.06-1.06-3.78-3.79A6 6 0 0 0 7 1Zm0 1.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9ZM6.25 4.5v2h-2v1.5h2v2h1.5v-2h2V6.5h-2v-2h-1.5Z" />
+                  </svg>
+              </span>
               <div class="shot-placeholder">
                 <span class="shot-placeholder-hint"><span data-i18n="shot_placeholder_hint">Place</span>
-                  <code>events_finished.jpg</code> <span data-i18n="shot_placeholder_hint_2">in
+                  <code>events_finished.webp</code> <span data-i18n="shot_placeholder_hint_2">in
                     img/screenshots/</span></span>
               </div>
             </div>
@@ -267,10 +343,16 @@
 
           <figure class="shot">
             <div class="shot-media">
-              <img src="img/screenshots/modpanel_finished.jpg" alt="" loading="lazy">
+              <img class="zoomable" src="img/screenshots/modpanel_finished.webp" alt="" loading="lazy" tabindex="0"
+                role="button" data-lightbox-caption="shot_modpanel_caption">
+              <span class="zoom-hint" aria-hidden="true">
+                <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
+                    d="M7 1a6 6 0 1 0 3.76 10.66l3.79 3.78 1.06-1.06-3.78-3.79A6 6 0 0 0 7 1Zm0 1.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9ZM6.25 4.5v2h-2v1.5h2v2h1.5v-2h2V6.5h-2v-2h-1.5Z" />
+                  </svg>
+              </span>
               <div class="shot-placeholder">
                 <span class="shot-placeholder-hint"><span data-i18n="shot_placeholder_hint">Place</span>
-                  <code>modpanel_finished.jpg</code> <span data-i18n="shot_placeholder_hint_2">in
+                  <code>modpanel_finished.webp</code> <span data-i18n="shot_placeholder_hint_2">in
                     img/screenshots/</span></span>
               </div>
             </div>
@@ -279,10 +361,16 @@
 
           <figure class="shot">
             <div class="shot-media">
-              <img src="img/screenshots/visualalert_finished.jpg" alt="" loading="lazy">
+              <img class="zoomable" src="img/screenshots/visualalert_finished.webp" alt="" loading="lazy" tabindex="0"
+                role="button" data-lightbox-caption="shot_alert_caption">
+              <span class="zoom-hint" aria-hidden="true">
+                <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
+                    d="M7 1a6 6 0 1 0 3.76 10.66l3.79 3.78 1.06-1.06-3.78-3.79A6 6 0 0 0 7 1Zm0 1.5a4.5 4.5 0 1 1 0 9 4.5 4.5 0 0 1 0-9ZM6.25 4.5v2h-2v1.5h2v2h1.5v-2h2V6.5h-2v-2h-1.5Z" />
+                  </svg>
+              </span>
               <div class="shot-placeholder">
                 <span class="shot-placeholder-hint"><span data-i18n="shot_placeholder_hint">Place</span>
-                  <code>visualalert_finished.jpg</code> <span data-i18n="shot_placeholder_hint_2">in
+                  <code>visualalert_finished.webp</code> <span data-i18n="shot_placeholder_hint_2">in
                     img/screenshots/</span></span>
               </div>
             </div>
@@ -349,7 +437,38 @@
       </div>
     </section>
 
+    <!-- FEEDBACK -->
+    <section class="feedback" id="feedback">
+      <div class="wrap">
+        <p class="eyebrow center" data-i18n="feedback_eyebrow">Found a bug?</p>
+        <h2 class="center" data-i18n="feedback_title">Send feedback</h2>
+        <p class="section-subtitle center" data-i18n="feedback_subtitle">Tell us what happened &mdash; it only
+          takes a minute.</p>
+
+        <form class="feedback-form" id="feedback-form" novalidate>
+          <label for="feedback-title" data-i18n="feedback_label_title">Title</label>
+          <input type="text" id="feedback-title" name="title" required maxlength="120"
+            data-i18n-placeholder="feedback_placeholder_title" placeholder="Short summary of the problem">
+
+          <label for="feedback-description" data-i18n="feedback_label_description">Description</label>
+          <textarea id="feedback-description" name="description" rows="6" required
+            data-i18n-placeholder="feedback_placeholder_description"
+            placeholder="What happened, what you expected, and steps to reproduce if you have them"></textarea>
+
+          <button class="btn btn-accent" type="submit" data-i18n="feedback_submit">Send report</button>
+        </form>
+      </div>
+    </section>
+
   </main>
+
+  <div class="lightbox-overlay" id="lightbox-overlay" role="dialog" aria-modal="true" aria-hidden="true">
+    <button class="lightbox-close" type="button" id="lightbox-close" aria-label="Close">&times;</button>
+    <figure class="lightbox-figure">
+      <img id="lightbox-image" src="" alt="">
+      <figcaption class="lightbox-caption" id="lightbox-caption"></figcaption>
+    </figure>
+  </div>
 
   <footer class="site-footer">
     <div class="wrap footer-grid">
@@ -370,9 +489,14 @@
       </div>
 
       <p class="footer-license">
-        <span data-i18n="footer_license">Licensed under the MIT License.</span>
+        <span data-year>2026</span><span data-i18n="footer_license"> TTNOverlay is an open source project,
+          licensed under the MIT License.</span>
         <a href="#" data-repo-link="license" target="_blank" rel="noopener" data-i18n="footer_license_link">View
           LICENSE</a>
+      </p>
+      <p class="footer-credits">
+        <span data-i18n="footer_credits">Development, design, and creation by</span>
+        <a href="https://github.com/1devLion" target="_blank" rel="noopener">1devLion</a>.
       </p>
     </div>
   </footer>
