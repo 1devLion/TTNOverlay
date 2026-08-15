@@ -27,7 +27,9 @@ internal static partial class JaStrings
         ["SlMsg_BitsAmount"] = "{0}ビッツを送りました",
         ["SlMsg_Powerup"] = "Power-Upを使用しました",
         ["SlMsg_PowerupAmount"] = "Power-Upを使用しました（{0}ビッツ）",
+        ["SlMsg_AnonMysteryGift_One"] = "匿名の視聴者が{0}件のミステリーサブスクをギフトしました",
         ["SlMsg_AnonMysteryGift_Other"] = "匿名の視聴者が{0}件のミステリーサブスクをギフトしました",
+        ["SlMsg_MysteryGift_One"] = "{0}件のミステリーサブスクをギフトしました",
         ["SlMsg_MysteryGift_Other"] = "{0}件のミステリーサブスクをギフトしました",
     };
 }

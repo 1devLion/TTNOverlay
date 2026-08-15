@@ -4,6 +4,8 @@ internal static partial class EsStrings
 {
     private static readonly Dictionary<string, string> UpdateEntries = new()
     {
+        ["Update_WhatsNewTitle"] = "Novedades de la versión",
+        ["Update_CloseButton"] = "Cerrar",
         ["Update_AvailableTitle"] = "Actualización disponible",
         ["Update_AvailableMessage"] = "Hay una nueva versión disponible:",
         ["Update_ConfirmButton"] = "Actualizar",

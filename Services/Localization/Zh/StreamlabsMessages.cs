@@ -27,7 +27,9 @@ internal static partial class ZhStrings
         ["SlMsg_BitsAmount"] = "发送了 {0} 比特",
         ["SlMsg_Powerup"] = "使用了 Power-Up",
         ["SlMsg_PowerupAmount"] = "使用了 Power-Up（{0} 比特）",
+        ["SlMsg_AnonMysteryGift_One"] = "一位匿名观众赠送了 {0} 份神秘订阅",
         ["SlMsg_AnonMysteryGift_Other"] = "一位匿名观众赠送了 {0} 份神秘订阅",
+        ["SlMsg_MysteryGift_One"] = "赠送了 {0} 份神秘订阅",
         ["SlMsg_MysteryGift_Other"] = "赠送了 {0} 份神秘订阅",
     };
 }
