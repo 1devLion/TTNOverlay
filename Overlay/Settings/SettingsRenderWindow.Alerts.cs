@@ -160,7 +160,7 @@ internal sealed partial class SettingsRenderWindow
             foreach (var (key, locKey) in IrcGifEventTypes)
                 y = DrawGifListItemRow(target, x, width, y, key, LocalizationService.T(locKey));
 
-            _resetAllGifsButtonRect = new Rect(x, y, 160f, FooterButtonHeight);
+            _resetAllGifsButtonRect = MeasureButtonRect(LocalizationService.T("Settings_Alerts_ResetAllGifs"), x, y, FooterButtonHeight, minWidth: 160f);
             DrawFooterButton(target, _resetAllGifsButtonRect, LocalizationService.T("Settings_Alerts_ResetAllGifs"), primary: false);
             y += FooterButtonHeight + FieldGap;
         }
