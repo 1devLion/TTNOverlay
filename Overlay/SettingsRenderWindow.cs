@@ -170,6 +170,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
             _buttonFormat = DWriteFactory.CreateTextFormat("Segoe UI", FontWeight.Normal, Vortice.DirectWrite.FontStyle.Normal, 13f);
             _buttonFormat.TextAlignment = Vortice.DirectWrite.TextAlignment.Center;
             _buttonFormat.ParagraphAlignment = ParagraphAlignment.Center;
+            _buttonFormat.WordWrapping = Vortice.DirectWrite.WordWrapping.NoWrap;
         }
 
         _titleBarFormat ??= DWriteFactory.CreateTextFormat("Segoe UI", FontWeight.SemiBold, Vortice.DirectWrite.FontStyle.Normal, 18f);
@@ -262,8 +263,24 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         using var layout = DWriteFactory.CreateTextLayout(label, _buttonFormat!, rect.Width, rect.Height);
 
         var textBrush = !enabled ? _secondaryBrush! : primary ? _windowBackgroundBrushInverse ??= target.CreateSolidColorBrush(new Color4(1f, 1f, 1f, 1f)) : _textBrush!;
+
+        target.PushAxisAlignedClip(rect, AntialiasMode.PerPrimitive);
         target.DrawTextLayout(new System.Numerics.Vector2(rect.Left, rect.Top), layout, textBrush);
+        target.PopAxisAlignedClip();
     }
+
+    /// <summary>
+    /// Sizes a button rect to fit its label.
+    /// </summary>
+    private Rect MeasureButtonRect(string label, float x, float y, float height, float minWidth, float horizontalPadding = 16f)
+    {
+        const float measureLayoutWidth = 4000f;
+        using var layout = DWriteFactory.CreateTextLayout(label, _buttonFormat!, measureLayoutWidth, height);
+        float textWidth = (float)layout.Metrics.WidthIncludingTrailingWhitespace;
+        float measuredWidth = textWidth * 1.3f + horizontalPadding * 2f + 6f;
+        return new Rect(x, y, System.Math.Max(minWidth, measuredWidth), height);
+    }
+
 
     private void DrawSidebar(ID2D1DCRenderTarget target, float height)
     {
@@ -317,7 +334,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
 
     private const float RevealButtonWidth = 28f;
 
-    private float DrawTextField(ID2D1DCRenderTarget target, float x, float width, float y, string labelKey, TextBox box, out Rect fieldRect, out Rect revealButtonRect, string? infoKey = null, bool passwordReveal = false, bool enabled = true, string? belowInfoKey = null)
+    private float DrawTextField(ID2D1DCRenderTarget target, float x, float width, float y, string labelKey, TextBox box, out Rect fieldRect, out Rect revealButtonRect, string? infoKey = null, bool passwordReveal = false, bool enabled = true, string? belowInfoKey = null, float? fieldWidth = null)
     {
         using (var label = DWriteFactory.CreateTextLayout(LocalizationService.T(labelKey), _labelFormat!, width, 18f))
             target.DrawTextLayout(new System.Numerics.Vector2(x, y), label, _secondaryBrush!);
@@ -330,9 +347,10 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
             y += 28f;
         }
 
-        float textWidth = passwordReveal ? width - RevealButtonWidth : width;
+        float boxWidth = fieldWidth ?? width;
+        float textWidth = passwordReveal ? boxWidth - RevealButtonWidth : boxWidth;
         fieldRect = new Rect(x, y, textWidth, FieldHeight);
-        var outerRect = new Rect(x, y, width, FieldHeight);
+        var outerRect = new Rect(x, y, boxWidth, FieldHeight);
         revealButtonRect = passwordReveal ? new Rect(x + textWidth, y, RevealButtonWidth, FieldHeight) : default;
 
         var borderBrush = !enabled ? _fieldBorderBrush! : box == _focusedTextBox ? _checkboxBrush! : _fieldBorderBrush!;

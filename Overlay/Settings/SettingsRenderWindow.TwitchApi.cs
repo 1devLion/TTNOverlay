@@ -107,6 +107,15 @@ internal sealed partial class SettingsRenderWindow
         DrawTwitchLoginButton(target, x, y);
     }
 
+    private float LayoutColorRowButtons(string pickLabel, string resetLabel, float rowX, float y, float buttonHeight, out Rect pickRect, out Rect resetRect)
+    {
+        pickRect = MeasureButtonRect(pickLabel, rowX + 24f + 8f, y, buttonHeight, minWidth: 90f);
+
+        float resetY = y + buttonHeight + 6f;
+        resetRect = MeasureButtonRect(resetLabel, rowX, resetY, buttonHeight, minWidth: 170f);
+        return resetY + buttonHeight;
+    }
+
     private float DrawViewerCountColorRow(ID2D1DCRenderTarget target, float x, float width, float y)
     {
         using (var label = DWriteFactory.CreateTextLayout(LocalizationService.T("Settings_TwitchApi_ViewerCountBackground"), _labelFormat!, width, 18f))
