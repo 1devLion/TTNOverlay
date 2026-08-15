@@ -49,6 +49,7 @@ internal sealed partial class SettingsRenderWindow
     private Rect _testFlashButtonRect;
     private Rect _ircGifBrowseButtonRect;
     private Rect _ircGifClearButtonRect;
+    private Rect _ircGifPreviewButtonRect;
     private Rect _resetAllGifsButtonRect;
     private Rect _resetAllColorsButtonRect;
     private readonly Dictionary<string, Rect> _alertsGifBrowseButtonRects = new();
@@ -243,8 +244,25 @@ internal sealed partial class SettingsRenderWindow
 
         _ircGifClearButtonRect = new Rect(x + width - 28f, y, 28f, FieldHeight);
         _ircGifBrowseButtonRect = new Rect(_ircGifClearButtonRect.Left - 8f - 32f, y, 32f, FieldHeight);
-        float pathWidth = _ircGifBrowseButtonRect.Left - x - FieldGap;
-        var pathRect = new Rect(x, y, System.Math.Max(1f, pathWidth), FieldHeight);
+
+        _ircGifPreviewButtonRect = new Rect(x, y, FieldHeight, FieldHeight);
+        float pathLeft = _ircGifPreviewButtonRect.Right + 8f;
+        float pathWidth = _ircGifBrowseButtonRect.Left - pathLeft - FieldGap;
+        var pathRect = new Rect(pathLeft, y, System.Math.Max(1f, pathWidth), FieldHeight);
+
+        target.FillRectangle(_ircGifPreviewButtonRect, _fieldBackgroundBrush!);
+        target.DrawRectangle(_ircGifPreviewButtonRect, _fieldBorderBrush!, 1f);
+        if (enabled && !string.IsNullOrWhiteSpace(_ircEventGifPath))
+        {
+            var thumb = GetOrLoadGifThumbnail(_ircEventGifPath);
+            if (thumb is not null)
+            {
+                target.PushAxisAlignedClip(_ircGifPreviewButtonRect, AntialiasMode.PerPrimitive);
+                target.DrawBitmap(thumb, _ircGifPreviewButtonRect, 1f, BitmapInterpolationMode.Linear, new Rect(0, 0, thumb.Size.Width, thumb.Size.Height));
+                target.PopAxisAlignedClip();
+            }
+            DrawGifPreviewEyeOverlay(target, _ircGifPreviewButtonRect);
+        }
 
         target.FillRectangle(pathRect, _fieldBackgroundBrush!);
         target.DrawRectangle(pathRect, _fieldBorderBrush!, 1f);
@@ -504,6 +522,11 @@ internal sealed partial class SettingsRenderWindow
                 _ircEventGifPath = "";
                 Settings.IrcEventGifPath = "";
                 RequestRender();
+                return;
+            }
+            if (!string.IsNullOrWhiteSpace(_ircEventGifPath) && Contains(_ircGifPreviewButtonRect, clientX, clientY))
+            {
+                OpenGifPreviewWindow(_ircEventGifPath);
                 return;
             }
         }
