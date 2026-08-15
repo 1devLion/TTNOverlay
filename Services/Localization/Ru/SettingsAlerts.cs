@@ -22,7 +22,7 @@ internal static partial class RuStrings
         ["Settings_Alerts_RemoveCustomGifTooltip"] = "Удалить",
         ["Settings_Alerts_ResetAllGifs"] = "Сбросить все пользовательские GIF",
         ["Settings_Alerts_BoxColorHeader"] = "Цвет блока события",
-        ["Settings_Alerts_ColorModeExplanation"] = "\"Тема\" следует теме (сплошной чёрный в тёмной теме, собственный цвет в светлой). \"Оригинал\" всегда использует собственный цвет типа события независимо от темы. \"Пользовательский\" использует выбранный вами цвет.",
+        ["Settings_Alerts_ColorModeExplanation"] = "\"Тема\" следует теме (сплошной чёрный в тёмной теме, сплошной светло-серый в светлой). \"Оригинал\" всегда использует собственный цвет типа события независимо от темы. \"Пользовательский\" использует выбранный вами цвет.",
         ["Settings_Alerts_ColorMode_Theme"] = "Тема",
         ["Settings_Alerts_ColorMode_Original"] = "Оригинал",
         ["Settings_Alerts_ColorMode_Custom"] = "Пользовательский",

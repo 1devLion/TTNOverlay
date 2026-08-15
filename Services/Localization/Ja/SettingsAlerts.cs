@@ -22,7 +22,7 @@ internal static partial class JaStrings
         ["Settings_Alerts_RemoveCustomGifTooltip"] = "削除",
         ["Settings_Alerts_ResetAllGifs"] = "すべてのカスタムGIFをリセット",
         ["Settings_Alerts_BoxColorHeader"] = "イベントボックスの色",
-        ["Settings_Alerts_ColorModeExplanation"] = "「テーマ」はテーマに従います (ダークでは黒一色、ライトでは独自の色)。「オリジナル」はテーマに関係なくイベントタイプ固有の色を常に使用します。「カスタム」は選択した色を使用します。",
+        ["Settings_Alerts_ColorModeExplanation"] = "「テーマ」はテーマに従います (ダークでは黒一色、ライトでは明るいグレー一色)。「オリジナル」はテーマに関係なくイベントタイプ固有の色を常に使用します。「カスタム」は選択した色を使用します。",
         ["Settings_Alerts_ColorMode_Theme"] = "テーマ",
         ["Settings_Alerts_ColorMode_Original"] = "オリジナル",
         ["Settings_Alerts_ColorMode_Custom"] = "カスタム",

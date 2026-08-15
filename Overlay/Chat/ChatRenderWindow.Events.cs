@@ -134,9 +134,15 @@ internal sealed partial class ChatRenderWindow
     private static (string Icon, Color4 BgColor) GetEventStyle(string? eventType, string? announcementColor) =>
         eventType switch
         {
-            "sub" or "resub" => ("🎉", new Color4(0x9B / 255f, 0x4D / 255f, 0xCA / 255f, 1f)),
-            "primepaidupgrade" or "giftpaidupgrade" or "anongiftpaidupgrade" =>
-                ("⭐", new Color4(0x9B / 255f, 0x4D / 255f, 0xCA / 255f, 1f)),
+            "sub" => ("🎉", new Color4(0x9B / 255f, 0x4D / 255f, 0xCA / 255f, 1f)),
+            "resub" => ("🎉", new Color4(0x6D / 255f, 0x28 / 255f, 0xD9 / 255f, 1f)),
+            "subgift" => ("🎁", new Color4(0xC0 / 255f, 0x26 / 255f, 0xD3 / 255f, 1f)),
+            "anonsubgift" => ("🎭", new Color4(0x86 / 255f, 0x19 / 255f, 0x8F / 255f, 1f)),
+            "submysterygift" => ("✨", new Color4(0xDB / 255f, 0x27 / 255f, 0x77 / 255f, 1f)),
+            "anonsubmysterygift" => ("🎭", new Color4(0x9D / 255f, 0x17 / 255f, 0x4D / 255f, 1f)),
+            "primepaidupgrade" => ("⭐", new Color4(0x4F / 255f, 0x46 / 255f, 0xE5 / 255f, 1f)),
+            "giftpaidupgrade" => ("⭐", new Color4(0x7C / 255f, 0x3A / 255f, 0xED / 255f, 1f)),
+            "anongiftpaidupgrade" => ("⭐", new Color4(0x5B / 255f, 0x21 / 255f, 0xB6 / 255f, 1f)),
             "raid" => ("⚔️", new Color4(0xFF / 255f, 0x7A / 255f, 0x00 / 255f, 1f)),
             "ritual" => ("👋", new Color4(0x00 / 255f, 0x9E / 255f, 0x9E / 255f, 1f)),
             "bitsbadgetier" => ("💎", new Color4(0x00 / 255f, 0x90 / 255f, 0xFF / 255f, 1f)),

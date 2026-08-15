@@ -22,7 +22,7 @@ internal static partial class EnStrings
         ["Settings_Alerts_RemoveCustomGifTooltip"] = "Remove",
         ["Settings_Alerts_ResetAllGifs"] = "Reset all custom GIFs",
         ["Settings_Alerts_BoxColorHeader"] = "Event box color",
-        ["Settings_Alerts_ColorModeExplanation"] = "\"Theme\" follows the theme (solid black in Dark, its own color in Light). \"Original\" always uses the event type's own color, regardless of theme. \"Custom\" uses the color you pick.",
+        ["Settings_Alerts_ColorModeExplanation"] = "\"Theme\" follows the theme (solid black in Dark, solid light gray in Light). \"Original\" always uses the event type's own color, regardless of theme. \"Custom\" uses the color you pick.",
         ["Settings_Alerts_ColorMode_Theme"] = "Theme",
         ["Settings_Alerts_ColorMode_Original"] = "Original",
         ["Settings_Alerts_ColorMode_Custom"] = "Custom",

@@ -22,7 +22,7 @@ internal static partial class DeStrings
         ["Settings_Alerts_RemoveCustomGifTooltip"] = "Entfernen",
         ["Settings_Alerts_ResetAllGifs"] = "Alle benutzerdefinierten GIFs zurücksetzen",
         ["Settings_Alerts_BoxColorHeader"] = "Ereignisfeld-Farbe",
-        ["Settings_Alerts_ColorModeExplanation"] = "\"Design\" folgt dem Design (durchgehend schwarz im Dunkel-Modus, eigene Farbe im Hell-Modus). \"Original\" verwendet immer die eigene Farbe des Ereignistyps, unabhängig vom Design. \"Benutzerdefiniert\" verwendet die von Ihnen gewählte Farbe.",
+        ["Settings_Alerts_ColorModeExplanation"] = "\"Design\" folgt dem Design (durchgehend schwarz im Dunkel-Modus, durchgehend hellgrau im Hell-Modus). \"Original\" verwendet immer die eigene Farbe des Ereignistyps, unabhängig vom Design. \"Benutzerdefiniert\" verwendet die von Ihnen gewählte Farbe.",
         ["Settings_Alerts_ColorMode_Theme"] = "Design",
         ["Settings_Alerts_ColorMode_Original"] = "Original",
         ["Settings_Alerts_ColorMode_Custom"] = "Benutzerdefiniert",

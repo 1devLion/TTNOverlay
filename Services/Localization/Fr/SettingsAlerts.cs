@@ -22,7 +22,7 @@ internal static partial class FrStrings
         ["Settings_Alerts_RemoveCustomGifTooltip"] = "Supprimer",
         ["Settings_Alerts_ResetAllGifs"] = "Réinitialiser tous les GIF personnalisés",
         ["Settings_Alerts_BoxColorHeader"] = "Couleur de la boîte d'événement",
-        ["Settings_Alerts_ColorModeExplanation"] = "« Thème » suit le thème (noir uni en sombre, sa propre couleur en clair). « Original » utilise toujours la couleur propre au type d'événement, quel que soit le thème. « Personnalisé » utilise la couleur que vous choisissez.",
+        ["Settings_Alerts_ColorModeExplanation"] = "« Thème » suit le thème (noir uni en sombre, gris clair uni en clair). « Original » utilise toujours la couleur propre au type d'événement, quel que soit le thème. « Personnalisé » utilise la couleur que vous choisissez.",
         ["Settings_Alerts_ColorMode_Theme"] = "Thème",
         ["Settings_Alerts_ColorMode_Original"] = "Original",
         ["Settings_Alerts_ColorMode_Custom"] = "Personnalisé",

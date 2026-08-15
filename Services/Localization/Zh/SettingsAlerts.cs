@@ -22,7 +22,7 @@ internal static partial class ZhStrings
         ["Settings_Alerts_RemoveCustomGifTooltip"] = "移除",
         ["Settings_Alerts_ResetAllGifs"] = "重置所有自定义 GIF",
         ["Settings_Alerts_BoxColorHeader"] = "事件框颜色",
-        ["Settings_Alerts_ColorModeExplanation"] = "“主题”跟随主题（暗色中为纯黑，亮色中为自身颜色）。“原始”始终使用事件类型自身的颜色，不随主题变化。“自定义”使用您选择的颜色。",
+        ["Settings_Alerts_ColorModeExplanation"] = "“主题”跟随主题（暗色中为纯黑，亮色中为纯浅灰）。“原始”始终使用事件类型自身的颜色，不随主题变化。“自定义”使用您选择的颜色。",
         ["Settings_Alerts_ColorMode_Theme"] = "主题",
         ["Settings_Alerts_ColorMode_Original"] = "原始",
         ["Settings_Alerts_ColorMode_Custom"] = "自定义",

@@ -288,10 +288,6 @@ internal sealed partial class SettingsRenderWindow
 
         string mode = _eventBoxColorModes.TryGetValue(key, out var m) ? m : "Theme";
 
-        string swatchHex = mode == "Custom"
-            ? (_eventBoxColors.TryGetValue(key, out var custom) && !string.IsNullOrEmpty(custom) ? custom : defaultHex)
-            : defaultHex;
-
         var chooseRect = new Rect(x + width - 90f, rowTop, 90f, rowContentHeight);
         var swatchRect = new Rect(chooseRect.Left - 8f - 22f, rowTop + 2f, 22f, 22f);
         var modeRect = new Rect(swatchRect.Left - 8f - 120f, rowTop, 120f, rowContentHeight);
@@ -302,11 +298,29 @@ internal sealed partial class SettingsRenderWindow
 
         DrawFooterButton(target, modeRect, ColorModeLabel(mode) + " \u25BE", primary: false);
 
-        if (ColorPickerWindow.TryParseHex(swatchHex, out var cr, out var cg, out var cb))
+        Color4 swatchColor;
+        if (mode == "Custom")
         {
-            using var swatchBrush = target.CreateSolidColorBrush(new Color4(cr / 255f, cg / 255f, cb / 255f, 1f));
-            target.FillRectangle(swatchRect, swatchBrush);
+            string customHex = _eventBoxColors.TryGetValue(key, out var customValue) && !string.IsNullOrEmpty(customValue) ? customValue : defaultHex;
+            swatchColor = ColorPickerWindow.TryParseHex(customHex, out var cr, out var cg, out var cb)
+                ? new Color4(cr / 255f, cg / 255f, cb / 255f, 1f)
+                : new Color4(0f, 0f, 0f, 1f);
         }
+        else if (mode == "Original")
+        {
+            swatchColor = ColorPickerWindow.TryParseHex(defaultHex, out var cr, out var cg, out var cb)
+                ? new Color4(cr / 255f, cg / 255f, cb / 255f, 1f)
+                : new Color4(0f, 0f, 0f, 1f);
+        }
+        else
+        {
+            swatchColor = ThemeService.IsDark
+                ? new Color4(0f, 0f, 0f, 1f)
+                : new Color4(0xE8 / 255f, 0xE8 / 255f, 0xE8 / 255f, 1f);
+        }
+
+        using (var swatchBrush = target.CreateSolidColorBrush(swatchColor))
+            target.FillRectangle(swatchRect, swatchBrush);
         target.DrawRectangle(swatchRect, _fieldBorderBrush!, 1f);
 
         DrawFooterButton(target, chooseRect, LocalizationService.T("Settings_Alerts_ChooseEllipsis"), primary: false, enabled: mode == "Custom");
@@ -327,14 +341,14 @@ internal sealed partial class SettingsRenderWindow
     private static readonly (string Key, string LocKey, string DefaultHex)[] AllEventTypesForColor =
     {
         ("sub", "EventType_Sub", "#9B4DCA"),
-        ("resub", "EventType_Resub", "#9B4DCA"),
-        ("subgift", "EventType_Subgift", "#9B4DCA"),
-        ("anonsubgift", "EventType_AnonSubgift", "#9B4DCA"),
-        ("submysterygift", "EventType_MysteryGift", "#9B4DCA"),
-        ("anonsubmysterygift", "EventType_AnonMysteryGift", "#9B4DCA"),
-        ("primepaidupgrade", "EventType_PrimeUpgrade", "#9B4DCA"),
-        ("giftpaidupgrade", "EventType_GiftUpgrade", "#9B4DCA"),
-        ("anongiftpaidupgrade", "EventType_AnonGiftUpgrade", "#9B4DCA"),
+        ("resub", "EventType_Resub", "#6D28D9"),
+        ("subgift", "EventType_Subgift", "#C026D3"),
+        ("anonsubgift", "EventType_AnonSubgift", "#86198F"),
+        ("submysterygift", "EventType_MysteryGift", "#DB2777"),
+        ("anonsubmysterygift", "EventType_AnonMysteryGift", "#9D174D"),
+        ("primepaidupgrade", "EventType_PrimeUpgrade", "#4F46E5"),
+        ("giftpaidupgrade", "EventType_GiftUpgrade", "#7C3AED"),
+        ("anongiftpaidupgrade", "EventType_AnonGiftUpgrade", "#5B21B6"),
         ("raid", "EventType_Raid", "#FF7A00"),
         ("ritual", "EventType_Ritual", "#009E9E"),
         ("bitsbadgetier", "EventType_BitsBadge", "#0090FF"),

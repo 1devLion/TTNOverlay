@@ -22,7 +22,7 @@ internal static partial class PtStrings
         ["Settings_Alerts_RemoveCustomGifTooltip"] = "Remover",
         ["Settings_Alerts_ResetAllGifs"] = "Redefinir todos os GIFs personalizados",
         ["Settings_Alerts_BoxColorHeader"] = "Cor da caixa de evento",
-        ["Settings_Alerts_ColorModeExplanation"] = "\"Padrão\" respeita o tema (preto uniforme no Escuro, cor própria no Claro). \"Original\" sempre usa a cor própria do tipo de evento, independente do tema. \"Personalizado\" usa a cor que você escolher.",
+        ["Settings_Alerts_ColorModeExplanation"] = "\"Padrão\" respeita o tema (preto uniforme no Escuro, cinza claro uniforme no Claro). \"Original\" sempre usa a cor própria do tipo de evento, independente do tema. \"Personalizado\" usa a cor que você escolher.",
         ["Settings_Alerts_ColorMode_Theme"] = "Padrão",
         ["Settings_Alerts_ColorMode_Original"] = "Original",
         ["Settings_Alerts_ColorMode_Custom"] = "Personalizado",

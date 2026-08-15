@@ -22,7 +22,7 @@ internal static partial class EsStrings
         ["Settings_Alerts_RemoveCustomGifTooltip"] = "Quitar",
         ["Settings_Alerts_ResetAllGifs"] = "Restablecer todos los GIF personalizados",
         ["Settings_Alerts_BoxColorHeader"] = "Color de la caja de evento",
-        ["Settings_Alerts_ColorModeExplanation"] = "\"Predeterminado\" respeta el tema (negro parejo en Oscuro, color propio en Claro). \"Original\" siempre usa el color propio del tipo de evento, sin importar el tema. \"Personalizado\" usa el color que elijas.",
+        ["Settings_Alerts_ColorModeExplanation"] = "\"Predeterminado\" respeta el tema (negro parejo en Oscuro, gris claro parejo en Claro). \"Original\" siempre usa el color propio del tipo de evento, sin importar el tema. \"Personalizado\" usa el color que elijas.",
         ["Settings_Alerts_ColorMode_Theme"] = "Predeterminado",
         ["Settings_Alerts_ColorMode_Original"] = "Original",
         ["Settings_Alerts_ColorMode_Custom"] = "Personalizado",
