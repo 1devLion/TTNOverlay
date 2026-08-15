@@ -56,6 +56,13 @@ internal sealed partial class SettingsRenderWindow
     private readonly Dictionary<string, Rect> _alertsColorModeButtonRects = new();
     private readonly Dictionary<string, Rect> _alertsColorChooseButtonRects = new();
 
+    private readonly Dictionary<string, Rect> _alertsGifPreviewButtonRects = new();
+    private readonly Dictionary<string, ID2D1Bitmap?> _gifThumbnailCache = new();
+    private readonly HashSet<string> _gifThumbnailLoadInFlight = new();
+    private readonly Dictionary<string, D2DBitmapLoader.DecodedImage> _pendingGifThumbnails = new();
+    private const int GifThumbnailPixelSize = 64;
+    private const float GifPreviewSize = 34f;
+
     public event Action<string, byte>? TestFlashRequested;
 
     private void InitAlerts()
@@ -111,8 +118,19 @@ internal sealed partial class SettingsRenderWindow
         _checkboxRects.Clear();
         _alertsGifBrowseButtonRects.Clear();
         _alertsGifClearButtonRects.Clear();
+        _alertsGifPreviewButtonRects.Clear();
         _alertsColorModeButtonRects.Clear();
         _alertsColorChooseButtonRects.Clear();
+
+        if (_pendingGifThumbnails.Count > 0)
+        {
+            foreach (var (path, decoded) in _pendingGifThumbnails)
+            {
+                try { _gifThumbnailCache[path] = D2DBitmapLoader.CreateBitmap(target, decoded, path); }
+                catch { _gifThumbnailCache[path] = null; }
+            }
+            _pendingGifThumbnails.Clear();
+        }
 
         target.PushAxisAlignedClip(new Rect(x, viewportTop, width, viewportHeight), AntialiasMode.PerPrimitive);
         DrawAlertsContent(target, x, width, viewportTop + Padding - _alertsScroll.Offset);
@@ -255,12 +273,28 @@ internal sealed partial class SettingsRenderWindow
         var clearRect = new Rect(x + width - 24f, rowTop, 24f, rowContentHeight);
         var browseRect = new Rect(clearRect.Left - 6f - 28f, rowTop, 28f, rowContentHeight);
         var nameRect = new Rect(x, rowTop, 320f, rowContentHeight);
-        var pathRect = new Rect(nameRect.Right + 8f, rowTop, System.Math.Max(1f, browseRect.Left - nameRect.Right - 8f - FieldGap), rowContentHeight);
+        var previewRect = new Rect(nameRect.Right + 8f, rowTop + (rowContentHeight - GifPreviewSize) / 2f, GifPreviewSize, GifPreviewSize);
+        var pathRect = new Rect(previewRect.Right + 8f, rowTop, System.Math.Max(1f, browseRect.Left - previewRect.Right - 8f - FieldGap), rowContentHeight);
 
         target.PushAxisAlignedClip(nameRect, AntialiasMode.PerPrimitive);
         using (var nameLayout = DWriteFactory.CreateTextLayout(displayName, _labelFormat!, nameRect.Width, nameRect.Height))
             target.DrawTextLayout(new System.Numerics.Vector2(nameRect.Left, nameRect.Top + 2f), nameLayout, _secondaryBrush!);
         target.PopAxisAlignedClip();
+
+        target.FillRectangle(previewRect, _fieldBackgroundBrush!);
+        target.DrawRectangle(previewRect, _fieldBorderBrush!, 1f);
+        if (!string.IsNullOrWhiteSpace(path))
+        {
+            var thumb = GetOrLoadGifThumbnail(path);
+            if (thumb is not null)
+            {
+                target.PushAxisAlignedClip(previewRect, AntialiasMode.PerPrimitive);
+                target.DrawBitmap(thumb, previewRect, 1f, BitmapInterpolationMode.Linear, new Rect(0, 0, thumb.Size.Width, thumb.Size.Height));
+                target.PopAxisAlignedClip();
+            }
+            DrawGifPreviewEyeOverlay(target, previewRect);
+            _alertsGifPreviewButtonRects[key] = previewRect;
+        }
 
         target.FillRectangle(pathRect, _fieldBackgroundBrush!);
         target.DrawRectangle(pathRect, _fieldBorderBrush!, 1f);
@@ -278,6 +312,66 @@ internal sealed partial class SettingsRenderWindow
 
         return y + GifListRowHeight;
     }
+
+    private void DrawGifPreviewEyeOverlay(ID2D1DCRenderTarget target, Rect bounds)
+    {
+        using var dimBrush = target.CreateSolidColorBrush(new Color4(0f, 0f, 0f, 0.4f));
+        target.FillRectangle(bounds, dimBrush);
+
+        float cx = bounds.Left + bounds.Width / 2f;
+        float cy = bounds.Top + bounds.Height / 2f;
+        using var eyeBrush = target.CreateSolidColorBrush(new Color4(1f, 1f, 1f, 1f));
+        target.DrawEllipse(new Ellipse(new System.Numerics.Vector2(cx, cy), 9f, 5.5f), eyeBrush, 1.4f);
+        target.FillEllipse(new Ellipse(new System.Numerics.Vector2(cx, cy), 2.6f, 2.6f), eyeBrush);
+    }
+
+    private ID2D1Bitmap? GetOrLoadGifThumbnail(string path)
+    {
+        if (_gifThumbnailCache.TryGetValue(path, out var cached))
+            return cached;
+
+        if (_gifThumbnailLoadInFlight.Add(path))
+            _ = LoadGifThumbnailAsync(path);
+
+        return null;
+    }
+
+    private async Task LoadGifThumbnailAsync(string path)
+    {
+        var bytes = await LocalImageLoader.ReadBytesAsync(path);
+        D2DBitmapLoader.DecodedImage? decoded = null;
+        if (bytes is not null)
+        {
+            var animated = LocalImageLoader.TryDecodeAnimated(bytes, GifThumbnailPixelSize);
+            decoded = animated is { Count: > 0 }
+                ? D2DBitmapLoader.Decode(animated[0].Image)
+                : LocalImageLoader.TryDecodeStatic(bytes, GifThumbnailPixelSize);
+        }
+
+        PostToUiThread(() =>
+        {
+            _gifThumbnailLoadInFlight.Remove(path);
+            if (decoded is null)
+            {
+                _gifThumbnailCache[path] = null;
+                RequestRender();
+                return;
+            }
+            _pendingGifThumbnails[path] = decoded.Value;
+            RequestRender();
+        });
+    }
+
+    private void DisposeGifThumbnailCache()
+    {
+        foreach (var bmp in _gifThumbnailCache.Values)
+            bmp?.Dispose();
+        _gifThumbnailCache.Clear();
+        _gifThumbnailLoadInFlight.Clear();
+        _pendingGifThumbnails.Clear();
+    }
+
+    private void OpenGifPreviewWindow(string path) => GifPreviewWindow.Show(Hwnd, PostToUiThread, path);
 
     private const float ColorListRowHeight = 36f;
 
@@ -420,6 +514,14 @@ internal sealed partial class SettingsRenderWindow
                 if (Contains(bounds, clientX, clientY)) { BrowseIrcEventGif(key); return; }
             foreach (var (key, bounds) in _alertsGifClearButtonRects)
                 if (Contains(bounds, clientX, clientY)) { ClearAdvancedGif(key); return; }
+            foreach (var (key, bounds) in _alertsGifPreviewButtonRects)
+            {
+                if (!Contains(bounds, clientX, clientY))
+                    continue;
+                if (_ircEventGifPaths.TryGetValue(key, out var previewPath) && !string.IsNullOrWhiteSpace(previewPath))
+                    OpenGifPreviewWindow(previewPath);
+                return;
+            }
             if (Contains(_resetAllGifsButtonRect, clientX, clientY)) { ResetAllGifs(); return; }
         }
 

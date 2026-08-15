@@ -109,25 +109,43 @@ internal sealed class LayeredRenderer : IDisposable
 
     private int _renderCount;
     private bool _needsRebind = true;
+    private bool _inRender;
     public void Render(Action<ID2D1DCRenderTarget> draw)
     {
         if (_memDc == IntPtr.Zero || _width <= 0 || _height <= 0)
             return;
 
-        if (_needsRebind)
+        if (_inRender)
         {
-            _target.BindDC(_memDc, new Rectangle(0, 0, _allocatedWidth, _allocatedHeight));
-            _needsRebind = false;
+            DebugLog.Write("LayeredRenderer.Render: LLAMADA REENTRANTE detectada -- se ignora esta pasada para no corromper el render target en curso");
+            return;
         }
+        _inRender = true;
+        try
+        {
+            if (_needsRebind)
+            {
+                _target.BindDC(_memDc, new Rectangle(0, 0, _allocatedWidth, _allocatedHeight));
+                _needsRebind = false;
+            }
 
-        _target.BeginDraw();
-        _target.Clear(new Color4(0f, 0f, 0f, 0f));
-        draw(_target);
-        _target.EndDraw();
-        UploadToScreen();
+            _target.BeginDraw();
+            _target.Clear(new Color4(0f, 0f, 0f, 0f));
+            draw(_target);
+            _target.EndDraw();
+            UploadToScreen();
 
-        if (++_renderCount % 30 == 0)
-            MemoryDiag.Log($"Render #{_renderCount} (w={_width} h={_height})");
+            if (++_renderCount % 30 == 0)
+                MemoryDiag.Log($"Render #{_renderCount} (w={_width} h={_height})");
+        }
+        catch (Exception ex)
+        {
+            DebugLog.WriteException("LayeredRenderer.Render", ex);
+        }
+        finally
+        {
+            _inRender = false;
+        }
     }
 
     private void UploadToScreen()
@@ -170,4 +188,3 @@ internal sealed class LayeredRenderer : IDisposable
             Win32.DeleteDC(_memDc);
     }
 }
-

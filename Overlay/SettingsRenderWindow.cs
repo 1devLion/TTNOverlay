@@ -871,6 +871,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         _messageSoundPresetDropdown.Dispose();
         _eventSoundPresetDropdown.Dispose();
         _eventColorModeDropdown.Dispose();
+        DisposeGifThumbnailCache();
     }
 
     private void DisposeThemedBrushes()
