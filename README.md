@@ -52,19 +52,25 @@
 
 ### Download
 
-A portable `.exe` available to download in Releases 
+| Platform | Download                                                                           |
+| -------- | ---------------------------------------------------------------------------------- |
+| Windows  | [TTNOverlay-win-Setup.exe](https://github.com/1devLion/TTNOverlay/releases/latest) |
 
-
-| Platform | Download                                                                 |
-| -------- | ------------------------------------------------------------------------ |
-| Windows  | [TTNOverlay.exe](https://github.com/1devLion/TTNOverlay/releases/latest) |
+Installs to your user profile (no admin required) and updates itself automatically.
 
 ## Build
 
-If you want to build it yourself (Needs the .NET 10 SDK): 
+If you want to build it yourself (needs the .NET 10 SDK):
 
 ```powershell
-dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
+dotnet publish TTNOverlay.csproj -c Release -o publish -r win-x64 --self-contained true
+```
+
+To package it as an installer like the one in Releases, you'll also need the [Velopack CLI](https://docs.velopack.io/):
+
+```powershell
+dotnet tool install -g vpk
+vpk pack -u TTNOverlay -v <version> -p publish -e TTNOverlay.exe --icon Resources\icon.ico --splashImage Resources\install_splash.gif --packTitle "TTNOverlay" 
 ```
 
 ## Stack
