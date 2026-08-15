@@ -26,11 +26,11 @@
 ## Screenshots
 
 <div align="center">
-  <img src="docs/img/screenshots/chat_finished.jpg" width="400"/>
-  <img src="docs/img/screenshots/events_finished.jpg" width="400"/>
+  <img src="docs/img/screenshots/chat_finished.webp" width="400"/>
+  <img src="docs/img/screenshots/events_finished.webp" width="400"/>
   <br/><br/>
-  <img src="docs/img/screenshots/modpanel_finished.jpg" width="400"/>
-  <img src="docs/img/screenshots/visualalert_finished.jpg" width="400"/>
+  <img src="docs/img/screenshots/modpanel_finished.webp" width="400"/>
+  <img src="docs/img/screenshots/visualalert_finished.webp" width="400"/>
 </div>
 
 ## Features
