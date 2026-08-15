@@ -24,6 +24,8 @@ publish/
 # Publish profiles (pueden tener rutas/tokens locales)
 Properties/PublishProfiles/*.pubxml.user
 
+TestReleases/
+
 # OS
 .DS_Store
 Thumbs.db
