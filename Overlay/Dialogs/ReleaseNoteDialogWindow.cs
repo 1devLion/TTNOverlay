@@ -85,8 +85,22 @@ internal sealed class ReleaseNotesDialogWindow : OverlayWindowBase
         using var probeFormat = DWriteFactory.CreateTextFormat("Segoe UI", FontWeight.Normal, Vortice.DirectWrite.FontStyle.Normal, 13f);
         probeFormat.WordWrapping = Vortice.DirectWrite.WordWrapping.Wrap;
         float contentWidth = FixedWidth - Padding * 2f;
+
+        // Hay que aplicar los mismos spans (bold + tamaño de header) que OnRender aplica al
+        // dibujar, si no la medición queda más baja que el render real cada vez que hay un
+        // header (#, ##) en las release notes, y el último párrafo termina cortado a la mitad
+        // sin que se detecte que hace falta scroll.
         using (var probe = DWriteFactory.CreateTextLayout(_plainText, probeFormat, contentWidth, float.MaxValue))
+        {
+            foreach (var span in _boldSpans)
+            {
+                var range = new Vortice.DirectWrite.TextRange((uint)span.Start, (uint)span.Length);
+                probe.SetFontWeight(FontWeight.Bold, range);
+                if (span.IsHeader)
+                    probe.SetFontSize(15f, range);
+            }
             _fullMessageHeight = probe.Metrics.Height;
+        }
         _messageHeight = Math.Min(_fullMessageHeight, MaxMessageHeight);
 
         int preferredHeight = (int)(Padding + TitleHeight + TitleGap + _messageHeight + MessageGap + ButtonHeight + Padding);
@@ -99,6 +113,11 @@ internal sealed class ReleaseNotesDialogWindow : OverlayWindowBase
         if (Win32.TryGetCenteredPosition(_ownerHwnd, finalWidth, finalHeight, out int x, out int y))
             Win32.SetWindowPos(Hwnd, IntPtr.Zero, x, y, 0, 0, Win32.SWP_NOSIZE | Win32.SWP_NOZORDER | Win32.SWP_NOACTIVATE);
 
+        // WM_MOUSEWHEEL se entrega a la ventana con foco de teclado, no a la que está bajo el
+        // mouse. Como arriba deshabilitamos _ownerHwnd (donde probablemente seguía el foco),
+        // sin este SetFocus la rueda del mouse no le llega a nadie: el owner está deshabilitado
+        // (no recibe input) y este diálogo nunca la pidió explícitamente.
+        Win32.SetFocus(Hwnd);
     }
     protected override void OnClientMouseMove(int x, int y)
     {
