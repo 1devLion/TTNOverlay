@@ -20,8 +20,7 @@ internal sealed partial class ChatRenderWindow
     private List<(string Id, string Login)> _moderationChatters = new();
     private List<(string Id, string Login, DateTime? ExpiresAt, string Reason)>? _moderationBanned;
 
-    private float _moderationScrollOffset;
-    private float _moderationScrollOverflow;
+    private ScrollState _moderationScroll;
 
     private ID2D1SolidColorBrush? _moderationTextBrush;
     private ID2D1SolidColorBrush? _moderationSecondaryBrush;
@@ -88,4 +87,3 @@ internal sealed partial class ChatRenderWindow
     };
 
 }
-

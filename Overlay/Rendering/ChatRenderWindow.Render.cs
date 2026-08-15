@@ -27,15 +27,8 @@ internal sealed partial class ChatRenderWindow
     private void InvalidateMessageHeightCache() => _messageHeightCache.Clear();
 
     /// <summary>
-    /// Caches the actual IDWriteTextLayout used to draw a non-emote message's body (Paso 2 / draw
-    /// pass of OnRender), keyed the same way as _messageHeightCache (per ChatMessage, tied to a
-    /// ConditionalWeakTable so entries die with the message once it scrolls out and MaxMessages
-    /// trims it -- no manual eviction needed). Without this, DrawBody recreated a fresh layout via
-    /// DWriteFactory.CreateTextLayout on every single frame for every visible non-emote message,
-    /// even though the text/width/format hadn't changed since the previous frame -- the same
-    /// per-frame-recreation problem _wordLayoutCache already solves for the emote path.
-    /// Invalidated (Dispose + Clear) anywhere _bodyFormat itself gets disposed, since a cached
-    /// layout is only valid for the exact IDWriteTextFormat instance it was created with.
+    /// Caches the IDWriteTextLayout used to draw a non-emote message's body, keyed per ChatMessage
+    /// via a ConditionalWeakTable.
     /// </summary>
     private sealed class BodyLayoutCacheEntry
     {
@@ -204,23 +197,17 @@ internal sealed partial class ChatRenderWindow
 
             if (_showingEvents)
             {
-                if (_eventsScrollOffset > 0f)
-                    _eventsScrollOffset += addedAtBottomHeight;
+                _eventsScroll.OnContentGrew(addedAtBottomHeight);
                 _eventsLastNewestMsg = newestMsg;
-
-                _eventsScrollOverflow = overflow;
-                _eventsScrollOffset = Math.Clamp(_eventsScrollOffset, 0f, overflow);
+                _eventsScroll.RecomputeOverflow(totalContentHeight, visibleHeight);
             }
             else
             {
-                if (_messagesScrollOffset > 0f)
-                    _messagesScrollOffset += addedAtBottomHeight;
+                _messagesScroll.OnContentGrew(addedAtBottomHeight);
                 _messagesLastNewestMsg = newestMsg;
-
-                _messagesScrollOverflow = overflow;
-                _messagesScrollOffset = Math.Clamp(_messagesScrollOffset, 0f, overflow);
+                _messagesScroll.RecomputeOverflow(totalContentHeight, visibleHeight);
             }
-            float scrollOffset = _showingEvents ? _eventsScrollOffset : _messagesScrollOffset;
+            float scrollOffset = _showingEvents ? _eventsScroll.Offset : _messagesScroll.Offset;
 
             float startY = y - overflow + scrollOffset;
 

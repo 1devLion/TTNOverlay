@@ -39,11 +39,9 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
     private readonly List<ChatMessage> _messages = new();
     private bool _clickThroughEnabled;
 
-    private float _messagesScrollOffset;
-    private float _messagesScrollOverflow;
+    private ScrollState _messagesScroll;
     private ChatMessage? _messagesLastNewestMsg;
-    private float _eventsScrollOffset;
-    private float _eventsScrollOverflow;
+    private ScrollState _eventsScroll;
     private ChatMessage? _eventsLastNewestMsg;
     private const float ScrollStepPx = 60f;
 
@@ -141,11 +139,11 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
         float deltaPx = (delta / 120f) * ScrollStepPx;
 
         if (_showingModeration)
-            _moderationScrollOffset = Math.Clamp(_moderationScrollOffset - deltaPx, 0f, _moderationScrollOverflow);
+            _moderationScroll.ApplyWheel(deltaPx, invert: true);
         else if (_showingEvents)
-            _eventsScrollOffset = Math.Clamp(_eventsScrollOffset + deltaPx, 0f, _eventsScrollOverflow);
+            _eventsScroll.ApplyWheel(deltaPx);
         else
-            _messagesScrollOffset = Math.Clamp(_messagesScrollOffset + deltaPx, 0f, _messagesScrollOverflow);
+            _messagesScroll.ApplyWheel(deltaPx);
 
         RequestRender();
     }

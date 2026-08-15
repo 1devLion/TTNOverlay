@@ -42,11 +42,9 @@ internal sealed partial class ChatRenderWindow
             return;
 
         float totalHeight = MeasureOrDrawModerationContent(target, maxWidth, 0f, draw: false);
-        float overflow = Math.Max(0f, totalHeight - visibleHeight);
-        _moderationScrollOverflow = overflow;
-        _moderationScrollOffset = Math.Clamp(_moderationScrollOffset, 0f, overflow);
+        _moderationScroll.RecomputeOverflow(totalHeight, visibleHeight);
 
-        float startY = top - _moderationScrollOffset;
+        float startY = top - _moderationScroll.Offset;
 
         target.PushAxisAlignedClip(new Rect(0f, top, width, visibleHeight), AntialiasMode.PerPrimitive);
         try

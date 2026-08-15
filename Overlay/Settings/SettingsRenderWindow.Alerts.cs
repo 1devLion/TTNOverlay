@@ -42,8 +42,7 @@ internal sealed partial class SettingsRenderWindow
 
     private string? _eventColorModeDropdownKey;
 
-    private float _alertsScrollOffset;
-    private float _alertsScrollOverflow;
+    private ScrollState _alertsScroll;
 
     private Rect _flashColorSwatchRect;
     private Rect _pickFlashColorButtonRect;
@@ -107,8 +106,7 @@ internal sealed partial class SettingsRenderWindow
         float viewportHeight = System.Math.Max(0f, winHeight - FooterHeight - viewportTop);
 
         float totalHeight = MeasureAlertsContentHeight();
-        _alertsScrollOverflow = System.Math.Max(0f, totalHeight - viewportHeight);
-        _alertsScrollOffset = System.Math.Clamp(_alertsScrollOffset, 0f, _alertsScrollOverflow);
+        _alertsScroll.RecomputeOverflow(totalHeight, viewportHeight);
 
         _checkboxRects.Clear();
         _alertsGifBrowseButtonRects.Clear();
@@ -117,7 +115,7 @@ internal sealed partial class SettingsRenderWindow
         _alertsColorChooseButtonRects.Clear();
 
         target.PushAxisAlignedClip(new Rect(x, viewportTop, width, viewportHeight), AntialiasMode.PerPrimitive);
-        DrawAlertsContent(target, x, width, viewportTop + Padding - _alertsScrollOffset);
+        DrawAlertsContent(target, x, width, viewportTop + Padding - _alertsScroll.Offset);
         target.PopAxisAlignedClip();
     }
 
@@ -529,10 +527,10 @@ internal sealed partial class SettingsRenderWindow
 
     protected override void OnMouseWheel(int delta, int clientX, int clientY)
     {
-        if (_selectedSection != 4 || _alertsScrollOverflow <= 0f)
+        if (_selectedSection != 4 || _alertsScroll.Overflow <= 0f)
             return;
         const float stepPerNotch = 48f;
-        _alertsScrollOffset = System.Math.Clamp(_alertsScrollOffset - delta / 120f * stepPerNotch, 0f, _alertsScrollOverflow);
+        _alertsScroll.ApplyWheel(delta / 120f * stepPerNotch, invert: true);
         RequestRender();
     }
 
