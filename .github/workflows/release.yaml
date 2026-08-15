@@ -40,10 +40,10 @@ jobs:
 
       - name: Publish app
         run: dotnet publish TTNOverlay.csproj -c Release -o publish -r win-x64 --self-contained true -p:Version=${{ steps.get-version.outputs.version }}
-        
+
       - name: Create Velopack Release
         run: |
           dotnet tool install -g vpk
-          vpk download github --repoUrl https://github.com/${{ github.repository }}
+          vpk download github --repoUrl https://github.com/${{ github.repository }} --token ${{ secrets.GITHUB_TOKEN }}
           vpk pack -u TTNOverlay -v ${{ steps.get-version.outputs.version }} -p publish -e TTNOverlay.exe --releaseNotes RELEASE_NOTES.md --icon Resources\icon.ico --splashImage Resources\install_splash.gif --packTitle "TTNOverlay"
-          vpk upload github --repoUrl https://github.com/${{ github.repository }} --publish --releaseName "TTNOverlay v${{ steps.get-version.outputs.version }}" --tag ${{ github.ref_name }}
+          vpk upload github --repoUrl https://github.com/${{ github.repository }} --publish --releaseName "TTNOverlay v${{ steps.get-version.outputs.version }}" --tag ${{ github.ref_name }} --token ${{ secrets.GITHUB_TOKEN }}
