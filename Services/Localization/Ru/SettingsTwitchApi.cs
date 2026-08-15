@@ -8,6 +8,7 @@ internal static partial class RuStrings
         ["Settings_TwitchApi_LoginInfo"] = "Войдите с Twitch, чтобы включить панель модерации, виджет количества зрителей и значки.",
         ["Settings_TwitchApi_ShowViewerCount"] = "Показывать количество зрителей",
         ["Settings_TwitchApi_ViewerCountBackground"] = "Фон счётчика зрителей",
+        ["Settings_TwitchApi_ViewerCountTextColor"] = "Цвет текста счётчика зрителей",
         ["Settings_TwitchApi_ViewerCountSize"] = "Размер счётчика зрителей",
         ["Settings_TwitchApi_ResetViewerCountColor"] = "Сбросить цвет темы",
         ["Settings_TwitchApi_ShowBadges"] = "Показывать значки",

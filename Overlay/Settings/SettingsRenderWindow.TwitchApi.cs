@@ -33,6 +33,12 @@ internal sealed partial class SettingsRenderWindow
     private Rect _resetViewerCountColorButtonRect;
     private Rect _viewerCountSizeFieldRect;
 
+    private string _viewerCountTextColorHex = "";
+    private string _originalViewerCountTextColorHex = "";
+    private Rect _viewerCountTextColorSwatchRect;
+    private Rect _pickViewerCountTextColorButtonRect;
+    private Rect _resetViewerCountTextColorButtonRect;
+
     private string? _twitchLoginTransientStatus;
     private bool _twitchLoginBusy;
 
@@ -46,6 +52,7 @@ internal sealed partial class SettingsRenderWindow
         _showBadges = Settings.ShowBadges;
         _viewerCountColorHex = Settings.ViewerCountBackgroundColor;
         _viewerCountColorAlpha = Settings.ViewerCountBackgroundAlpha;
+        _viewerCountTextColorHex = Settings.ViewerCountTextColor;
         _viewerCountSizeBox.Text = Settings.ViewerCountSize.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
         _originalEnableTwitchApi = _enableTwitchApi;
@@ -53,6 +60,7 @@ internal sealed partial class SettingsRenderWindow
         _originalShowBadges = _showBadges;
         _originalViewerCountColorHex = _viewerCountColorHex;
         _originalViewerCountColorAlpha = _viewerCountColorAlpha;
+        _originalViewerCountTextColorHex = _viewerCountTextColorHex;
         _originalViewerCountSize = Settings.ViewerCountSize;
     }
 
@@ -63,6 +71,7 @@ internal sealed partial class SettingsRenderWindow
         Settings.ShowBadges = _originalShowBadges;
         Settings.ViewerCountBackgroundColor = _originalViewerCountColorHex;
         Settings.ViewerCountBackgroundAlpha = _originalViewerCountColorAlpha;
+        Settings.ViewerCountTextColor = _originalViewerCountTextColorHex;
         Settings.ViewerCountSize = _originalViewerCountSize;
     }
 
@@ -82,7 +91,8 @@ internal sealed partial class SettingsRenderWindow
         y = DrawCheckboxField(target, x, width, y, "Settings_TwitchApi_Enable", _enableTwitchApi, "EnableTwitchApi");
         y = DrawCheckboxField(target, x, width, y, "Settings_TwitchApi_ShowViewerCount", _showViewerCount, "ShowViewerCount");
         y = DrawViewerCountColorRow(target, x, width, y);
-        y = DrawTextField(target, x, System.Math.Min(width, 120f), y, "Settings_TwitchApi_ViewerCountSize", _viewerCountSizeBox, out _viewerCountSizeFieldRect, out _, enabled: _showViewerCount);
+        y = DrawViewerCountTextColorRow(target, x, width, y);
+        y = DrawTextField(target, x, width, y, "Settings_TwitchApi_ViewerCountSize", _viewerCountSizeBox, out _viewerCountSizeFieldRect, out _, enabled: _showViewerCount, fieldWidth: 120f);
         y = DrawCheckboxField(target, x, width, y, "Settings_TwitchApi_ShowBadges", _showBadges, "ShowBadges");
         y += FieldGap;
 
@@ -115,13 +125,63 @@ internal sealed partial class SettingsRenderWindow
         }
         target.DrawRectangle(_viewerCountColorSwatchRect, _fieldBorderBrush!, 1f);
 
-        _pickViewerCountColorButtonRect = new Rect(x + 24f + 8f, y, 90f, 24f);
-        DrawFooterButton(target, _pickViewerCountColorButtonRect, LocalizationService.T("Settings_Alerts_PickColor"), primary: false, enabled: enabled);
+        string pickLabel = LocalizationService.T("Settings_Alerts_PickColor");
+        string resetLabel = LocalizationService.T("Settings_TwitchApi_ResetViewerCountColor");
+        float rowBottom = LayoutColorRowButtons(pickLabel, resetLabel, x, y, 24f, out _pickViewerCountColorButtonRect, out _resetViewerCountColorButtonRect);
+        DrawFooterButton(target, _pickViewerCountColorButtonRect, pickLabel, primary: false, enabled: enabled);
+        DrawFooterButton(target, _resetViewerCountColorButtonRect, resetLabel, primary: false, enabled: enabled && hasCustomColor);
 
-        _resetViewerCountColorButtonRect = new Rect(_pickViewerCountColorButtonRect.Right + 8f, y, 130f, 24f);
-        DrawFooterButton(target, _resetViewerCountColorButtonRect, LocalizationService.T("Settings_TwitchApi_ResetViewerCountColor"), primary: false, enabled: enabled && hasCustomColor);
+        return rowBottom + FieldGap;
+    }
 
-        return y + 24f + FieldGap;
+    private float DrawViewerCountTextColorRow(ID2D1DCRenderTarget target, float x, float width, float y)
+    {
+        using (var label = DWriteFactory.CreateTextLayout(LocalizationService.T("Settings_TwitchApi_ViewerCountTextColor"), _labelFormat!, width, 18f))
+            target.DrawTextLayout(new System.Numerics.Vector2(x, y), label, _secondaryBrush!);
+        y += 18f + LabelGap;
+
+        bool enabled = _showViewerCount;
+        bool hasCustomColor = !string.IsNullOrWhiteSpace(_viewerCountTextColorHex);
+        string swatchHex = hasCustomColor ? _viewerCountTextColorHex : (ThemeService.IsDark ? "#FFFFFF" : "#000000");
+
+        _viewerCountTextColorSwatchRect = new Rect(x, y, 24f, 24f);
+        if (ColorPickerWindow.TryParseHex(swatchHex, out var cr, out var cg, out var cb))
+        {
+            using var swatchBrush = target.CreateSolidColorBrush(new Color4(cr / 255f, cg / 255f, cb / 255f, enabled ? 1f : 0.3f));
+            target.FillRectangle(_viewerCountTextColorSwatchRect, swatchBrush);
+        }
+        target.DrawRectangle(_viewerCountTextColorSwatchRect, _fieldBorderBrush!, 1f);
+
+        string pickLabel = LocalizationService.T("Settings_Alerts_PickColor");
+        string resetLabel = LocalizationService.T("Settings_TwitchApi_ResetViewerCountColor");
+        float rowBottom = LayoutColorRowButtons(pickLabel, resetLabel, x, y, 24f, out _pickViewerCountTextColorButtonRect, out _resetViewerCountTextColorButtonRect);
+        DrawFooterButton(target, _pickViewerCountTextColorButtonRect, pickLabel, primary: false, enabled: enabled);
+        DrawFooterButton(target, _resetViewerCountTextColorButtonRect, resetLabel, primary: false, enabled: enabled && hasCustomColor);
+
+        return rowBottom + FieldGap;
+    }
+
+    private void OpenViewerCountTextColorPicker()
+    {
+        string current = string.IsNullOrWhiteSpace(_viewerCountTextColorHex)
+            ? (ThemeService.IsDark ? "#FFFFFF" : "#000000")
+            : _viewerCountTextColorHex;
+
+        ColorPickerWindow.Show(Hwnd, PostToUiThread, current, 0xFF, result =>
+        {
+            if (result is null)
+                return;
+            _viewerCountTextColorHex = result.Value.Hex;
+            Settings.ViewerCountTextColor = _viewerCountTextColorHex;
+            RequestRender();
+        });
+    }
+
+    private void ResetViewerCountTextColor()
+    {
+        _viewerCountTextColorHex = "";
+        Settings.ViewerCountTextColor = "";
+        RequestRender();
     }
 
     private void OpenViewerCountColorPicker()
@@ -335,6 +395,8 @@ internal sealed partial class SettingsRenderWindow
         {
             if (Contains(_pickViewerCountColorButtonRect, clientX, clientY)) { OpenViewerCountColorPicker(); return; }
             if (!string.IsNullOrWhiteSpace(_viewerCountColorHex) && Contains(_resetViewerCountColorButtonRect, clientX, clientY)) { ResetViewerCountColor(); return; }
+            if (Contains(_pickViewerCountTextColorButtonRect, clientX, clientY)) { OpenViewerCountTextColorPicker(); return; }
+            if (!string.IsNullOrWhiteSpace(_viewerCountTextColorHex) && Contains(_resetViewerCountTextColorButtonRect, clientX, clientY)) { ResetViewerCountTextColor(); return; }
         }
     }
 }

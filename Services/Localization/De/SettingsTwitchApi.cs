@@ -8,6 +8,7 @@ internal static partial class DeStrings
         ["Settings_TwitchApi_LoginInfo"] = "Melden Sie sich mit Twitch an, um den Moderationsbereich, das Zuschauerzahlen-Widget und Abzeichen zu aktivieren.",
         ["Settings_TwitchApi_ShowViewerCount"] = "Zuschauerzahl anzeigen",
         ["Settings_TwitchApi_ViewerCountBackground"] = "Zuschauerzahl-Hintergrund",
+        ["Settings_TwitchApi_ViewerCountTextColor"] = "Zuschauerzahl-Textfarbe",
         ["Settings_TwitchApi_ViewerCountSize"] = "Zuschauerzahl-Größe",
         ["Settings_TwitchApi_ResetViewerCountColor"] = "Design-Farbe zurücksetzen",
         ["Settings_TwitchApi_ShowBadges"] = "Abzeichen anzeigen",

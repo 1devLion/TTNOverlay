@@ -84,7 +84,7 @@ internal sealed partial class ChatRenderWindow
 
         _viewerCountBadgeBrush ??= target.CreateSolidColorBrush(GetViewerCountBackgroundColor());
 
-        _viewerCountTextBrush ??= target.CreateSolidColorBrush(ThemeService.OverlayText);
+        _viewerCountTextBrush ??= target.CreateSolidColorBrush(GetViewerCountTextColor());
 
         float fontSize = (float)_settings.ViewerCountSize;
         float scale = fontSize / ViewerCountBaseFontSize;
@@ -125,7 +125,7 @@ internal sealed partial class ChatRenderWindow
 
     /// <summary>
     /// Resolves the badge background color: a user-picked color if set (Settings.ViewerCountBackgroundColor),
-    /// otherwise the theme-based default that was previously hardcoded here.
+    /// otherwise the theme-based default.
     /// </summary>
     private Color4 GetViewerCountBackgroundColor()
     {
@@ -139,6 +139,17 @@ internal sealed partial class ChatRenderWindow
         return ThemeService.IsDark
             ? new Color4(0f, 0f, 0f, alpha / 255f)
             : new Color4(0xF2 / 255f, 0xF2 / 255f, 0xF2 / 255f, alpha / 255f);
+    }
+
+    private Color4 GetViewerCountTextColor()
+    {
+        if (!string.IsNullOrWhiteSpace(_settings.ViewerCountTextColor) &&
+            ColorPickerWindow.TryParseHex(_settings.ViewerCountTextColor, out var r, out var g, out var b))
+        {
+            return new Color4(r / 255f, g / 255f, b / 255f, 1f);
+        }
+
+        return ThemeService.OverlayText;
     }
 
     private void DisconnectViewerCount()

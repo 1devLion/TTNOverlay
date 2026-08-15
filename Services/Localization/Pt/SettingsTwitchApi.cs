@@ -8,6 +8,7 @@ internal static partial class PtStrings
         ["Settings_TwitchApi_LoginInfo"] = "Faça login com Twitch para ativar o painel de moderação, o widget de espectadores e os emblemas.",
         ["Settings_TwitchApi_ShowViewerCount"] = "Mostrar quantidade de espectadores",
         ["Settings_TwitchApi_ViewerCountBackground"] = "Fundo do contador de espectadores",
+        ["Settings_TwitchApi_ViewerCountTextColor"] = "Cor do texto do contador de espectadores",
         ["Settings_TwitchApi_ViewerCountSize"] = "Tamanho do contador de espectadores",
         ["Settings_TwitchApi_ResetViewerCountColor"] = "Redefinir cor do tema",
         ["Settings_TwitchApi_ShowBadges"] = "Mostrar emblemas",

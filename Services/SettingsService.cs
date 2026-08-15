@@ -73,6 +73,7 @@ public class AppSettings
     public bool ShowViewerCount { get; set; } = true;
     public string ViewerCountBackgroundColor { get; set; } = "";
     public byte ViewerCountBackgroundAlpha { get; set; } = 0xAA;
+    public string ViewerCountTextColor { get; set; } = "";
     public double ViewerCountSize { get; set; } = 13;
 
     public string StreamlabsSocketToken { get; set; } = "";

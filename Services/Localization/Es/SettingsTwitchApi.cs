@@ -8,6 +8,7 @@ internal static partial class EsStrings
         ["Settings_TwitchApi_LoginInfo"] = "Iniciá sesión con Twitch para activar el panel de moderación, el widget de espectadores y las insignias.",
         ["Settings_TwitchApi_ShowViewerCount"] = "Mostrar cantidad de espectadores",
         ["Settings_TwitchApi_ViewerCountBackground"] = "Fondo del contador de espectadores",
+        ["Settings_TwitchApi_ViewerCountTextColor"] = "Color del texto del contador de espectadores",
         ["Settings_TwitchApi_ViewerCountSize"] = "Tamaño del contador de espectadores",
         ["Settings_TwitchApi_ResetViewerCountColor"] = "Restablecer color del tema",
         ["Settings_TwitchApi_ShowBadges"] = "Mostrar insignias",
