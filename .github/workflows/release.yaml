@@ -2,7 +2,7 @@ name: Release
 
 on:
   push:
-    tags: ['v*']
+    tags: ["v*"]
 
 permissions:
   contents: write
@@ -22,11 +22,25 @@ jobs:
       - name: Install .NET
         uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: '10.0.x'
+          dotnet-version: "10.0.x"
+
+      - name: Generate AppKeyProvider
+        shell: bash
+        run: |
+          mkdir -p Source/Generated
+          cat > Source/Generated/AppKeyProvider.cs << EOF
+          namespace TTNOverlay.Generated
+          {
+              internal static class AppKeyProvider
+              {
+                  public const string Key = "${{ secrets.TWITCH_CLIENT_ID }}";
+              }
+          }
+          EOF
 
       - name: Publish app
         run: dotnet publish TTNOverlay.csproj -c Release -o publish -r win-x64 --self-contained true -p:Version=${{ steps.get-version.outputs.version }}
-
+        
       - name: Create Velopack Release
         run: |
           dotnet tool install -g vpk
