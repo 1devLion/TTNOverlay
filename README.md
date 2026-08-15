@@ -3,10 +3,27 @@
 
   # TTNOverlay
 
+  A multi-function Twitch overlay for Windows: live chat, event alerts, viewer count, and in-app moderation. Transparent, click-through, fully customizable!
+
+  <a href="https://github.com/1devLion/TTNOverlay/releases/latest">
+    <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/1devLion/TTNOverlay">
+  </a>
+  <a href="https://github.com/1devLion/TTNOverlay/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc">
+    <img alt="GitHub issues" src="https://img.shields.io/github/issues/1devLion/TTNOverlay">
+  </a>
+  <br/>
+  <a href="https://ko-fi.com/enubia">
+    <img src="https://img.shields.io/badge/Ko--fi-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white" alt="Ko-Fi" width="92" />
+  </a>
+
+  ---
+
   Live chat, event alerts, viewer count, and in-app moderation. Drawn as a transparent, click-through window right on top of whatever you're playing. Chat works with no login at all. Sign in only for viewer count, badges, and moderation.
 
 
 </div>
+
+## Screenshots
 
 <div align="center">
   <img src="docs/img/screenshots/chat_finished.jpg" width="400"/>
@@ -15,14 +32,6 @@
   <img src="docs/img/screenshots/modpanel_finished.jpg" width="400"/>
   <img src="docs/img/screenshots/visualalert_finished.jpg" width="400"/>
 </div>
-
-## Stack
-
-- .NET 10, Win32 (P/Invoke) + **Vortice.Direct2D1** for a layered, GPU-drawn window.
-- Twitch **IRC over WebSocket** for chat (anonymous, no login required)
-- Twitch **Helix API** + user OAuth for viewer count, badges, and moderation
-- **Streamlabs Socket API** (optional) for donations, follows, hosts, and merch
-- Cloudflare Worker as OAuth token broker (keeps the Twitch client secret off the client)
 
 ## Features
 
@@ -41,23 +50,30 @@
 
 ---
 
-### Get it
+### Download
 
-A portable `.exe` available to download in Releases or, if you want to build it yourself (Needs the .NET 10 SDK): 
+A portable `.exe` available to download in Releases 
+
+
+| Platform | Download                                                                 |
+| -------- | ------------------------------------------------------------------------ |
+| Windows  | [TTNOverlay.exe](https://github.com/1devLion/TTNOverlay/releases/latest) |
+
+## Build
+
+If you want to build it yourself (Needs the .NET 10 SDK): 
 
 ```powershell
 dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true
 ```
 
-## Structure
+## Stack
 
-```
-Overlay/            native windows: main overlay, settings, moderation, rendering, controls
-Twitch/             IRC client, Helix API, OAuth
-Streamlabs/         Socket API client + event mapping
-Services/           settings, moderation, theming, localization, caching, audio, logging
-Models/             chat message and color models
-Native/             Win32 interop (hotkeys)
-```
+- .NET 10, Win32 (P/Invoke) + **Vortice.Direct2D1** for a layered, GPU-drawn window.
+- Twitch **IRC over WebSocket** for chat (anonymous, no login required)
+- Twitch **Helix API** + user OAuth for viewer count, badges, and moderation
+- **Streamlabs Socket API** (optional) for donations, follows, hosts, and merch
+- Cloudflare Worker as OAuth token broker (keeps the Twitch client secret off the client)
 
-MIT licensed. If you like it, [buy me a coffee on Ko-fi](https://ko-fi.com/1devlion/donate) ☕
+## License
+MIT licensed, see more [here](https://github.com/1devLion/TTNOverlay/blob/main/LICENSE)
