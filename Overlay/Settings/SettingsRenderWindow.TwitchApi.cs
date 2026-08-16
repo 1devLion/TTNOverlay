@@ -1,4 +1,3 @@
-using TTNOverlay.Native;
 using TTNOverlay.Overlay.Controls;
 using TTNOverlay.Services;
 using Vortice.Direct2D1;

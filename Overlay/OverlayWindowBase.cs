@@ -2,6 +2,7 @@ using System.Runtime.InteropServices;
 using TTNOverlay.Services;
 using Vortice.Direct2D1;
 using Vortice.DirectWrite;
+using TTNOverlay.Native;
 
 namespace TTNOverlay.Overlay;
 

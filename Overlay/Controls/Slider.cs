@@ -1,4 +1,3 @@
-using Vortice.Mathematics;
 using Rect = Vortice.Mathematics.Rect;
 
 namespace TTNOverlay.Overlay.Controls;

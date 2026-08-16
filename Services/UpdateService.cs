@@ -1,4 +1,3 @@
-using TTNOverlay.Native;
 using TTNOverlay.Overlay;
 using Velopack;
 using Velopack.Sources;

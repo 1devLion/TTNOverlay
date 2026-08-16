@@ -1,5 +1,5 @@
 using TTNOverlay.Services;
-using TTNOverlay.Twitch;
+using TTNOverlay.Native;
 
 namespace TTNOverlay.Overlay;
 

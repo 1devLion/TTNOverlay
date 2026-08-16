@@ -1,5 +1,6 @@
 using System.ComponentModel;
 using System.Runtime.InteropServices;
+using TTNOverlay.Native;
 
 namespace TTNOverlay.Overlay;
 

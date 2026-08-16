@@ -1,4 +1,4 @@
-namespace TTNOverlay.Overlay;
+namespace TTNOverlay.Services;
 
 /// <summary>
 /// Raw BGRA pixel buffer helpers, including nearest-neighbor downscaling for cached images.

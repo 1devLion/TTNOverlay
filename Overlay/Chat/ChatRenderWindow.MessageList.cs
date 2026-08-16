@@ -1,6 +1,4 @@
-using System.Linq;
 using TTNOverlay.Models;
-using TTNOverlay.Services;
 
 namespace TTNOverlay.Overlay;
 

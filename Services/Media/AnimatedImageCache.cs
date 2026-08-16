@@ -1,7 +1,4 @@
-using System.Net.Http;
-using TTNOverlay.Services;
-
-namespace TTNOverlay.Overlay;
+namespace TTNOverlay.Services;
 
 /// <summary>
 /// Downloads and caches decoded animated image frames (GIF/WebP/APNG) by URL, bounded by total memory usage.

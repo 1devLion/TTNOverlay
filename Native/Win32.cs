@@ -1,6 +1,6 @@
 using System.Runtime.InteropServices;
 
-namespace TTNOverlay.Overlay;
+namespace TTNOverlay.Native;
 
 /// <summary>
 /// P/Invoke declarations and constants for the Win32 APIs used by the native overlay windows.

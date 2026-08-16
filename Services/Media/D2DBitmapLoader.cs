@@ -1,14 +1,11 @@
 using System.Drawing;
 using System.Drawing.Imaging;
-using System.IO;
-using System.Net.Http;
 using System.Runtime.InteropServices;
-using TTNOverlay.Services;
 using Vortice.Direct2D1;
 using Vortice.DXGI;
 using Vortice.Mathematics;
 
-namespace TTNOverlay.Overlay;
+namespace TTNOverlay.Services;
 
 /// <summary>
 /// Downloads images and decodes them into Direct2D bitmaps for rendering.

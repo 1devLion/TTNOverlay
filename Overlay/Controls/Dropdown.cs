@@ -1,7 +1,6 @@
 using System.Numerics;
 using Vortice.Direct2D1;
 using Vortice.DirectWrite;
-using Vortice.Mathematics;
 using TTNOverlay.Services;
 using Rect = Vortice.Mathematics.Rect;
 

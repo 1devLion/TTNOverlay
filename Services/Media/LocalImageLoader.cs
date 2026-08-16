@@ -1,8 +1,4 @@
-using System.IO;
-using System.Threading.Tasks;
-using TTNOverlay.Services;
-
-namespace TTNOverlay.Overlay;
+namespace TTNOverlay.Services;
 
 /// <summary>
 /// Reads and decodes local image/GIF/WebP files (unlike D2DBitmapLoader/AnimatedImageCache,

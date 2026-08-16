@@ -1,4 +1,4 @@
-namespace TTNOverlay.Overlay;
+namespace TTNOverlay.Services;
 
 /// <summary>
 /// Minimal GIF decoder that extracts raw BGRA frames for the animated image pipeline.

@@ -1,4 +1,3 @@
-using System;
 using TTNOverlay.Services;
 using Vortice.Direct2D1;
 using Vortice.DirectWrite;

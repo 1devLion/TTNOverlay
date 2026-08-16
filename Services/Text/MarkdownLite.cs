@@ -1,6 +1,6 @@
 using System.Text;
 
-namespace TTNOverlay.Overlay;
+namespace TTNOverlay.Services;
 
 /// <summary>
 /// Very small Markdown subset renderer: strips #, ##, -, *, ** from the raw text and

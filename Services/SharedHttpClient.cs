@@ -1,5 +1,3 @@
-using System.Net.Http;
-
 namespace TTNOverlay.Services;
 
 /// <summary>

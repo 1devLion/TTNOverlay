@@ -1,4 +1,5 @@
-namespace TTNOverlay.Overlay;
+using TTNOverlay.Native;
+namespace TTNOverlay.Services;
 
 /// <summary>
 /// Creates and manages the Windows system tray icon and its context menu.

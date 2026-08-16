@@ -1,7 +1,6 @@
-using System.IO;
 using System.Runtime.InteropServices;
 
-namespace TTNOverlay.Overlay;
+namespace TTNOverlay.Services;
 
 /// <summary>
 /// P/Invoke wrapper around libwebp used to decode static and animated WebP images.

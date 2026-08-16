@@ -1,8 +1,8 @@
 using Vortice.Direct2D1;
 using Vortice.DirectWrite;
-using Vortice.Mathematics;
 using TTNOverlay.Twitch;
 using Rect = Vortice.Mathematics.Rect;
+using TTNOverlay.Services;
 
 namespace TTNOverlay.Overlay;
 

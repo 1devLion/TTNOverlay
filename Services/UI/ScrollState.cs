@@ -1,4 +1,4 @@
-namespace TTNOverlay.Overlay;
+namespace TTNOverlay.Services;
 
 /// <summary>
 /// Offset/overflow pair used by every scrollable list in the app (messages, events,

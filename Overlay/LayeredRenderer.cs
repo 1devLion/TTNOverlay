@@ -5,6 +5,7 @@ using Vortice.Direct2D1;
 using Vortice.DirectWrite;
 using Vortice.DXGI;
 using Vortice.Mathematics;
+using TTNOverlay.Native;
 using static TTNOverlay.Overlay.SharedGraphicsResources;
 
 namespace TTNOverlay.Overlay;

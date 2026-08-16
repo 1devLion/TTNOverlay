@@ -2,6 +2,7 @@ using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using TTNOverlay.Models;
+using TTNOverlay.Native;
 using TTNOverlay.Services;
 using Vortice.Direct2D1;
 using Vortice.DirectWrite;

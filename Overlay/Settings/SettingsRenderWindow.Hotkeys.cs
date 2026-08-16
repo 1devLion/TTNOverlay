@@ -1,9 +1,6 @@
 using TTNOverlay.Native;
-using TTNOverlay.Overlay.Controls;
 using TTNOverlay.Services;
 using Vortice.Direct2D1;
-using Vortice.DirectWrite;
-using Vortice.Mathematics;
 using Rect = Vortice.Mathematics.Rect;
 
 namespace TTNOverlay.Overlay;

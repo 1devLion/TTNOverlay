@@ -1,13 +1,9 @@
-using System.Linq;
-using System.Numerics;
 using System.Text.RegularExpressions;
 using TTNOverlay.Models;
 using TTNOverlay.Native;
 using TTNOverlay.Services;
-using TTNOverlay.Twitch;
 using Vortice.Direct2D1;
 using Vortice.DirectWrite;
-using Vortice.Mathematics;
 
 namespace TTNOverlay.Overlay;
 

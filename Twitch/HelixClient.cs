@@ -1,4 +1,3 @@
-using System.Net.Http;
 using TTNOverlay.Services;
 
 namespace TTNOverlay.Twitch;
