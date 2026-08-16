@@ -21,7 +21,10 @@ internal sealed partial class ChatRenderWindow
     {
         _dashboardEvents.Add(msg);
         while (_dashboardEvents.Count > MaxEventsInDashboard)
+        {
+            RemoveMessageCaches(_dashboardEvents[0]);
             _dashboardEvents.RemoveAt(0);
+        }
 
     }
 

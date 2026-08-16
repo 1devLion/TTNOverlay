@@ -27,7 +27,13 @@ internal sealed partial class ChatRenderWindow
             return;
 
         var cutoff = DateTime.UtcNow.AddSeconds(-_settings.MessageTimeoutSeconds);
-        int removed = _messages.RemoveAll(m => !m.IsPersistent && m.ReceivedAt <= cutoff);
+        int removed = _messages.RemoveAll(m =>
+        {
+            if (m.IsPersistent || m.ReceivedAt > cutoff)
+                return false;
+            RemoveMessageCaches(m);
+            return true;
+        });
         if (removed > 0)
             RequestRender();
     }
@@ -36,7 +42,10 @@ internal sealed partial class ChatRenderWindow
     {
         _messages.Add(msg);
         while (_messages.Count > Math.Max(1, _settings.MaxMessages))
+        {
+            RemoveMessageCaches(_messages[0]);
             _messages.RemoveAt(0);
+        }
 
     }
 

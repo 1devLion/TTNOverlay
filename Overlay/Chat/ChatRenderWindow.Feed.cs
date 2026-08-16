@@ -145,6 +145,8 @@ internal sealed partial class ChatRenderWindow
 
     private void ResetForChannelChange()
     {
+        foreach (var msg in _messages)
+            RemoveMessageCaches(msg);
         _messages.Clear();
 
         _badgeUrls = null;

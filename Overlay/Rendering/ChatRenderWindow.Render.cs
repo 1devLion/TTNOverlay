@@ -1,5 +1,4 @@
 using System.Numerics;
-using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using TTNOverlay.Models;
 using TTNOverlay.Native;
@@ -23,13 +22,24 @@ internal sealed partial class ChatRenderWindow
         public float Height;
     }
 
-    private readonly ConditionalWeakTable<ChatMessage, MessageHeightCacheEntry> _messageHeightCache = new();
+    /// <summary>Keyed by reference, cleaned up explicitly alongside _bodyLayoutCache (see
+    /// RemoveMessageCaches) instead of via ConditionalWeakTable, for the same reason: consistent,
+    /// deterministic cleanup instead of relying on GC to eventually drop the entry.</summary>
+    private readonly Dictionary<ChatMessage, MessageHeightCacheEntry> _messageHeightCache = new();
 
     private void InvalidateMessageHeightCache() => _messageHeightCache.Clear();
 
+    /// <summary>Single entry point for dropping a message from both per-message render caches.
+    /// Call this at every point where a ChatMessage leaves _messages or _dashboardEvents.</summary>
+    private void RemoveMessageCaches(ChatMessage msg)
+    {
+        _messageHeightCache.Remove(msg);
+        RemoveBodyLayoutCacheEntry(msg);
+    }
+
     /// <summary>
     /// Caches the IDWriteTextLayout used to draw a non-emote message's body, keyed per ChatMessage
-    /// via a ConditionalWeakTable.
+    /// by reference.
     /// </summary>
     private sealed class BodyLayoutCacheEntry
     {
@@ -38,13 +48,28 @@ internal sealed partial class ChatRenderWindow
         public IDWriteTextFormat Format = null!;
     }
 
-    private readonly ConditionalWeakTable<ChatMessage, BodyLayoutCacheEntry> _bodyLayoutCache = new();
+    /// <summary>
+    /// Keyed by reference (ChatMessage does not override Equals/GetHashCode), same as every other
+    /// per-message cache. Unlike a ConditionalWeakTable, entries are removed and disposed explicitly
+    /// wherever a ChatMessage leaves _messages/_dashboardEvents, so the native IDWriteTextLayout is
+    /// released immediately instead of waiting on GC + finalization of the COM wrapper.
+    /// </summary>
+    private readonly Dictionary<ChatMessage, BodyLayoutCacheEntry> _bodyLayoutCache = new();
 
     private void InvalidateBodyLayoutCache()
     {
-        foreach (var (_, entry) in _bodyLayoutCache)
+        foreach (var entry in _bodyLayoutCache.Values)
             entry.Layout.Dispose();
         _bodyLayoutCache.Clear();
+    }
+
+    /// <summary>Removes and disposes a single message's cached layout. Call this at every point
+    /// where a ChatMessage is dropped from _messages or _dashboardEvents, mirroring how the image
+    /// and word-layout caches are cleaned up at their own eviction points.</summary>
+    private void RemoveBodyLayoutCacheEntry(ChatMessage msg)
+    {
+        if (_bodyLayoutCache.Remove(msg, out var entry))
+            entry.Layout.Dispose();
     }
 
     private IDWriteTextLayout GetOrCreateBodyLayout(ChatMessage msg, IDWriteTextFormat format, float maxWidth)
@@ -88,13 +113,13 @@ internal sealed partial class ChatRenderWindow
             ? DrawEventBanner(target, msg, x, 0f, maxWidth, float.MaxValue, draw: false)
             : DrawMessage(target, msg, x, 0f, maxWidth, float.MaxValue, draw: false);
 
-        _messageHeightCache.AddOrUpdate(msg, new MessageHeightCacheEntry
+        _messageHeightCache[msg] = new MessageHeightCacheEntry
         {
             Width = maxWidth,
             FontSize = _settings.FontSize,
             Channel = channel,
             Height = height,
-        });
+        };
         return height;
     }
 
