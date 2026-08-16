@@ -11,72 +11,36 @@ namespace TTNOverlay.Overlay;
 internal sealed partial class ChatRenderWindow
 {
 
-    private readonly Dictionary<string, ID2D1Bitmap?> _imageCache = new();
+    private const long MaxCachedImageBytes = 20L * 1024 * 1024;
+    private const int MaxCachedAnimatedFrames = 2000;
+    private const int MaxCachedUsernameBrushes = 128;
+
+    private readonly DisposingLruCache<string, ID2D1Bitmap?> _imageCache =
+        new((int)MaxCachedImageBytes, weigher: ImageBitmapBytes, onEvict: (_, bmp) => bmp?.Dispose());
+
     private readonly HashSet<string> _imageLoadInFlight = new();
 
-    private readonly Dictionary<string, List<(ID2D1Bitmap Bitmap, int DelayMs)>?> _animatedImageCache = new();
+    private readonly DisposingLruCache<string, List<(ID2D1Bitmap Bitmap, int DelayMs)>?> _animatedImageCache =
+        new(MaxCachedAnimatedFrames, weigher: frames => frames?.Count ?? 0, onEvict: (_, frames) => DisposeAnimatedFrames(frames));
 
     private readonly HashSet<string> _animatedLoadInFlight = new();
     private readonly Dictionary<string, (int Index, DateTime NextDueUtc)> _animationState = new();
     private System.Threading.Timer? _animationTimer;
 
-    private const long MaxCachedImageBytes = 20L * 1024 * 1024;
-    private const int MaxCachedAnimatedFrames = 2000;
-    private readonly LinkedList<string> _imageCacheOrder = new();
-    private readonly LinkedList<string> _animatedImageCacheOrder = new();
+    private readonly DisposingLruCache<string, ID2D1SolidColorBrush> _usernameBrushCache =
+        new(MaxCachedUsernameBrushes, onEvict: (_, brush) => brush.Dispose());
 
-    private const int MaxCachedUsernameBrushes = 128;
-    private readonly Dictionary<string, ID2D1SolidColorBrush> _usernameBrushCache = new();
-    private readonly LinkedList<string> _usernameBrushCacheOrder = new();
+    private static int ImageBitmapBytes(ID2D1Bitmap? bmp) =>
+        bmp is null ? 0 : (int)(bmp.Size.Width * bmp.Size.Height * 4);
 
-    /// <summary>
-    /// Running totals kept in sync with _imageCache / _animatedImageCache on every insert and evict.
-    /// </summary>
-    private long _imageCacheBytes;
-    private int _animatedFrameCount;
-
-    private void TouchImageCache(string key)
+    /// <summary>Disposes an evicted/removed animated entry's frames. _animationState is intentionally
+    /// left alone here: AdvanceAnimations already prunes any entry whose cache lookup misses on its
+    /// next tick (at most 33ms later), so cleaning it up here too would be redundant.</summary>
+    private static void DisposeAnimatedFrames(List<(ID2D1Bitmap Bitmap, int DelayMs)>? frames)
     {
-        _imageCacheOrder.Remove(key);
-        _imageCacheOrder.AddLast(key);
-
-        while (_imageCacheBytes > MaxCachedImageBytes && _imageCacheOrder.Count > 0)
-        {
-            var oldest = _imageCacheOrder.First!.Value;
-            _imageCacheOrder.RemoveFirst();
-            if (_imageCache.TryGetValue(oldest, out var bmp))
-            {
-                if (bmp is not null)
-                    _imageCacheBytes -= (long)(bmp.Size.Width * bmp.Size.Height * 4);
-                bmp?.Dispose();
-                _imageCache.Remove(oldest);
-                DebugLog.Write($"TouchImageCache: evict {oldest} (cache > {MaxCachedImageBytes / 1024 / 1024}MB)");
-            }
-        }
-    }
-
-    private void TouchAnimatedCache(string key)
-    {
-        _animatedImageCacheOrder.Remove(key);
-        _animatedImageCacheOrder.AddLast(key);
-
-        while (_animatedFrameCount > MaxCachedAnimatedFrames && _animatedImageCacheOrder.Count > 0)
-        {
-            var oldest = _animatedImageCacheOrder.First!.Value;
-            _animatedImageCacheOrder.RemoveFirst();
-            if (_animatedImageCache.TryGetValue(oldest, out var frames))
-            {
-                if (frames is not null)
-                {
-                    foreach (var f in frames)
-                        f.Bitmap.Dispose();
-                    _animatedFrameCount -= frames.Count;
-                }
-                _animatedImageCache.Remove(oldest);
-                _animationState.Remove(oldest);
-                DebugLog.Write($"TouchAnimatedCache: evict {oldest} ({frames?.Count ?? 0} frames, total > {MaxCachedAnimatedFrames})");
-            }
-        }
+        if (frames is not null)
+            foreach (var f in frames)
+                f.Bitmap.Dispose();
     }
 
     private ID2D1Bitmap? GetOrLoadImageBitmap(string key, string url, int targetSize)
@@ -105,8 +69,7 @@ internal sealed partial class ChatRenderWindow
 
             if (decoded is null)
             {
-                _imageCache[key] = null;
-                TouchImageCache(key);
+                _imageCache.Set(key, null);
                 _loggedWaitingBadges.Remove(key);
                 DebugLog.Write($"LoadImageAsync: {key} cached as null (decode failed)");
                 RequestRender();
@@ -122,17 +85,14 @@ internal sealed partial class ChatRenderWindow
             try
             {
                 var bitmap = D2DBitmapLoader.CreateBitmap(_target, decoded.Value, key);
-                _imageCache[key] = bitmap;
-                _imageCacheBytes += (long)(bitmap.Size.Width * bitmap.Size.Height * 4);
-                TouchImageCache(key);
+                _imageCache.Set(key, bitmap);
                 _loggedWaitingBadges.Remove(key);
                 DebugLog.Write($"LoadImageAsync: {key} inserted into cache OK");
             }
             catch (Exception ex)
             {
                 DebugLog.WriteException($"LoadImageAsync ({key})", ex);
-                _imageCache[key] = null;
-                TouchImageCache(key);
+                _imageCache.Set(key, null);
                 _loggedWaitingBadges.Remove(key);
             }
 
@@ -146,25 +106,8 @@ internal sealed partial class ChatRenderWindow
             return cached;
 
         var brush = target.CreateSolidColorBrush(ParseHexColor(hex));
-        _usernameBrushCache[hex] = brush;
-        TouchUsernameBrushCache(hex);
+        _usernameBrushCache.Set(hex, brush);
         return brush;
-    }
-
-    private void TouchUsernameBrushCache(string hex)
-    {
-        _usernameBrushCacheOrder.Remove(hex);
-        _usernameBrushCacheOrder.AddLast(hex);
-        while (_usernameBrushCacheOrder.Count > MaxCachedUsernameBrushes)
-        {
-            var oldest = _usernameBrushCacheOrder.First!.Value;
-            _usernameBrushCacheOrder.RemoveFirst();
-            if (_usernameBrushCache.TryGetValue(oldest, out var brush))
-            {
-                brush.Dispose();
-                _usernameBrushCache.Remove(oldest);
-            }
-        }
     }
 
     private static Color4 ParseHexColor(string hex)
@@ -187,22 +130,12 @@ internal sealed partial class ChatRenderWindow
 
     private void InvalidateMediaCaches()
     {
-        foreach (var bitmap in _imageCache.Values)
-            bitmap?.Dispose();
         _imageCache.Clear();
-        _imageCacheOrder.Clear();
         _imageLoadInFlight.Clear();
-        _imageCacheBytes = 0;
 
-        foreach (var frames in _animatedImageCache.Values)
-            if (frames is not null)
-                foreach (var f in frames)
-                    f.Bitmap.Dispose();
         _animatedImageCache.Clear();
-        _animatedImageCacheOrder.Clear();
         _animatedLoadInFlight.Clear();
         _animationState.Clear();
-        _animatedFrameCount = 0;
 
         RequestRender();
     }
@@ -245,50 +178,20 @@ internal sealed partial class ChatRenderWindow
         _animationTimer?.Dispose();
         _animationTimer = null;
 
-        foreach (var brush in _usernameBrushCache.Values)
-            brush.Dispose();
         _usernameBrushCache.Clear();
-
-        foreach (var bitmap in _imageCache.Values)
-            bitmap?.Dispose();
         _imageCache.Clear();
-        _imageCacheBytes = 0;
-
-        foreach (var frames in _animatedImageCache.Values)
-            if (frames is not null)
-                foreach (var f in frames)
-                    f.Bitmap.Dispose();
         _animatedImageCache.Clear();
         _animationState.Clear();
-        _animatedFrameCount = 0;
     }
 
     private void PurgeEventIconCaches()
     {
         const string prefix = "eventicon:";
 
-        foreach (var key in _imageCache.Keys.Where(k => k.StartsWith(prefix, StringComparison.Ordinal)).ToList())
-        {
-            if (_imageCache[key] is { } bmp)
-                _imageCacheBytes -= (long)(bmp.Size.Width * bmp.Size.Height * 4);
-            _imageCache[key]?.Dispose();
-            _imageCache.Remove(key);
-            _imageCacheOrder.Remove(key);
-        }
+        _imageCache.RemoveWhere(k => k.StartsWith(prefix, StringComparison.Ordinal));
         _imageLoadInFlight.RemoveWhere(k => k.StartsWith(prefix, StringComparison.Ordinal));
 
-        foreach (var key in _animatedImageCache.Keys.Where(k => k.StartsWith(prefix, StringComparison.Ordinal)).ToList())
-        {
-            if (_animatedImageCache[key] is { } frames)
-            {
-                foreach (var f in frames)
-                    f.Bitmap.Dispose();
-                _animatedFrameCount -= frames.Count;
-            }
-            _animatedImageCache.Remove(key);
-            _animatedImageCacheOrder.Remove(key);
-            _animationState.Remove(key);
-        }
+        _animatedImageCache.RemoveWhere(k => k.StartsWith(prefix, StringComparison.Ordinal));
         _animatedLoadInFlight.RemoveWhere(k => k.StartsWith($"anim:{prefix}", StringComparison.Ordinal));
     }
 
@@ -371,8 +274,7 @@ internal sealed partial class ChatRenderWindow
                 DebugLog.Write(
                     $"LoadAnimatedAsync: {key} has no animation (frames<2) -- staying static, cached as null"
                 );
-                _animatedImageCache[key] = null;
-                TouchAnimatedCache(key);
+                _animatedImageCache.Set(key, null);
                 return;
             }
 
@@ -391,9 +293,7 @@ internal sealed partial class ChatRenderWindow
                     )
                     .ToList();
 
-                _animatedImageCache[key] = bitmaps;
-                _animatedFrameCount += bitmaps.Count;
-                TouchAnimatedCache(key);
+                _animatedImageCache.Set(key, bitmaps);
 
                 if (_animatedImageCache.ContainsKey(key))
                 {

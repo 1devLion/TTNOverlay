@@ -150,18 +150,7 @@ internal sealed partial class ChatRenderWindow
         _badgeUrls = null;
         _thirdPartyEmotes = null;
 
-        var staleBadgeKeys = new List<string>();
-        foreach (var key in _imageCache.Keys)
-            if (key.StartsWith("badge:"))
-                staleBadgeKeys.Add(key);
-        foreach (var key in staleBadgeKeys)
-        {
-            if (_imageCache[key] is { } bmp)
-                _imageCacheBytes -= (long)(bmp.Size.Width * bmp.Size.Height * 4);
-            _imageCache[key]?.Dispose();
-            _imageCache.Remove(key);
-            _imageCacheOrder.Remove(key);
-        }
+        _imageCache.RemoveWhere(k => k.StartsWith("badge:", StringComparison.Ordinal));
         _imageLoadInFlight.RemoveWhere(k => k.StartsWith("badge:"));
 
         foreach (var list in _pendingIrcEventsByFamily.Values)
