@@ -116,7 +116,7 @@ internal sealed partial class ChatRenderWindow
     private void ProcessIncomingEvent(ChatMessage msg, bool isFromStreamlabs)
     {
         var eventType = msg.EventType!;
-        var family = EventFamily(eventType);
+        var family = EventFamily(msg.EventKind);
 
         if (_settings.EventAlertSource == "IrcOnly")
         {
@@ -204,24 +204,23 @@ internal sealed partial class ChatRenderWindow
         TriggerAlert("event");
     }
 
-    private static string? EventFamily(string eventType) =>
-        eventType switch
+    // Groups by canonical EventType instead of enumerating every Twitch/Streamlabs raw-id pair by hand.
+    // This is what makes the IRC/Streamlabs dedup logic above automatically cross-platform: whenever a
+    // future platform (Kick, YouTube, ...) is classified into EventType.Sub/Resub/.../Raid, its events
+    // dedup against Twitch's and Streamlabs' the same way, with no change needed here.
+    private static string? EventFamily(EventType eventKind) =>
+        eventKind switch
         {
-            "sub"
-            or "resub"
-            or "subgift"
-            or "anonsubgift"
-            or "submysterygift"
-            or "anonsubmysterygift"
-            or "primepaidupgrade"
-            or "giftpaidupgrade"
-            or "anongiftpaidupgrade"
-            or "sl_subscription"
-            or "sl_subgift"
-            or "sl_anonsubgift"
-            or "sl_submysterygift"
-            or "sl_anonmysterygift" => "sub",
-            "raid" or "sl_raid" => "raid",
+            EventType.Sub
+            or EventType.Resub
+            or EventType.SubGift
+            or EventType.AnonSubGift
+            or EventType.MysteryGiftSub
+            or EventType.AnonMysteryGiftSub
+            or EventType.PrimeUpgrade
+            or EventType.GiftUpgrade
+            or EventType.AnonGiftUpgrade => "sub",
+            EventType.Raid => "raid",
             _ => null,
         };
 

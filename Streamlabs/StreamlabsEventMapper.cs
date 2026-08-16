@@ -26,13 +26,7 @@ internal static class StreamlabsEventMapper
             yield break;
 
         var type = (typeEl.GetString() ?? "").ToLowerInvariant();
-
-        var normalizedType = type switch
-        {
-            "twitchcharitydonation" => "donation",
-            "cheer" => "bits",
-            _ => type,
-        };
+        var normalizedType = EventTypeIds.NormalizeStreamlabsRawType(type);
 
         if (
             !data.TryGetProperty("message", out var messages)
@@ -60,6 +54,21 @@ internal static class StreamlabsEventMapper
             var months = GetFirstInt(item, "months");
             var amountInt = GetFirstInt(item, "amount");
             var amountStr = GetAmountString(item);
+
+            // Power-ups don't necessarily report "amount" -- Streamlabs' own widget template for this
+            // event type uses {powerUpName}/{bitsSpent} tokens (see ReplacePlaceholders), so read those
+            // directly too. bitsSpent falls back to "amount" when Streamlabs doesn't send a dedicated
+            // bits field, and also backfills amountStr so the built-in (non-custom-template) Power-up
+            // text still shows a bits count.
+            var powerUpName = GetFirstString(item, "powerUpName", "power_up_name", "powerupName");
+            var bitsSpentInt = GetFirstInt(item, "bitsSpent", "bits_spent") ?? amountInt;
+            var bitsSpentStr = bitsSpentInt?.ToString();
+            if (type == "powerup" && string.IsNullOrEmpty(amountStr))
+                amountStr = bitsSpentStr;
+
+            // Merch's own widget template uses {product} (see ReplacePlaceholders) -- Streamlabs sends
+            // the product name flat as "product" on the message item, not under unsavedSettings.
+            var product = GetFirstString(item, "product");
 
             var streakMonths = GetFirstInt(item, "streak_months");
             var subPlanRaw = GetFirstString(item, "sub_plan");
@@ -214,12 +223,17 @@ internal static class StreamlabsEventMapper
                     months: months?.ToString(),
                     streakMonths: streakMonths?.ToString(),
                     subPlan: subPlanName,
-                    viewers: viewersCount?.ToString()
+                    viewers: viewersCount?.ToString(),
+                    powerUpName: powerUpName,
+                    bitsSpent: bitsSpentStr,
+                    product: product
                 );
             }
 
             if (!string.IsNullOrWhiteSpace(comment))
                 eventText += $"\n\"{comment}\"";
+
+            var (eventPlatform, eventKind) = EventTypeIds.Classify(eventType);
 
             yield return new ChatMessage
             {
@@ -227,6 +241,8 @@ internal static class StreamlabsEventMapper
                 IsSystem = true,
                 Color = ChatColors.StreamlabsEvent,
                 EventType = eventType,
+                Platform = eventPlatform,
+                EventKind = eventKind,
                 Text = eventText,
                 StreakMonths = streakMonths,
                 SubPlanName = subPlanName,
@@ -476,7 +492,10 @@ internal static class StreamlabsEventMapper
         string? months,
         string? streakMonths = null,
         string? subPlan = null,
-        string? viewers = null
+        string? viewers = null,
+        string? powerUpName = null,
+        string? bitsSpent = null,
+        string? product = null
     )
     {
         var result = template
@@ -491,7 +510,14 @@ internal static class StreamlabsEventMapper
 
             .Replace("{count}", viewers ?? "?")
             .Replace("{viewers}", viewers ?? "?")
-            .Replace("{raiders}", viewers ?? "?");
+            .Replace("{raiders}", viewers ?? "?")
+
+            .Replace("{powerUpName}", powerUpName ?? "?")
+            .Replace("{power_up_name}", powerUpName ?? "?")
+            .Replace("{bitsSpent}", bitsSpent ?? "?")
+            .Replace("{bits_spent}", bitsSpent ?? "?")
+
+            .Replace("{product}", product ?? "?");
 
         return result;
     }

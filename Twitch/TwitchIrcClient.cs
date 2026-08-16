@@ -187,6 +187,8 @@ public class TwitchIrcClient : ITwitchIrcClient
                 text += $"\n\"{parsed.Trailing}\"";
         }
 
+        var (platform, eventKind) = EventTypeIds.Classify(msgId);
+
         MessageReceived?.Invoke(
             new ChatMessage
             {
@@ -195,6 +197,8 @@ public class TwitchIrcClient : ITwitchIrcClient
                 Text = text,
                 Color = ChatColors.TwitchAnnouncement,
                 EventType = msgId,
+                Platform = platform,
+                EventKind = eventKind,
                 AnnouncementColor = announcementColor,
                 Emotes = emotes,
                 SubPlanName = subInfo?.PlanName,
@@ -228,26 +232,28 @@ public class TwitchIrcClient : ITwitchIrcClient
                 streakMonths = streak;
         }
 
-        (string? Format, string? ImageUrl)? variation = msgId switch
+        var eventKind = EventTypeIds.ParseTwitchMsgId(msgId);
+
+        (string? Format, string? ImageUrl)? variation = eventKind switch
         {
-            "sub" => SubEventVariationResolver.ResolveTierSubVariation(normalizedSubPlan),
-            "resub" => SubEventVariationResolver.ResolveTierSubVariation(normalizedSubPlan),
-            "subgift" => SubEventVariationResolver.ResolveCachedSubVariation(
+            EventType.Sub => SubEventVariationResolver.ResolveTierSubVariation(normalizedSubPlan),
+            EventType.Resub => SubEventVariationResolver.ResolveTierSubVariation(normalizedSubPlan),
+            EventType.SubGift => SubEventVariationResolver.ResolveCachedSubVariation(
                 "subgift",
                 false,
                 normalizedSubPlan
             ),
-            "anonsubgift" => SubEventVariationResolver.ResolveCachedSubVariation(
+            EventType.AnonSubGift => SubEventVariationResolver.ResolveCachedSubVariation(
                 "subgift",
                 true,
                 normalizedSubPlan
             ),
-            "submysterygift" => SubEventVariationResolver.ResolveCachedSubVariation(
+            EventType.MysteryGiftSub => SubEventVariationResolver.ResolveCachedSubVariation(
                 "submysterygift",
                 false,
                 normalizedSubPlan
             ),
-            "anonsubmysterygift" => SubEventVariationResolver.ResolveCachedSubVariation(
+            EventType.AnonMysteryGiftSub => SubEventVariationResolver.ResolveCachedSubVariation(
                 "submysterygift",
                 true,
                 normalizedSubPlan
@@ -339,4 +345,3 @@ public class TwitchIrcClient : ITwitchIrcClient
         _socket?.Dispose();
     }
 }
-

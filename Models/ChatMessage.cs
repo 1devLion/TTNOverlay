@@ -53,6 +53,20 @@ public class ChatMessage
 
     public string? EventType { get; set; }
 
+    /// <summary>
+    /// Which service this event came from, derived from <see cref="EventType"/> via
+    /// <see cref="EventTypeIds.Classify"/>. Null for ordinary chat messages (EventType is null).
+    /// </summary>
+    public Platform? Platform { get; set; }
+
+    /// <summary>
+    /// Canonical classification of <see cref="EventType"/>, derived via <see cref="EventTypeIds.Classify"/>.
+    /// Defaults to Unknown (the same "generic event" appearance as before this field existed) -- it is
+    /// a convenience for switch-based icon/color/family logic, never a replacement for EventType, which
+    /// remains the raw string that is actually persisted and always carries whatever Twitch/Streamlabs sent.
+    /// </summary>
+    public EventType EventKind { get; set; } = global::TTNOverlay.Models.EventType.Unknown;
+
     public string? AnnouncementColor { get; set; }
 
     public int? StreakMonths { get; set; }

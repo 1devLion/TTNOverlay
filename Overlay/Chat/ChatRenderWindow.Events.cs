@@ -29,7 +29,7 @@ internal sealed partial class ChatRenderWindow
 
     private float DrawEventBanner(ID2D1DCRenderTarget target, ChatMessage msg, float x, float y, float maxWidth, float clipHeight, bool draw = true)
     {
-        var (icon, defaultBg) = GetEventStyle(msg.EventType, msg.AnnouncementColor);
+        var (icon, defaultBg) = GetEventStyle(msg.EventKind, msg.Platform, msg.AnnouncementColor);
 
         float iconSize = (float)Math.Ceiling(_settings.FontSize * 1.8);
         string? iconUrl = !string.IsNullOrEmpty(msg.EventImageUrl) ? msg.EventImageUrl : GetIrcEventGifPath(msg);
@@ -131,35 +131,46 @@ internal sealed partial class ChatRenderWindow
             DrawBitmapAt(target, bitmap, x, y, size);
     }
 
-    private static (string Icon, Color4 BgColor) GetEventStyle(string? eventType, string? announcementColor) =>
-        eventType switch
+    // Switches on the canonical (EventType, Platform) pair, not the raw event-id string.
+    // Most kinds render identically regardless of platform (Raid, Announcement, Bits, ...) and use the
+    // "_" wildcard for Platform. A few gift-sub kinds keep DIFFERENT colors per platform on purpose --
+    // that divergence already existed before this refactor (Streamlabs' gift-sub variants were always a
+    // flat purple, distinct from Twitch's own per-type colors), so it's preserved explicitly here
+    // instead of being flattened away. EventType.Unknown (any event this app doesn't specifically
+    // classify yet, on any current or future platform) keeps the generic "info" style, same fallback as
+    // before.
+    private static (string Icon, Color4 BgColor) GetEventStyle(EventType eventKind, Platform? platform, string? announcementColor) =>
+        (eventKind, platform) switch
         {
-            "sub" => ("🎉", new Color4(0x9B / 255f, 0x4D / 255f, 0xCA / 255f, 1f)),
-            "resub" => ("🎉", new Color4(0x6D / 255f, 0x28 / 255f, 0xD9 / 255f, 1f)),
-            "subgift" => ("🎁", new Color4(0xC0 / 255f, 0x26 / 255f, 0xD3 / 255f, 1f)),
-            "anonsubgift" => ("🎭", new Color4(0x86 / 255f, 0x19 / 255f, 0x8F / 255f, 1f)),
-            "submysterygift" => ("✨", new Color4(0xDB / 255f, 0x27 / 255f, 0x77 / 255f, 1f)),
-            "anonsubmysterygift" => ("🎭", new Color4(0x9D / 255f, 0x17 / 255f, 0x4D / 255f, 1f)),
-            "primepaidupgrade" => ("⭐", new Color4(0x4F / 255f, 0x46 / 255f, 0xE5 / 255f, 1f)),
-            "giftpaidupgrade" => ("⭐", new Color4(0x7C / 255f, 0x3A / 255f, 0xED / 255f, 1f)),
-            "anongiftpaidupgrade" => ("⭐", new Color4(0x5B / 255f, 0x21 / 255f, 0xB6 / 255f, 1f)),
-            "raid" => ("⚔️", new Color4(0xFF / 255f, 0x7A / 255f, 0x00 / 255f, 1f)),
-            "ritual" => ("👋", new Color4(0x00 / 255f, 0x9E / 255f, 0x9E / 255f, 1f)),
-            "bitsbadgetier" => ("💎", new Color4(0x00 / 255f, 0x90 / 255f, 0xFF / 255f, 1f)),
-            "announcement" => ("📢", AnnouncementColor(announcementColor)),
+            (EventType.Sub, _) => ("🎉", new Color4(0x9B / 255f, 0x4D / 255f, 0xCA / 255f, 1f)),
+            (EventType.Resub, _) => ("🎉", new Color4(0x6D / 255f, 0x28 / 255f, 0xD9 / 255f, 1f)),
 
-            "sl_donation" => ("💰", new Color4(0x1F / 255f, 0xA0 / 255f, 0x5C / 255f, 1f)),
-            "sl_follow" => ("💜", new Color4(0x9B / 255f, 0x4D / 255f, 0xCA / 255f, 1f)),
-            "sl_host" => ("📡", new Color4(0x00 / 255f, 0x82 / 255f, 0xFF / 255f, 1f)),
-            "sl_merch" => ("🛍️", new Color4(0xFF / 255f, 0x7A / 255f, 0x00 / 255f, 1f)),
-            "sl_subscription" => ("🎉", new Color4(0x9B / 255f, 0x4D / 255f, 0xCA / 255f, 1f)),
-            "sl_bits" or "sl_cheer" => ("💎", new Color4(0x00 / 255f, 0x90 / 255f, 0xFF / 255f, 1f)),
-            "sl_powerup" => ("⚡", new Color4(0x00 / 255f, 0x90 / 255f, 0xFF / 255f, 1f)),
-            "sl_raid" => ("⚔️", new Color4(0xFF / 255f, 0x7A / 255f, 0x00 / 255f, 1f)),
-            "sl_subgift" => ("🎁", new Color4(0x9B / 255f, 0x4D / 255f, 0xCA / 255f, 1f)),
-            "sl_anonsubgift" => ("🎭", new Color4(0x9B / 255f, 0x4D / 255f, 0xCA / 255f, 1f)),
-            "sl_submysterygift" => ("✨", new Color4(0x9B / 255f, 0x4D / 255f, 0xCA / 255f, 1f)),
-            "sl_anonmysterygift" => ("🎭", new Color4(0x9B / 255f, 0x4D / 255f, 0xCA / 255f, 1f)),
+            (EventType.SubGift, Platform.Streamlabs) => ("🎁", new Color4(0x9B / 255f, 0x4D / 255f, 0xCA / 255f, 1f)),
+            (EventType.SubGift, _) => ("🎁", new Color4(0xC0 / 255f, 0x26 / 255f, 0xD3 / 255f, 1f)),
+
+            (EventType.AnonSubGift, Platform.Streamlabs) => ("🎭", new Color4(0x9B / 255f, 0x4D / 255f, 0xCA / 255f, 1f)),
+            (EventType.AnonSubGift, _) => ("🎭", new Color4(0x86 / 255f, 0x19 / 255f, 0x8F / 255f, 1f)),
+
+            (EventType.MysteryGiftSub, Platform.Streamlabs) => ("✨", new Color4(0x9B / 255f, 0x4D / 255f, 0xCA / 255f, 1f)),
+            (EventType.MysteryGiftSub, _) => ("✨", new Color4(0xDB / 255f, 0x27 / 255f, 0x77 / 255f, 1f)),
+
+            (EventType.AnonMysteryGiftSub, Platform.Streamlabs) => ("🎭", new Color4(0x9B / 255f, 0x4D / 255f, 0xCA / 255f, 1f)),
+            (EventType.AnonMysteryGiftSub, _) => ("🎭", new Color4(0x9D / 255f, 0x17 / 255f, 0x4D / 255f, 1f)),
+
+            (EventType.PrimeUpgrade, _) => ("⭐", new Color4(0x4F / 255f, 0x46 / 255f, 0xE5 / 255f, 1f)),
+            (EventType.GiftUpgrade, _) => ("⭐", new Color4(0x7C / 255f, 0x3A / 255f, 0xED / 255f, 1f)),
+            (EventType.AnonGiftUpgrade, _) => ("⭐", new Color4(0x5B / 255f, 0x21 / 255f, 0xB6 / 255f, 1f)),
+            (EventType.Raid, _) => ("⚔️", new Color4(0xFF / 255f, 0x7A / 255f, 0x00 / 255f, 1f)),
+            (EventType.Ritual, _) => ("👋", new Color4(0x00 / 255f, 0x9E / 255f, 0x9E / 255f, 1f)),
+            (EventType.BitsBadgeTier, _) => ("💎", new Color4(0x00 / 255f, 0x90 / 255f, 0xFF / 255f, 1f)),
+            (EventType.Announcement, _) => ("📢", AnnouncementColor(announcementColor)),
+
+            (EventType.Donation, _) => ("💰", new Color4(0x1F / 255f, 0xA0 / 255f, 0x5C / 255f, 1f)),
+            (EventType.Follow, _) => ("💜", new Color4(0x9B / 255f, 0x4D / 255f, 0xCA / 255f, 1f)),
+            (EventType.Host, _) => ("📡", new Color4(0x00 / 255f, 0x82 / 255f, 0xFF / 255f, 1f)),
+            (EventType.Merch, _) => ("🛍️", new Color4(0xFF / 255f, 0x7A / 255f, 0x00 / 255f, 1f)),
+            (EventType.Bits, _) => ("💎", new Color4(0x00 / 255f, 0x90 / 255f, 0xFF / 255f, 1f)),
+            (EventType.PowerUp, _) => ("⚡", new Color4(0x00 / 255f, 0x90 / 255f, 0xFF / 255f, 1f)),
 
             _ => ("ℹ️", new Color4(0x60 / 255f, 0x60 / 255f, 0x60 / 255f, 1f)),
         };

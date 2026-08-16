@@ -1,3 +1,4 @@
+using TTNOverlay.Models;
 using TTNOverlay.Services;
 
 namespace TTNOverlay.Twitch;
@@ -19,25 +20,30 @@ public static class EventTextLocalizer
     )
     {
         var lang = LocalizationService.Instance.CurrentLanguage;
+        var eventKind = EventTypeIds.ParseTwitchMsgId(msgId);
 
-        string? text = msgId switch
+        // Switches on the canonical EventType, not the raw msg-id string -- see EventTypeIds.Classify.
+        // EventType.Unknown (any msg-id Twitch sends that isn't mapped there) falls through to null
+        // below, same as before: the caller (TwitchIrcClient) then falls back to Twitch's own
+        // system-msg text, so an unrecognized event still gets a readable message, never silently
+        // dropped.
+        string? text = eventKind switch
         {
-            "sub" => BuildSub(tags, lang),
-            "resub" => BuildResub(tags, lang),
-            "subgift" => BuildSubgift(tags, lang),
-            "anonsubgift" => BuildAnonSubgift(tags, lang),
-            "submysterygift" => BuildMysteryGift(tags, lang),
-            "anonsubmysterygift" => BuildAnonMysteryGift(tags, lang),
-            "raid" => BuildRaid(tags, lang),
-            "ritual" => BuildRitual(tags, lang),
-            "bitsbadgetier" => BuildBitsBadge(tags, lang),
-            "primepaidupgrade" => BuildPrimeUpgrade(tags, lang),
-            "giftpaidupgrade" => BuildGiftUpgrade(tags, lang),
-            "anongiftpaidupgrade" => BuildAnonGiftUpgrade(lang),
-            "watchstreak" => BuildWatchStreak(tags, lang),
-            "bonus" => BuildBonusGift(tags, lang),
-            "bonusgift" => BuildBonusGift(tags, lang),
-            "viewermilestone" => BuildViewerMilestone(tags, lang),
+            EventType.Sub => BuildSub(tags, lang),
+            EventType.Resub => BuildResub(tags, lang),
+            EventType.SubGift => BuildSubgift(tags, lang),
+            EventType.AnonSubGift => BuildAnonSubgift(tags, lang),
+            EventType.MysteryGiftSub => BuildMysteryGift(tags, lang),
+            EventType.AnonMysteryGiftSub => BuildAnonMysteryGift(tags, lang),
+            EventType.Raid => BuildRaid(tags, lang),
+            EventType.Ritual => BuildRitual(tags, lang),
+            EventType.BitsBadgeTier => BuildBitsBadge(tags, lang),
+            EventType.PrimeUpgrade => BuildPrimeUpgrade(tags, lang),
+            EventType.GiftUpgrade => BuildGiftUpgrade(tags, lang),
+            EventType.AnonGiftUpgrade => BuildAnonGiftUpgrade(lang),
+            EventType.WatchStreak => BuildWatchStreak(tags, lang),
+            EventType.BonusGift => BuildBonusGift(tags, lang),
+            EventType.ViewerMilestone => BuildViewerMilestone(tags, lang),
             _ => null,
         };
 

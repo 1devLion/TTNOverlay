@@ -1,3 +1,4 @@
+using TTNOverlay.Models;
 using TTNOverlay.Native;
 using TTNOverlay.Overlay.Controls;
 using TTNOverlay.Services;
@@ -449,50 +450,54 @@ internal sealed partial class SettingsRenderWindow
         _ => LocalizationService.T("Settings_Alerts_ColorMode_Theme"),
     };
 
+    // Keys are the exact strings persisted in settings.json (EventBoxColorModes/EventBoxColors), sourced
+    // from EventTypeIds instead of typed out by hand -- same values as before, just centralized. Adding
+    // a Kick/YouTube event to this list later means adding its id block + constants in EventTypeIds and
+    // one line here; nothing about the rendering/parsing logic elsewhere needs to change for that.
     private static readonly (string Key, string LocKey, string DefaultHex)[] AllEventTypesForColor =
     {
-        ("sub", "EventType_Sub", "#9B4DCA"),
-        ("resub", "EventType_Resub", "#6D28D9"),
-        ("subgift", "EventType_Subgift", "#C026D3"),
-        ("anonsubgift", "EventType_AnonSubgift", "#86198F"),
-        ("submysterygift", "EventType_MysteryGift", "#DB2777"),
-        ("anonsubmysterygift", "EventType_AnonMysteryGift", "#9D174D"),
-        ("primepaidupgrade", "EventType_PrimeUpgrade", "#4F46E5"),
-        ("giftpaidupgrade", "EventType_GiftUpgrade", "#7C3AED"),
-        ("anongiftpaidupgrade", "EventType_AnonGiftUpgrade", "#5B21B6"),
-        ("raid", "EventType_Raid", "#FF7A00"),
-        ("ritual", "EventType_Ritual", "#009E9E"),
-        ("bitsbadgetier", "EventType_BitsBadge", "#0090FF"),
-        ("announcement", "EventType_Announcement", "#1F69FF"),
-        ("sl_donation", "EventType_SlDonation", "#1FA05C"),
-        ("sl_follow", "EventType_SlFollow", "#9B4DCA"),
-        ("sl_host", "EventType_SlHost", "#0082FF"),
-        ("sl_merch", "EventType_SlMerch", "#FF7A00"),
-        ("sl_subscription", "EventType_SlSubscription", "#9B4DCA"),
-        ("sl_bits", "EventType_SlBits", "#0090FF"),
-        ("sl_powerup", "EventType_SlPowerup", "#0090FF"),
-        ("sl_raid", "EventType_SlRaid", "#FF7A00"),
-        ("sl_subgift", "EventType_SlSubgift", "#9B4DCA"),
-        ("sl_anonsubgift", "EventType_SlAnonSubgift", "#9B4DCA"),
-        ("sl_submysterygift", "EventType_SlMysteryGift", "#9B4DCA"),
-        ("sl_anonmysterygift", "EventType_SlAnonMysteryGift", "#9B4DCA"),
+        (EventTypeIds.Twitch.Sub, "EventType_Sub", "#9B4DCA"),
+        (EventTypeIds.Twitch.Resub, "EventType_Resub", "#6D28D9"),
+        (EventTypeIds.Twitch.SubGift, "EventType_Subgift", "#C026D3"),
+        (EventTypeIds.Twitch.AnonSubGift, "EventType_AnonSubgift", "#86198F"),
+        (EventTypeIds.Twitch.SubMysteryGift, "EventType_MysteryGift", "#DB2777"),
+        (EventTypeIds.Twitch.AnonSubMysteryGift, "EventType_AnonMysteryGift", "#9D174D"),
+        (EventTypeIds.Twitch.PrimePaidUpgrade, "EventType_PrimeUpgrade", "#4F46E5"),
+        (EventTypeIds.Twitch.GiftPaidUpgrade, "EventType_GiftUpgrade", "#7C3AED"),
+        (EventTypeIds.Twitch.AnonGiftPaidUpgrade, "EventType_AnonGiftUpgrade", "#5B21B6"),
+        (EventTypeIds.Twitch.Raid, "EventType_Raid", "#FF7A00"),
+        (EventTypeIds.Twitch.Ritual, "EventType_Ritual", "#009E9E"),
+        (EventTypeIds.Twitch.BitsBadgeTier, "EventType_BitsBadge", "#0090FF"),
+        (EventTypeIds.Twitch.Announcement, "EventType_Announcement", "#1F69FF"),
+        (EventTypeIds.Streamlabs.Donation, "EventType_SlDonation", "#1FA05C"),
+        (EventTypeIds.Streamlabs.Follow, "EventType_SlFollow", "#9B4DCA"),
+        (EventTypeIds.Streamlabs.Host, "EventType_SlHost", "#0082FF"),
+        (EventTypeIds.Streamlabs.Merch, "EventType_SlMerch", "#FF7A00"),
+        (EventTypeIds.Streamlabs.Subscription, "EventType_SlSubscription", "#9B4DCA"),
+        (EventTypeIds.Streamlabs.Bits, "EventType_SlBits", "#0090FF"),
+        (EventTypeIds.Streamlabs.PowerUp, "EventType_SlPowerup", "#0090FF"),
+        (EventTypeIds.Streamlabs.Raid, "EventType_SlRaid", "#FF7A00"),
+        (EventTypeIds.Streamlabs.SubGift, "EventType_SlSubgift", "#9B4DCA"),
+        (EventTypeIds.Streamlabs.AnonSubGift, "EventType_SlAnonSubgift", "#9B4DCA"),
+        (EventTypeIds.Streamlabs.SubMysteryGift, "EventType_SlMysteryGift", "#9B4DCA"),
+        (EventTypeIds.Streamlabs.AnonMysteryGift, "EventType_SlAnonMysteryGift", "#9B4DCA"),
     };
 
     private static readonly (string Key, string LocKey)[] IrcGifEventTypes =
     {
-        ("sub", "EventType_Sub"),
-        ("resub", "EventType_Resub"),
-        ("raid", "EventType_Raid"),
-        ("ritual", "EventType_Short_NewChatter"),
-        ("bitsbadgetier", "EventType_BitsBadge"),
-        ("announcement", "EventType_Announcement"),
-        ("primepaidupgrade", "EventType_Short_PrimeUpgrade"),
-        ("giftpaidupgrade", "EventType_Short_GiftUpgrade"),
-        ("anongiftpaidupgrade", "EventType_Short_AnonGiftUpgrade"),
-        ("subgift", "EventType_Short_GiftedSub"),
-        ("anonsubgift", "EventType_Short_AnonGiftedSub"),
-        ("submysterygift", "EventType_Short_MysterySub"),
-        ("anonsubmysterygift", "EventType_Short_AnonMysterySub"),
+        (EventTypeIds.Twitch.Sub, "EventType_Sub"),
+        (EventTypeIds.Twitch.Resub, "EventType_Resub"),
+        (EventTypeIds.Twitch.Raid, "EventType_Raid"),
+        (EventTypeIds.Twitch.Ritual, "EventType_Short_NewChatter"),
+        (EventTypeIds.Twitch.BitsBadgeTier, "EventType_BitsBadge"),
+        (EventTypeIds.Twitch.Announcement, "EventType_Announcement"),
+        (EventTypeIds.Twitch.PrimePaidUpgrade, "EventType_Short_PrimeUpgrade"),
+        (EventTypeIds.Twitch.GiftPaidUpgrade, "EventType_Short_GiftUpgrade"),
+        (EventTypeIds.Twitch.AnonGiftPaidUpgrade, "EventType_Short_AnonGiftUpgrade"),
+        (EventTypeIds.Twitch.SubGift, "EventType_Short_GiftedSub"),
+        (EventTypeIds.Twitch.AnonSubGift, "EventType_Short_AnonGiftedSub"),
+        (EventTypeIds.Twitch.SubMysteryGift, "EventType_Short_MysterySub"),
+        (EventTypeIds.Twitch.AnonSubMysteryGift, "EventType_Short_AnonMysterySub"),
     };
 
     private void HandleAlertsSectionClick(int clientX, int clientY)
