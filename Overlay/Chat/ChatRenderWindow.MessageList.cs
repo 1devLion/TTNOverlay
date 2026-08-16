@@ -26,7 +26,7 @@ internal sealed partial class ChatRenderWindow
         if (_messages.Count == 0 || _settings.MessageTimeoutSeconds <= 0)
             return;
 
-        var cutoff = DateTime.Now.AddSeconds(-_settings.MessageTimeoutSeconds);
+        var cutoff = DateTime.UtcNow.AddSeconds(-_settings.MessageTimeoutSeconds);
         int removed = _messages.RemoveAll(m => !m.IsPersistent && m.ReceivedAt <= cutoff);
         if (removed > 0)
             RequestRender();

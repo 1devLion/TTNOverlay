@@ -36,7 +36,7 @@ public class ChatMessage
     public string Text { get; set; } = "";
     public List<Badge> Badges { get; set; } = new();
     public List<EmotePosition> Emotes { get; set; } = new();
-    public DateTime ReceivedAt { get; set; } = DateTime.Now;
+    public DateTime ReceivedAt { get; set; } = DateTime.UtcNow;
     public bool IsAction { get; set; }
     public bool IsSystem { get; set; }
 
