@@ -37,15 +37,15 @@ internal sealed partial class ChatRenderWindow
             || _settings.EventAlertSource == "IrcOnly"
         )
         {
-            DebugLog.Write("ConnectStreamlabsIfConfigured: no configurado o EventAlertSource=IrcOnly. No conecta socket");
+            DebugLog.Write("ConnectStreamlabsIfConfigured: not configured or EventAlertSource=IrcOnly. Does not connect socket");
             return;
         }
 
         var client = new StreamlabsSocketClient();
         client.MessageReceived += OnStreamlabsMessageReceived;
-        client.Connected += () => DebugLog.Write("ConnectStreamlabsIfConfigured: conectado");
+        client.Connected += () => DebugLog.Write("ConnectStreamlabsIfConfigured: connected");
         client.Disconnected += reason =>
-            DebugLog.Write($"ConnectStreamlabsIfConfigured: desconectado ({reason})");
+            DebugLog.Write($"ConnectStreamlabsIfConfigured: disconnected ({reason})");
         client.Error += ex =>
             DebugLog.WriteException("ConnectStreamlabsIfConfigured._streamlabs.Error", ex);
 
