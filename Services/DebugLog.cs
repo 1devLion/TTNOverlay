@@ -47,14 +47,22 @@ public static class DebugLog
 
     public static void WriteException(string context, Exception ex)
     {
-        Write($"EXCEPTION en {context}: {ex.GetType().Name}: {ex.Message}");
-        Write(ex.StackTrace ?? "(sin stack trace)");
+        Write($"EXCEPTION in {context}: {ex.GetType().Name}: {ex.Message}");
+        Write(ex.StackTrace ?? "(no stack trace)");
     }
 
     private static void Flush()
     {
-        if (_writer is null || _pending.IsEmpty)
+        if (_pending.IsEmpty)
             return;
+
+        if (_writer is null)
+        {
+            // No file to write to (e.g. %AppData% not writable) — drain and discard so
+            // _pending doesn't grow unbounded while logging stays enabled.
+            while (_pending.TryDequeue(out _)) { }
+            return;
+        }
 
         try
         {
@@ -78,4 +86,3 @@ public static class DebugLog
         _writer = null;
     }
 }
-

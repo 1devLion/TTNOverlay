@@ -762,8 +762,6 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         }
     }
 
-    private void ApplyPendingDropdownSelections() { }
-
     private void ToggleCheckbox(string fieldId)
     {
         switch (fieldId)

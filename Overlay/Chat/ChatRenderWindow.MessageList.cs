@@ -103,7 +103,9 @@ internal sealed partial class ChatRenderWindow
             yield break;
         }
 
-        var ordered = msg.Emotes.OrderBy(e => e.Start).ToList();
+        // Emotes already arrive ordered by position: TwitchIrcClient.ParseEmotes sorts once at
+        // parse time, and KickChatClient.ParseKickEmotes produces them in order by construction.
+        var ordered = msg.Emotes;
         int cursor = 0;
         var chars = msg.Text;
 

@@ -95,7 +95,7 @@ public class AppSettings
     public bool ViewerCountIncludeTwitch { get; set; } = true;
     public bool ViewerCountIncludeKick { get; set; } = true;
 
-    /// <summary>Reserved for when the YouTube integration lands — no fetch exists yet, so this
+    /// <summary>Reserved for when the YouTube integration lands. No fetch exists yet, so this
     /// toggle currently has no effect, but the setting is here so the UI/persistence don't need
     /// another migration later.</summary>
     public bool ViewerCountIncludeYouTube { get; set; } = true;

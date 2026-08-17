@@ -31,6 +31,7 @@ internal static class SharedGraphicsResources
     public static IDWriteFactory DWriteFactory =>
         _dwriteFactory ??= DWrite.DWriteCreateFactory<IDWriteFactory>(Vortice.DirectWrite.FactoryType.Shared);
 
+    #if DEBUG
     public static void DumpLiveD2DObjects(string label)
     {
         try
@@ -59,6 +60,7 @@ internal static class SharedGraphicsResources
         }
         DebugLog.FlushNow();
     }
+    #endif
 
     public static void Shutdown()
     {

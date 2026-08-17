@@ -254,7 +254,9 @@ public abstract class OverlayWindowBase : IDisposable
                 Win32.GetClientRect(hWnd, out var finalRect);
                 _renderer?.Resize(finalRect.Right - finalRect.Left, finalRect.Bottom - finalRect.Top, allowShrink: true);
                 RequestRender();
+                #if DEBUG
                 SharedGraphicsResources.DumpLiveD2DObjects("post-resize");
+                #endif
                 return IntPtr.Zero;
 
             case Win32.WM_LBUTTONDOWN:

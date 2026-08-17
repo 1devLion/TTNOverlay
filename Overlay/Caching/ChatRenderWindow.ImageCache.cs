@@ -12,7 +12,7 @@ internal sealed partial class ChatRenderWindow
 {
 
     private const long MaxCachedImageBytes = 20L * 1024 * 1024;
-    private const int MaxCachedAnimatedFrames = 2000;
+    private const long MaxCachedAnimatedBytes = 20L * 1024 * 1024;
     private const int MaxCachedUsernameBrushes = 128;
 
     private readonly DisposingLruCache<string, ID2D1Bitmap?> _imageCache =
@@ -21,7 +21,7 @@ internal sealed partial class ChatRenderWindow
     private readonly HashSet<string> _imageLoadInFlight = new();
 
     private readonly DisposingLruCache<string, List<(ID2D1Bitmap Bitmap, int DelayMs)>?> _animatedImageCache =
-        new(MaxCachedAnimatedFrames, weigher: frames => frames?.Count ?? 0, onEvict: (_, frames) => DisposeAnimatedFrames(frames));
+        new((int)MaxCachedAnimatedBytes, weigher: AnimatedFramesBytes, onEvict: (_, frames) => DisposeAnimatedFrames(frames));
 
     private readonly HashSet<string> _animatedLoadInFlight = new();
     private readonly Dictionary<string, (int Index, DateTime NextDueUtc)> _animationState = new();
@@ -32,6 +32,16 @@ internal sealed partial class ChatRenderWindow
 
     private static int ImageBitmapBytes(ID2D1Bitmap? bmp) =>
         bmp is null ? 0 : (int)(bmp.Size.Width * bmp.Size.Height * 4);
+
+    private static int AnimatedFramesBytes(List<(ID2D1Bitmap Bitmap, int DelayMs)>? frames)
+    {
+        if (frames is null)
+            return 0;
+        long total = 0;
+        foreach (var f in frames)
+            total += (long)f.Bitmap.Size.Width * f.Bitmap.Size.Height * 4;
+        return (int)Math.Min(total, int.MaxValue);
+    }
 
     /// <summary>Disposes an evicted/removed animated entry's frames. _animationState is intentionally
     /// left alone here: AdvanceAnimations already prunes any entry whose cache lookup misses on its

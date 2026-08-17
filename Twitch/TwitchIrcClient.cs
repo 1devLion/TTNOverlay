@@ -321,6 +321,10 @@ public class TwitchIrcClient : ITwitchIrcClient
                 }
             }
         }
+        // Twitch's `emotes` tag is grouped by emote ID, not ordered by position in the text.
+        // Sort once here so downstream consumers (rendering) can assume position order and
+        // don't need to re-sort on every draw/measure pass.
+        list.Sort((a, b) => a.Start.CompareTo(b.Start));
         return list;
     }
 
