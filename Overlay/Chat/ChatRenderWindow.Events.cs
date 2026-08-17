@@ -133,8 +133,8 @@ internal sealed partial class ChatRenderWindow
 
     // Switches on the canonical (EventType, Platform) pair, not the raw event-id string.
     // Most kinds render identically regardless of platform (Raid, Announcement, Bits, ...) and use the
-    // "_" wildcard for Platform. A few gift-sub kinds keep DIFFERENT colors per platform on purpose --
-    // that divergence already existed before this refactor (Streamlabs' gift-sub variants were always a
+    // "_" wildcard for Platform. A few gift-sub kinds keep DIFFERENT colors per platform on purpose. 
+    // That divergence already existed before this refactor (Streamlabs' gift-sub variants were always a
     // flat purple, distinct from Twitch's own per-type colors), so it's preserved explicitly here
     // instead of being flattened away. EventType.Unknown (any event this app doesn't specifically
     // classify yet, on any current or future platform) keeps the generic "info" style, same fallback as

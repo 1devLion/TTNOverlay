@@ -7,7 +7,8 @@ using TTNOverlay.Services;
 namespace TTNOverlay.Streamlabs;
 
 /// <summary>
-/// WebSocket client for the Streamlabs Socket API; receives donation/sub/follow events and raises them as ChatMessages.
+/// WebSocket client for the Streamlabs Socket API that receives donation, subscription,
+/// follow, and other events and raises them as <see cref="ChatMessage"/> objects.
 /// </summary>
 public class StreamlabsSocketClient : IStreamlabsSocketClient
 {
@@ -19,11 +20,30 @@ public class StreamlabsSocketClient : IStreamlabsSocketClient
     private int _pingIntervalMs = 25000;
     private bool _pingLoopStarted;
 
+    /// <summary>
+    /// Occurs when a chat message is received from Streamlabs.
+    /// </summary>
     public event Action<ChatMessage>? MessageReceived;
+
+    /// <summary>
+    /// Occurs when the connection has been successfully established.
+    /// </summary>
     public event Action? Connected;
+
+    /// <summary>
+    /// Occurs when the connection has been closed.
+    /// </summary>
     public event Action<string>? Disconnected;
+
+    /// <summary>
+    /// Occurs when an error occurs in the client.
+    /// </summary>
     public event Action<Exception>? Error;
 
+    /// <summary>
+    /// Connects to the Streamlabs WebSocket using the provided token.
+    /// </summary>
+    /// <param name="token">The Streamlabs Socket API token.</param>
     public async Task ConnectAsync(string token)
     {
         if (string.IsNullOrWhiteSpace(token))
@@ -49,6 +69,10 @@ public class StreamlabsSocketClient : IStreamlabsSocketClient
         _ = ReceiveLoopAsync(_cts.Token);
     }
 
+    /// <summary>
+    /// Sends a text message over the WebSocket connection.
+    /// </summary>
+    /// <param name="text">The message text to send.</param>
     private async Task SendAsync(string text)
     {
         if (_socket is not { State: WebSocketState.Open })
@@ -57,6 +81,10 @@ public class StreamlabsSocketClient : IStreamlabsSocketClient
         await _socket.SendAsync(bytes, WebSocketMessageType.Text, true, CancellationToken.None);
     }
 
+    /// <summary>
+    /// Continuously receives messages from the WebSocket and processes them.
+    /// </summary>
+    /// <param name="token">Cancellation token to stop the loop.</param>
     private async Task ReceiveLoopAsync(CancellationToken token)
     {
         var buffer = new byte[16384];
@@ -92,6 +120,10 @@ public class StreamlabsSocketClient : IStreamlabsSocketClient
         }
     }
 
+    /// <summary>
+    /// Processes an Engine.IO packet (e.g., handshake, ping/pong, Socket.IO messages).
+    /// </summary>
+    /// <param name="packet">The raw packet string.</param>
     private async Task HandleEngineIoPacketAsync(string packet)
     {
         if (packet.Length == 0)
@@ -137,6 +169,10 @@ public class StreamlabsSocketClient : IStreamlabsSocketClient
         }
     }
 
+    /// <summary>
+    /// Processes a Socket.IO packet (connect, event array, error).
+    /// </summary>
+    /// <param name="payload">The payload string.</param>
     private void HandleSocketIoPacket(string payload)
     {
         if (payload.Length == 0)
@@ -160,6 +196,10 @@ public class StreamlabsSocketClient : IStreamlabsSocketClient
         }
     }
 
+    /// <summary>
+    /// Parses an event array from Socket.IO and maps it to chat messages.
+    /// </summary>
+    /// <param name="json">The JSON array string.</param>
     private void HandleEventArray(string json)
     {
         try
@@ -182,6 +222,9 @@ public class StreamlabsSocketClient : IStreamlabsSocketClient
         }
     }
 
+    /// <summary>
+    /// Disposes of the client and closes the WebSocket connection.
+    /// </summary>
     public async ValueTask DisposeAsync()
     {
         _cts?.Cancel();
@@ -205,6 +248,9 @@ public class StreamlabsSocketClient : IStreamlabsSocketClient
         _socket?.Dispose();
     }
 
+    /// <summary>
+    /// Starts a background loop that sends periodic ping messages to keep the connection alive.
+    /// </summary>
     private void StartPingLoop()
     {
         if (_pingLoopStarted)
@@ -245,6 +291,4 @@ public class StreamlabsSocketClient : IStreamlabsSocketClient
             _pingLoopStarted = false;
         });
     }
-
 }
-

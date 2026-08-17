@@ -118,7 +118,7 @@ internal sealed class LayeredRenderer : IDisposable
 
         if (_inRender)
         {
-            DebugLog.Write("LayeredRenderer.Render: LLAMADA REENTRANTE detectada -- se ignora esta pasada para no corromper el render target en curso");
+            DebugLog.Write("LayeredRenderer.Render: Reentrant call detected. This pass is ignored to avoid corrupting the current render target");
             return;
         }
         _inRender = true;

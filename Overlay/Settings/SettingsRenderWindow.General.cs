@@ -156,7 +156,7 @@ internal sealed partial class SettingsRenderWindow
     /// Draws the channel field(s) for the currently selected chat source. Individual Twitch/Kick
     /// modes keep the single-box layout that existed before Multichat. Multichat either shows one
     /// box per enabled-or-not source (each with its own "Enable" checkbox) or, when
-    /// MultichatUseSameChannel is on, collapses back down to the single shared box -- always
+    /// MultichatUseSameChannel is on, collapses back down to the single shared box. Always
     /// followed by the "use the same channel" checkbox itself so the user can toggle back.
     /// </summary>
     private float DrawChatSourceFields(ID2D1DCRenderTarget target, float x, float width, float y)

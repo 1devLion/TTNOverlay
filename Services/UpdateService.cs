@@ -23,9 +23,9 @@ internal static class UpdateService
 
             if (!mgr.IsInstalled)
                 return;
-            DebugLog.Write("Update: antes de CheckForUpdatesAsync");
+            DebugLog.Write("Update: before CheckForUpdatesAsync");
             var newVersion = await mgr.CheckForUpdatesAsync();
-            DebugLog.Write("Update: CheckForUpdatesAsync devolvió " + (newVersion?.TargetFullRelease.Version.ToString() ?? "null"));
+            DebugLog.Write("Update: CheckForUpdatesAsync returned " + (newVersion?.TargetFullRelease.Version.ToString() ?? "null"));
             if (newVersion is null)
                 return;
 

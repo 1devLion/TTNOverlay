@@ -69,7 +69,7 @@ public static class ThemeService
         ? new Color4(1f, 1f, 1f, 1f)
         : new Color4(0.125f, 0.125f, 0.125f, 1f);
 
-    /// <summary>Pure white/black -- used where a hover tint or icon needs full contrast rather than the softer text grays above.</summary>
+    /// <summary>Pure white/black. Used where a hover tint or icon needs full contrast rather than the softer text grays above.</summary>
     public static Color4 PureContrastTint => IsDark
         ? new Color4(1f, 1f, 1f, 1f)
         : new Color4(0f, 0f, 0f, 1f);

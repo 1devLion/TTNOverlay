@@ -37,7 +37,7 @@ internal sealed partial class ChatRenderWindow
             || _settings.EventAlertSource == "IrcOnly"
         )
         {
-            DebugLog.Write("ConnectStreamlabsIfConfigured: no configurado o EventAlertSource=IrcOnly -- no conecta socket");
+            DebugLog.Write("ConnectStreamlabsIfConfigured: no configurado o EventAlertSource=IrcOnly. No conecta socket");
             return;
         }
 
@@ -98,7 +98,7 @@ internal sealed partial class ChatRenderWindow
             if (msg.IsSystem && msg.EventType is not null)
                 ProcessIncomingEvent(msg, isFromStreamlabs: true);
             else
-                DebugLog.Write("OnStreamlabsMessageReceived: mensaje sin EventType, ignorado (inesperado)");
+                DebugLog.Write("OnStreamlabsMessageReceived: message without EventType, ignored (unexpected)");
         });
     }
 

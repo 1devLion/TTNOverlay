@@ -8,7 +8,7 @@ namespace TTNOverlay.Twitch;
 ///
 /// All wording lives in the "EventMsg_*" keys in Services/Localization/&lt;Lang&gt;/EventMessages.cs
 /// (see Strings.cs for how languages/fallback work). This class only picks which key(s) apply and
-/// fills in the placeholders -- add a language by adding an EventMessages.cs there, not here.
+/// fills in the placeholders. Add a language by adding an EventMessages.cs there, not here.
 /// </summary>
 public static class EventTextLocalizer
 {
@@ -22,7 +22,7 @@ public static class EventTextLocalizer
         var lang = LocalizationService.Instance.CurrentLanguage;
         var eventKind = EventTypeIds.ParseTwitchMsgId(msgId);
 
-        // Switches on the canonical EventType, not the raw msg-id string -- see EventTypeIds.Classify.
+        // Switches on the canonical EventType, not the raw msg-id string. See EventTypeIds.Classify.
         // EventType.Unknown (any msg-id Twitch sends that isn't mapped there) falls through to null
         // below, same as before: the caller (TwitchIrcClient) then falls back to Twitch's own
         // system-msg text, so an unrecognized event still gets a readable message, never silently

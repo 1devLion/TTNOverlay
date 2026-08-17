@@ -75,8 +75,8 @@ internal sealed partial class ChatRenderWindow
     }
 
     /// <summary>
-    /// Resolves which source(s) to connect and with which channel/slug, from Settings.ChatSourceMode --
-    /// same three-mode logic SettingsRenderWindow.General.cs already uses to decide which channel
+    /// Resolves which source(s) to connect and with which channel/slug, from Settings.ChatSourceMode.
+    /// Same three-mode logic SettingsRenderWindow.General.cs already uses to decide which channel
     /// box(es) to show (see DrawChatSourceFields there).
     /// </summary>
     private (
@@ -206,7 +206,7 @@ internal sealed partial class ChatRenderWindow
         PostToUiThread(() =>
         {
             SetKickStatus("MainWindow_ChannelConnected", channelSlug);
-            DebugLog.Write($"ConnectFeed: conectado a Kick '{channelSlug}'");
+            DebugLog.Write($"ConnectFeed: connected to Kick '{channelSlug}'");
             RequestRender();
         });
 
@@ -214,7 +214,7 @@ internal sealed partial class ChatRenderWindow
         PostToUiThread(() =>
         {
             SetKickStatus("MainWindow_Disconnected", reason);
-            DebugLog.Write($"ConnectFeed: Kick desconectado ({reason})");
+            DebugLog.Write($"ConnectFeed: Kick disconnected ({reason})");
             RequestRender();
         });
 

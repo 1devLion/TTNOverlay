@@ -451,7 +451,7 @@ internal sealed partial class SettingsRenderWindow
     };
 
     // Keys are the exact strings persisted in settings.json (EventBoxColorModes/EventBoxColors), sourced
-    // from EventTypeIds instead of typed out by hand -- same values as before, just centralized. Adding
+    // from EventTypeIds instead of typed out by hand. Same values as before, just centralized. Adding
     // a Kick/YouTube event to this list later means adding its id block + constants in EventTypeIds and
     // one line here; nothing about the rendering/parsing logic elsewhere needs to change for that.
     private static readonly (string Key, string LocKey, string DefaultHex)[] AllEventTypesForColor =

@@ -42,7 +42,7 @@ public class ModerationService : IModerationService
         _settings.ModeratorUserId = result.UserId;
         SettingsService.Save(_settings);
 
-        DebugLog.Write($"ModerationService: login OK como '{result.Login}'");
+        DebugLog.Write($"ModerationService: login OK as '{result.Login}'");
         return true;
     }
 

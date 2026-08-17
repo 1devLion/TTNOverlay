@@ -194,7 +194,7 @@ public abstract class OverlayWindowBase : IDisposable
         }
         catch (Exception ex)
         {
-            DebugLog.Write($"WndProc: excepción no controlada en msg=0x{msg:X4} -- {ex}");
+            DebugLog.Write($"WndProc: unhandled exception in msg=0x{msg:X4}. {ex}");
             DebugLog.FlushNow();
             return Win32.DefWindowProc(hWnd, msg, wParam, lParam);
         }
@@ -347,7 +347,7 @@ public abstract class OverlayWindowBase : IDisposable
                     }
                     catch (Exception ex)
                     {
-                        DebugLog.Write($"WM_UI_THREAD_CALLBACK: excepción en acción encolada -- {ex}");
+                        DebugLog.Write($"WM_UI_THREAD_CALLBACK: exception in glued action. {ex}");
                     }
                     System.Threading.Interlocked.Decrement(ref _pendingUiActionCount);
                     drained++;

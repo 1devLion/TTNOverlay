@@ -35,14 +35,14 @@ internal static class SharedGraphicsResources
     {
         try
         {
-            DebugLog.Write($"DumpLiveD2DObjects: arrancando ({label})");
+            DebugLog.Write($"DumpLiveD2DObjects: Starting ({label})");
 
             using var dxgiDebug = DXGI.DXGIGetDebugInterface1<IDXGIDebug1>();
             dxgiDebug.ReportLiveObjects(DxgiDebugAll, ReportLiveObjectFlags.Detail | ReportLiveObjectFlags.IgnoreInternal);
 
             using var infoQueue = DXGI.DXGIGetDebugInterface1<IDXGIInfoQueue>();
             ulong count = infoQueue.GetNumStoredMessages(DxgiDebugAll);
-            DebugLog.Write($"DumpLiveD2DObjects: {count} mensajes en cola ({label})");
+            DebugLog.Write($"DumpLiveD2DObjects: {count} queued messages ({label})");
 
             for (ulong i = 0; i < count; i++)
             {
@@ -51,11 +51,11 @@ internal static class SharedGraphicsResources
             }
             infoQueue.ClearStoredMessages(DxgiDebugAll);
 
-            DebugLog.Write($"DumpLiveD2DObjects: terminó ({label})");
+            DebugLog.Write($"DumpLiveD2DObjects: finished ({label})");
         }
         catch (Exception ex)
         {
-            DebugLog.Write($"DumpLiveD2DObjects: EXCEPCIÓN ({label}) -- {ex}");
+            DebugLog.Write($"DumpLiveD2DObjects: EXCEPTION ({label}). {ex}");
         }
         DebugLog.FlushNow();
     }

@@ -15,13 +15,17 @@ public static class SubEventVariationResolver
         (string? Format, string? ImageUrl)
     > _lastKnownAlertConfig = new();
 
-    private static readonly List<(
+    private static readonly List<( 
         string Condition,
         string? ConditionData,
         string? Format,
         string? ImageUrl
     )> _lastKnownSubVariations = new();
 
+    /// <summary>
+    /// Fetches the alert box widget configuration from Streamlabs and seeds the internal caches.
+    /// </summary>
+    /// <param name="widgetToken">The Streamlabs widget token.</param>
     public static async Task FetchAndSeedWidgetConfigAsync(string widgetToken)
     {
         if (string.IsNullOrWhiteSpace(widgetToken))
@@ -127,18 +131,41 @@ public static class SubEventVariationResolver
         }
     }
 
+    /// <summary>
+    /// Gets the cached alert configuration for a given normalized event type.
+    /// </summary>
+    /// <param name="normalizedType">The normalized event type key.</param>
+    /// <returns>A tuple with the format and image URL, or null if not found.</returns>
     public static (string? Format, string? ImageUrl)? TryGetAlertConfig(string normalizedType) =>
         _lastKnownAlertConfig.TryGetValue(normalizedType, out var cached) ? cached : null;
 
+    /// <summary>
+    /// Sets the alert configuration for a given normalized event type.
+    /// </summary>
+    /// <param name="normalizedType">The normalized event type key.</param>
+    /// <param name="format">The message format string.</param>
+    /// <param name="imageUrl">The image URL.</param>
     public static void SetAlertConfig(string normalizedType, string? format, string? imageUrl) =>
         _lastKnownAlertConfig[normalizedType] = (format, imageUrl);
 
+    /// <summary>
+    /// Gets the first cached sub variation matching a specific condition string.
+    /// </summary>
+    /// <param name="condition">The condition string to match.</param>
+    /// <returns>A tuple with the format and image URL, or null if not found.</returns>
     public static (string? Format, string? ImageUrl)? GetVariationByCondition(string condition)
     {
         var match = _lastKnownSubVariations.FirstOrDefault(v => v.Condition == condition);
         return match.Condition is null ? null : (match.Format, match.ImageUrl);
     }
 
+    /// <summary>
+    /// Resolves the cached sub variation for a given sub type, anonymity, and plan.
+    /// </summary>
+    /// <param name="subType">The sub event type (e.g., "submysterygift").</param>
+    /// <param name="isAnonymous">Whether the gift is anonymous.</param>
+    /// <param name="subPlanRaw">The raw sub plan string (e.g., "1000", "prime").</param>
+    /// <returns>A tuple with the format and image URL, or null if no match.</returns>
     public static (string? Format, string? ImageUrl)? ResolveCachedSubVariation(
         string subType,
         bool isAnonymous,
@@ -183,6 +210,11 @@ public static class SubEventVariationResolver
         return match.Condition is null ? null : (match.Format, match.ImageUrl);
     }
 
+    /// <summary>
+    /// Resolves the cached sub variation for a tier-based subscription (non-gift).
+    /// </summary>
+    /// <param name="subPlanRaw">The raw sub plan string.</param>
+    /// <returns>A tuple with the format and image URL, or null if no match.</returns>
     public static (string? Format, string? ImageUrl)? ResolveTierSubVariation(string? subPlanRaw)
     {
         if (_lastKnownSubVariations.Count == 0 || string.IsNullOrEmpty(subPlanRaw))
@@ -213,6 +245,11 @@ public static class SubEventVariationResolver
             && conditionData == tierDigit;
     }
 
+    /// <summary>
+    /// Gets a human-readable sub plan name from the raw plan string.
+    /// </summary>
+    /// <param name="subPlan">The raw plan string (e.g., "1000", "prime").</param>
+    /// <returns>The display name (e.g., "1", "Prime") or the original if unknown.</returns>
     public static string? GetSubPlanName(string? subPlan) =>
         subPlan switch
         {
@@ -223,6 +260,10 @@ public static class SubEventVariationResolver
             _ => subPlan,
         };
 
+    /// <summary>
+    /// Seeds the sub variations cache for testing purposes.
+    /// </summary>
+    /// <param name="variations">The list of variations to seed.</param>
     internal static void SeedSubVariationsForTests(
         IEnumerable<(string Condition, string? ConditionData, string? Format, string? ImageUrl)> variations
     )
@@ -231,10 +272,12 @@ public static class SubEventVariationResolver
         _lastKnownSubVariations.AddRange(variations);
     }
 
+    /// <summary>
+    /// Clears all cached configurations.
+    /// </summary>
     public static void Clear()
     {
         _lastKnownAlertConfig.Clear();
         _lastKnownSubVariations.Clear();
     }
 }
-

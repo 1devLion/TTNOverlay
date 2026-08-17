@@ -14,6 +14,9 @@ internal static class D2DBitmapLoader
 {
     private static readonly HttpClient Http = SharedHttpClient.Instance;
 
+    /// <summary>
+    /// Represents a decoded image with premultiplied BGRA pixel data.
+    /// </summary>
     public readonly record struct DecodedImage(
         byte[] PremultipliedBgra,
         int Width,
@@ -21,20 +24,26 @@ internal static class D2DBitmapLoader
         int Stride
     );
 
+    /// <summary>
+    /// Downloads an image from the specified URL and decodes it into a <see cref="DecodedImage"/>.
+    /// </summary>
+    /// <param name="url">The image URL.</param>
+    /// <param name="targetSize">Optional target size for resizing.</param>
+    /// <returns>A decoded image, or null if the download or decode fails.</returns>
     public static async Task<DecodedImage?> DownloadAndDecodeAsync(string url, int targetSize = 0)
     {
         try
         {
             DebugLog.Write($"D2DBitmapLoader: GET {url}");
             byte[] bytes = await Http.GetByteArrayAsync(url);
-            DebugLog.Write($"D2DBitmapLoader: descarga OK ({bytes.Length} bytes) -- {url}");
+            DebugLog.Write($"D2DBitmapLoader: download OK ({bytes.Length} bytes). {url}");
 
             var webp = WebpDecoder.TryDecode(bytes, targetSize);
             if (webp is not null)
             {
                 var decodedWebp = Decode(webp.Value);
                 DebugLog.Write(
-                    $"D2DBitmapLoader: decode OK (WebP) {decodedWebp.Width}x{decodedWebp.Height} stride={decodedWebp.Stride} -- {url}"
+                    $"D2DBitmapLoader: decode OK (WebP) {decodedWebp.Width}x{decodedWebp.Height} stride={decodedWebp.Stride}. {url}"
                 );
                 return decodedWebp;
             }
@@ -47,27 +56,31 @@ internal static class D2DBitmapLoader
                 using var resized = new Bitmap(gdiBitmap, targetSize, targetSize);
                 var decodedResized = Decode(resized);
                 DebugLog.Write(
-                    $"D2DBitmapLoader: decode OK (GDI+, reescalado a {targetSize}) {decodedResized.Width}x{decodedResized.Height} stride={decodedResized.Stride} -- {url}"
+                    $"D2DBitmapLoader: decode OK (GDI+, resized to {targetSize}) {decodedResized.Width}x{decodedResized.Height} stride={decodedResized.Stride}. {url}"
                 );
                 return decodedResized;
             }
 
             var decoded = Decode(gdiBitmap);
             DebugLog.Write(
-                $"D2DBitmapLoader: decode OK {decoded.Width}x{decoded.Height} stride={decoded.Stride} -- {url}"
+                $"D2DBitmapLoader: decode OK {decoded.Width}x{decoded.Height} stride={decoded.Stride}. {url}"
             );
             return decoded;
         }
         catch (Exception ex)
         {
-
             DebugLog.Write(
-                $"D2DBitmapLoader: FALLÓ descarga/decode ({ex.GetType().Name}: {ex.Message}) -- {url}"
+                $"D2DBitmapLoader: FAILED download/decode ({ex.GetType().Name}: {ex.Message}). {url}"
             );
             return null;
         }
     }
 
+    /// <summary>
+    /// Decodes a GDI+ <see cref="Bitmap"/> into a <see cref="DecodedImage"/> with premultiplied alpha.
+    /// </summary>
+    /// <param name="gdiBitmap">The source bitmap.</param>
+    /// <returns>A decoded image.</returns>
     public static DecodedImage Decode(Bitmap gdiBitmap)
     {
         int width = gdiBitmap.Width;
@@ -93,6 +106,11 @@ internal static class D2DBitmapLoader
         }
     }
 
+    /// <summary>
+    /// Decodes raw BGRA pixel data into a <see cref="DecodedImage"/> with premultiplied alpha.
+    /// </summary>
+    /// <param name="raw">The raw BGRA data.</param>
+    /// <returns>A decoded image.</returns>
     public static DecodedImage Decode(RawBgra raw)
     {
         var pixels = raw.Pixels;
@@ -100,6 +118,13 @@ internal static class D2DBitmapLoader
         return new DecodedImage(pixels, raw.Width, raw.Height, raw.Stride);
     }
 
+    /// <summary>
+    /// Creates a Direct2D bitmap from a decoded image.
+    /// </summary>
+    /// <param name="target">The D2D render target.</param>
+    /// <param name="image">The decoded image data.</param>
+    /// <param name="key">An optional cache key for logging.</param>
+    /// <returns>A Direct2D bitmap.</returns>
     public static ID2D1Bitmap CreateBitmap(ID2D1DCRenderTarget target, DecodedImage image, string key = "")
     {
         var props = new BitmapProperties(
@@ -123,7 +148,6 @@ internal static class D2DBitmapLoader
         }
         catch (Exception ex)
         {
-
             DebugLog.WriteException("D2DBitmapLoader.CreateBitmap", ex);
             throw;
         }
@@ -133,6 +157,10 @@ internal static class D2DBitmapLoader
         }
     }
 
+    /// <summary>
+    /// Converts BGRA pixel data to premultiplied alpha format in place.
+    /// </summary>
+    /// <param name="bgra">The BGRA pixel array.</param>
     private static void PremultiplyInPlace(byte[] bgra)
     {
         for (int i = 0; i < bgra.Length; i += 4)

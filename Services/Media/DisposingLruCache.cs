@@ -7,7 +7,7 @@ namespace TTNOverlay.Services;
 /// <summary>
 /// Synchronous LRU cache bounded by a configurable weight budget. Evicted and explicitly removed
 /// values are passed to the onEvict callback so callers can dispose native/GPU resources (e.g.
-/// Direct2D bitmaps/brushes). Not thread-safe -- intended for UI-thread-only caches, unlike the
+/// Direct2D bitmaps/brushes). Not thread-safe. Intended for UI-thread-only caches, unlike the
 /// async-aware <see cref="LruCache{TKey, TValue}"/>.
 /// </summary>
 public sealed class DisposingLruCache<TKey, TValue> where TKey : notnull

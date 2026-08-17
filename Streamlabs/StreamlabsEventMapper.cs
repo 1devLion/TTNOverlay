@@ -9,7 +9,7 @@ namespace TTNOverlay.Streamlabs;
 ///
 /// All wording lives in the "SlMsg_*" keys in Services/Localization/&lt;Lang&gt;/StreamlabsMessages.cs
 /// (see Strings.cs for how languages/fallback work). This class only picks which key(s) apply and
-/// fills in the placeholders -- add a language by adding a StreamlabsMessages.cs there, not here.
+/// fills in the placeholders. Add a language by adding a StreamlabsMessages.cs there, not here.
 /// </summary>
 internal static class StreamlabsEventMapper
 {
@@ -55,7 +55,7 @@ internal static class StreamlabsEventMapper
             var amountInt = GetFirstInt(item, "amount");
             var amountStr = GetAmountString(item);
 
-            // Power-ups don't necessarily report "amount" -- Streamlabs' own widget template for this
+            // Power-ups don't necessarily report "amount". Streamlabs' own widget template for this
             // event type uses {powerUpName}/{bitsSpent} tokens (see ReplacePlaceholders), so read those
             // directly too. bitsSpent falls back to "amount" when Streamlabs doesn't send a dedicated
             // bits field, and also backfills amountStr so the built-in (non-custom-template) Power-up
@@ -66,7 +66,7 @@ internal static class StreamlabsEventMapper
             if (type == "powerup" && string.IsNullOrEmpty(amountStr))
                 amountStr = bitsSpentStr;
 
-            // Merch's own widget template uses {product} (see ReplacePlaceholders) -- Streamlabs sends
+            // Merch's own widget template uses {product} (see ReplacePlaceholders). Streamlabs sends
             // the product name flat as "product" on the message item, not under unsavedSettings.
             var product = GetFirstString(item, "product");
 

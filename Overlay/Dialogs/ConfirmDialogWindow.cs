@@ -9,7 +9,7 @@ using Rect = Vortice.Mathematics.Rect;
 namespace TTNOverlay.Overlay;
 
 /// <summary>
-/// Native yes/no confirmation dialog window used before destructive moderation actions.
+/// A native confirmation dialog window used before destructive moderation actions.
 /// </summary>
 internal sealed class ConfirmDialogWindow : OverlayWindowBase
 {
@@ -35,6 +35,9 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
     protected override int MinimumClientWidth => FixedWidth;
     protected override int MinimumClientHeight => _computedHeight;
 
+    /// <summary>
+    /// Invoked with the user's confirmation result when the dialog closes.
+    /// </summary>
     public Action<bool>? ResultReady;
 
     private Rect _cancelButtonRect, _confirmButtonRect;
@@ -63,6 +66,15 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
         _ownerHwnd = ownerHwnd;
     }
 
+    /// <summary>
+    /// Creates and shows the confirmation dialog.
+    /// </summary>
+    /// <param name="ownerHwnd">The owner window handle.</param>
+    /// <param name="postToOwnerUiThread">A delegate to post actions to the owner's UI thread.</param>
+    /// <param name="title">The dialog title.</param>
+    /// <param name="message">The dialog message.</param>
+    /// <param name="confirmText">The text for the confirm button.</param>
+    /// <param name="callback">The callback invoked with the user's choice.</param>
     public static void Show(
         IntPtr ownerHwnd,
         Action<Action> postToOwnerUiThread,
@@ -142,6 +154,7 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
         PositionOverOwner();
         DebugLog.Write("ConfirmDialogWindow.OnCreated: PositionOverOwner retornó, saliendo de OnCreated");
     }
+
     protected override void OnRender(ID2D1DCRenderTarget target)
     {
         if (_lastKnownIsDark != ThemeService.IsDark)

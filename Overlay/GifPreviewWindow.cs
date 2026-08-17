@@ -6,9 +6,7 @@ using Rect = Vortice.Mathematics.Rect;
 namespace TTNOverlay.Overlay;
 
 /// <summary>
-/// Native window of fixed size (DefaultSize x DefaultSize) that displays a local GIF/image file
-/// scaled to fit (aspect-preserved, letterboxed, never cropped/stretched), animated if it has
-/// more than one frame. Opens from the event-based GIF selector in Settings > Alerts.
+/// A native window that displays a local image or animated GIF file, scaled to fit with aspect preservation.
 /// </summary>
 internal sealed class GifPreviewWindow : OverlayWindowBase
 {
@@ -44,13 +42,19 @@ internal sealed class GifPreviewWindow : OverlayWindowBase
 
     private const int DefaultSize = 260;
 
+    /// <summary>
+    /// Creates and shows a GIF preview window for the specified image file.
+    /// </summary>
+    /// <param name="ownerHwnd">The owner window handle.</param>
+    /// <param name="postToOwnerUiThread">A delegate to post actions to the owner's UI thread.</param>
+    /// <param name="path">The path to the image file.</param>
     public static void Show(IntPtr ownerHwnd, Action<Action> postToOwnerUiThread, string path)
     {
         DebugLog.Write($"GifPreviewWindow.Show: path={path}");
 
         if (_current is { } previous)
         {
-            DebugLog.Write("GifPreviewWindow.Show: cerrando previsualización anterior antes de abrir la nueva");
+            DebugLog.Write("GifPreviewWindow.Show: closing previous preview before opening new one");
             _current = null;
             Win32.DestroyWindow(previous.Hwnd);
         }
@@ -67,7 +71,7 @@ internal sealed class GifPreviewWindow : OverlayWindowBase
         wnd.Destroyed += wnd.NotifyClosedIfCurrent;
         wnd.Destroyed += () => { DebugLog.Write("GifPreviewWindow: Destroyed event"); postToOwnerUiThread(wnd.Dispose); };
         wnd.Create(System.IO.Path.GetFileName(path), x, y, DefaultSize, DefaultSize);
-        DebugLog.Write("GifPreviewWindow.Show: Create() retornó OK");
+        DebugLog.Write("GifPreviewWindow.Show: Create() returned OK");
     }
 
     private void NotifyClosedIfCurrent()
@@ -86,33 +90,33 @@ internal sealed class GifPreviewWindow : OverlayWindowBase
     {
         try
         {
-            DebugLog.Write($"GifPreviewWindow.LoadAsync: leyendo {_path}");
+            DebugLog.Write($"GifPreviewWindow.LoadAsync: reading {_path}");
             var bytes = await LocalImageLoader.ReadBytesAsync(_path);
             if (bytes is null)
             {
-                DebugLog.Write("GifPreviewWindow.LoadAsync: ReadBytesAsync devolvió null, abortando");
+                DebugLog.Write("GifPreviewWindow.LoadAsync: ReadBytesAsync returned null, aborting");
                 return;
             }
-            DebugLog.Write($"GifPreviewWindow.LoadAsync: {bytes.Length} bytes leídos, decodificando animado");
+            DebugLog.Write($"GifPreviewWindow.LoadAsync: {bytes.Length} bytes read, decoding animated");
 
             var animated = LocalImageLoader.TryDecodeAnimated(bytes);
             if (animated is { Count: >= 2 })
             {
-                DebugLog.Write($"GifPreviewWindow.LoadAsync: {animated.Count} frames animados decodificados");
+                DebugLog.Write($"GifPreviewWindow.LoadAsync: {animated.Count} animated frames decoded");
                 PostToUiThread(() => { _pendingAnimatedFrames = animated; RequestRender(); });
                 return;
             }
 
-            DebugLog.Write("GifPreviewWindow.LoadAsync: no animado, decodificando estático");
+            DebugLog.Write("GifPreviewWindow.LoadAsync: not animated, decoding static");
             var staticImage = LocalImageLoader.TryDecodeStatic(bytes);
             if (staticImage is not null)
             {
-                DebugLog.Write($"GifPreviewWindow.LoadAsync: estático decodificado {staticImage.Value.Width}x{staticImage.Value.Height}");
+                DebugLog.Write($"GifPreviewWindow.LoadAsync: static decoded {staticImage.Value.Width}x{staticImage.Value.Height}");
                 PostToUiThread(() => { _pendingStaticImage = staticImage; RequestRender(); });
             }
             else
             {
-                DebugLog.Write("GifPreviewWindow.LoadAsync: decode estático devolvió null, nada para mostrar");
+                DebugLog.Write("GifPreviewWindow.LoadAsync: static decode returned null, nothing to display");
             }
         }
         catch (Exception ex)
@@ -123,7 +127,7 @@ internal sealed class GifPreviewWindow : OverlayWindowBase
 
     protected override void OnDeviceResourcesInvalidated()
     {
-        DebugLog.Write("GifPreviewWindow.OnDeviceResourcesInvalidated: el render target fue recreado -- invalidando bitmaps viejos");
+        DebugLog.Write("GifPreviewWindow.OnDeviceResourcesInvalidated: render target recreated - invalidating old bitmaps");
         _backgroundBrush?.Dispose();
         _backgroundBrush = null;
 
@@ -159,7 +163,7 @@ internal sealed class GifPreviewWindow : OverlayWindowBase
 
         if (_pendingAnimatedFrames is { } animFrames)
         {
-            DebugLog.Write($"GifPreviewWindow.OnRender: subiendo {animFrames.Count} frames a GPU");
+            DebugLog.Write($"GifPreviewWindow.OnRender: uploading {animFrames.Count} frames to GPU");
             _pendingAnimatedFrames = null;
             _lastAnimatedFrames = animFrames;
             try
@@ -171,11 +175,11 @@ internal sealed class GifPreviewWindow : OverlayWindowBase
                     var bmp = D2DBitmapLoader.CreateBitmap(target, D2DBitmapLoader.Decode(f.Image));
                     _frameBitmaps.Add((bmp, f.DelayMs));
                 }
-                DebugLog.Write("GifPreviewWindow.OnRender: frames subidos OK");
+                DebugLog.Write("GifPreviewWindow.OnRender: frames uploaded OK");
             }
             catch (Exception ex)
             {
-                DebugLog.WriteException("GifPreviewWindow.OnRender (subir frames animados)", ex);
+                DebugLog.WriteException("GifPreviewWindow.OnRender (uploading animated frames)", ex);
                 _frameBitmaps = null;
             }
 
@@ -188,17 +192,17 @@ internal sealed class GifPreviewWindow : OverlayWindowBase
         }
         else if (_pendingStaticImage is { } img)
         {
-            DebugLog.Write($"GifPreviewWindow.OnRender: subiendo bitmap estático {img.Width}x{img.Height}");
+            DebugLog.Write($"GifPreviewWindow.OnRender: uploading static bitmap {img.Width}x{img.Height}");
             _pendingStaticImage = null;
             _lastStaticImage = img;
             try
             {
                 _staticBitmap = D2DBitmapLoader.CreateBitmap(target, img);
-                DebugLog.Write("GifPreviewWindow.OnRender: bitmap estático subido OK");
+                DebugLog.Write("GifPreviewWindow.OnRender: static bitmap uploaded OK");
             }
             catch (Exception ex)
             {
-                DebugLog.WriteException("GifPreviewWindow.OnRender (subir bitmap estático)", ex);
+                DebugLog.WriteException("GifPreviewWindow.OnRender (uploading static bitmap)", ex);
                 _staticBitmap = null;
             }
 
@@ -221,9 +225,8 @@ internal sealed class GifPreviewWindow : OverlayWindowBase
     }
 
     /// <summary>
-    /// Calculate the destination rect (in client coordinates) to draw an image of
-    /// srcWidth x srcHeight "contained" (uncropped and undistorted) within an area
-    /// availWidth x availHeight, centered.
+    /// Calculates the destination rectangle that fits a source image within the available area
+    /// while preserving aspect ratio, centered.
     /// </summary>
     private static Rect GetAspectFitRect(float srcWidth, float srcHeight, float availWidth, float availHeight)
     {

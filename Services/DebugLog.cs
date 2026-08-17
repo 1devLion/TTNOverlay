@@ -26,7 +26,7 @@ public static class DebugLog
             var dir = Path.GetDirectoryName(FilePath)!;
             Directory.CreateDirectory(dir);
             _writer = new StreamWriter(FilePath, append: false) { AutoFlush = false };
-            _writer.WriteLine($"=== Log iniciado {DateTime.Now:yyyy-MM-dd HH:mm:ss} ===");
+            _writer.WriteLine($"=== Log started {DateTime.Now:yyyy-MM-dd HH:mm:ss} ===");
             _writer.Flush();
         }
         catch
@@ -47,7 +47,7 @@ public static class DebugLog
 
     public static void WriteException(string context, Exception ex)
     {
-        Write($"EXCEPCIÓN en {context}: {ex.GetType().Name}: {ex.Message}");
+        Write($"EXCEPTION en {context}: {ex.GetType().Name}: {ex.Message}");
         Write(ex.StackTrace ?? "(sin stack trace)");
     }
 

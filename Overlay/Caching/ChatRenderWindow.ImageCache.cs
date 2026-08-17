@@ -60,7 +60,7 @@ internal sealed partial class ChatRenderWindow
     {
         var decoded = await D2DBitmapLoader.DownloadAndDecodeAsync(url, targetSize);
         DebugLog.Write(
-            $"LoadImageAsync: {key} -- decode {(decoded is null ? "FAILED (see D2DBitmapLoader log above)" : "OK")}, _target {(_target is null ? "still null (no OnRender yet)" : "ready")}"
+            $"LoadImageAsync: {key}. Decode {(decoded is null ? "FAILED (see D2DBitmapLoader log above)" : "OK")}, _target {(_target is null ? "still null (no OnRender yet)" : "ready")}"
         );
 
         PostToUiThread(() =>
@@ -103,7 +103,7 @@ internal sealed partial class ChatRenderWindow
     /// <summary>
     /// Resolves an embedded-resource badge (Kick role badges/sub_gifter tiers, see
     /// KickBadgeIconLoader) into a cached ID2D1Bitmap. Unlike GetOrLoadImageBitmap, this has no
-    /// network round-trip -- the WebP is already in the assembly -- so it decodes and creates the
+    /// network round-trip. The WebP is already in the assembly. So it decodes and creates the
     /// bitmap synchronously on first use instead of going through the async load-in-flight path.
     /// </summary>
     private ID2D1Bitmap? GetOrCreateLocalBadgeBitmap(ID2D1DCRenderTarget target, string cacheKey, string localIconKey)

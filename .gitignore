@@ -21,7 +21,7 @@ publish/
 # VS Code
 .vscode/
 
-# Publish profiles (pueden tener rutas/tokens locales)
+# Publish profiles (they may have local routes/tokens)
 Properties/PublishProfiles/*.pubxml.user
 
 TestReleases/
@@ -30,8 +30,8 @@ TestReleases/
 .DS_Store
 Thumbs.db
 
-# Logs y capturas de debugging locales
+# Local debugging logs and captures
 *.log
 
-# Contiene el APP_SHARED_KEY del Worker de auth — nunca debe subirse.
+# It contains the APP_SHARED_KEY of the auth Worker. It should never be uploaded.
 Source/Generated/AppKeyProvider.cs
