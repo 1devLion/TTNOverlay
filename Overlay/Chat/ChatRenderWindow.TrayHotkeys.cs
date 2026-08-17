@@ -101,6 +101,8 @@ internal sealed partial class ChatRenderWindow
         _bordersHotkey?.SetEnabled(false);
 
         var previousChannel = _settings.Channel.Trim().ToLowerInvariant();
+        var previousKickChannel = _settings.KickChannel.Trim().ToLowerInvariant();
+        var previousChatSourceMode = _settings.ChatSourceMode;
         var previousHighQualityMedia = _settings.HighQualityMedia;
         var previousFontSize = _settings.FontSize;
 
@@ -130,7 +132,8 @@ internal sealed partial class ChatRenderWindow
         var settingsThread = new System.Threading.Thread(() => RunSettingsWindow(
             editableSettings,
             title, x, y, width, height,
-            previousChannel, previousHighQualityMedia, previousFontSize))
+            previousChannel, previousKickChannel, previousChatSourceMode,
+            previousHighQualityMedia, previousFontSize))
         {
             IsBackground = true,
             Name = "TTNOverlay-Settings",
@@ -142,7 +145,8 @@ internal sealed partial class ChatRenderWindow
     private void RunSettingsWindow(
         AppSettings editableSettings,
         string title, int x, int y, int width, int height,
-        string previousChannel, bool previousHighQualityMedia, double previousFontSize)
+        string previousChannel, string previousKickChannel, string previousChatSourceMode,
+        bool previousHighQualityMedia, double previousFontSize)
     {
         using var wnd = new SettingsRenderWindow(editableSettings);
 
@@ -165,16 +169,21 @@ internal sealed partial class ChatRenderWindow
 
                 RequestRender();
 
+                bool channelChanged =
+                    _settings.Channel.Trim().ToLowerInvariant() != previousChannel
+                    || _settings.KickChannel.Trim().ToLowerInvariant() != previousKickChannel
+                    || _settings.ChatSourceMode != previousChatSourceMode;
+
                 if (_settings.HighQualityMedia != previousHighQualityMedia || _settings.FontSize != previousFontSize)
                     InvalidateMediaCaches();
 
-                if (_settings.FontSize != previousFontSize || _settings.Channel.Trim().ToLowerInvariant() != previousChannel)
+                if (_settings.FontSize != previousFontSize || channelChanged)
                     InvalidateMessageHeightCache();
 
                 if (!_settings.EnableEventsPanel && _showingEvents)
                     SetView(showEvents: false);
 
-                if (_settings.Channel.Trim().ToLowerInvariant() != previousChannel)
+                if (channelChanged)
                 {
                     ResetForChannelChange();
                     _ = ReconnectFeedAsync();

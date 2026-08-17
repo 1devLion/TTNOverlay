@@ -115,6 +115,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
     {
         _themeDropdown.Width = 160f;
         _languageDropdown.Width = 160f;
+        _chatSourceDropdown.Width = 160f;
         _eventAlertSourceDropdown.Width = 260f;
         _audioDeviceDropdown.Width = 260f;
         _messageSoundPresetDropdown.Width = 220f;
@@ -208,6 +209,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
 
         _themeDropdown.Draw(target, DWriteFactory, _textBrush);
         _languageDropdown.Draw(target, DWriteFactory, _textBrush);
+        _chatSourceDropdown.Draw(target, DWriteFactory, _textBrush);
         _eventAlertSourceDropdown.Draw(target, DWriteFactory, _textBrush);
         _audioDeviceDropdown.Draw(target, DWriteFactory, _textBrush);
         _messageSoundPresetDropdown.Draw(target, DWriteFactory, _textBrush);
@@ -464,7 +466,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
     /// True while any of the 7 dropdowns in this window has its item list expanded.
     /// </summary>
     private bool AnyDropdownOpen() =>
-        _themeDropdown.IsOpen || _languageDropdown.IsOpen || _eventAlertSourceDropdown.IsOpen
+        _themeDropdown.IsOpen || _languageDropdown.IsOpen || _chatSourceDropdown.IsOpen || _eventAlertSourceDropdown.IsOpen
         || _audioDeviceDropdown.IsOpen || _messageSoundPresetDropdown.IsOpen || _eventSoundPresetDropdown.IsOpen
         || _eventColorModeDropdown.IsOpen;
 
@@ -497,6 +499,8 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         {
             if (Contains(_channelFieldRect, clientX, clientY))
                 FocusTextBox(_channelBox, _channelFieldRect, clientX, shift);
+            else if (Contains(_kickChannelFieldRect, clientX, clientY))
+                FocusTextBox(_kickChannelBox, _kickChannelFieldRect, clientX, shift);
             else if (Contains(_fontSizeFieldRect, clientX, clientY))
                 FocusTextBox(_fontSizeBox, _fontSizeFieldRect, clientX, shift);
             else if (Contains(_timeoutFieldRect, clientX, clientY))
@@ -557,6 +561,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
     private Rect GetFocusedTextBoxFieldRect()
     {
         if (_focusedTextBox == _channelBox) return _channelFieldRect;
+        if (_focusedTextBox == _kickChannelBox) return _kickChannelFieldRect;
         if (_focusedTextBox == _fontSizeBox) return _fontSizeFieldRect;
         if (_focusedTextBox == _timeoutBox) return _timeoutFieldRect;
         if (_focusedTextBox == _maxMessagesBox) return _maxMessagesFieldRect;
@@ -578,6 +583,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
 
         _themeDropdown.HandleMouseMove(clientX, clientY);
         _languageDropdown.HandleMouseMove(clientX, clientY);
+        _chatSourceDropdown.HandleMouseMove(clientX, clientY);
         _eventAlertSourceDropdown.HandleMouseMove(clientX, clientY);
         _audioDeviceDropdown.HandleMouseMove(clientX, clientY);
         _messageSoundPresetDropdown.HandleMouseMove(clientX, clientY);
@@ -636,7 +642,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
             return;
         }
 
-        if (_themeDropdown.HandleClick(clientX, clientY) || _languageDropdown.HandleClick(clientX, clientY) || _eventAlertSourceDropdown.HandleClick(clientX, clientY)
+        if (_themeDropdown.HandleClick(clientX, clientY) || _languageDropdown.HandleClick(clientX, clientY) || _chatSourceDropdown.HandleClick(clientX, clientY) || _eventAlertSourceDropdown.HandleClick(clientX, clientY)
             || _audioDeviceDropdown.HandleClick(clientX, clientY) || _messageSoundPresetDropdown.HandleClick(clientX, clientY) || _eventSoundPresetDropdown.HandleClick(clientX, clientY)
             || _eventColorModeDropdown.HandleClick(clientX, clientY))
         {
@@ -705,6 +711,11 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
             OpenLanguageDropdown();
             return;
         }
+        if (Contains(_chatSourceFieldRect, clientX, clientY))
+        {
+            OpenChatSourceDropdown();
+            return;
+        }
 
         foreach (var (bounds, field) in _checkboxRects)
         {
@@ -729,6 +740,14 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
             case "EventsPanel": _eventsPanel = !_eventsPanel; Settings.EnableEventsPanel = _eventsPanel; break;
             case "ModerationPanel": _moderationPanel = !_moderationPanel; Settings.EnableModerationPanel = _moderationPanel; break;
             case "HighQualityMedia": _highQualityMedia = !_highQualityMedia; Settings.HighQualityMedia = _highQualityMedia; break;
+            case "MultichatTwitchEnabled": _multichatTwitchEnabled = !_multichatTwitchEnabled; Settings.MultichatTwitchEnabled = _multichatTwitchEnabled; break;
+            case "MultichatKickEnabled": _multichatKickEnabled = !_multichatKickEnabled; Settings.MultichatKickEnabled = _multichatKickEnabled; break;
+            case "MultichatUseSameChannel":
+                _multichatUseSameChannel = !_multichatUseSameChannel;
+                Settings.MultichatUseSameChannel = _multichatUseSameChannel;
+                if (_multichatUseSameChannel && _focusedTextBox == _kickChannelBox)
+                    BlurFocusedTextBox();
+                break;
             case "EnableGlobalHotkeys": _enableGlobalHotkeys = !_enableGlobalHotkeys; Settings.EnableGlobalHotkeys = _enableGlobalHotkeys; break;
             case "EnableTwitchApi": _enableTwitchApi = !_enableTwitchApi; Settings.EnableTwitchApi = _enableTwitchApi; break;
             case "ShowViewerCount": _showViewerCount = !_showViewerCount; Settings.ShowViewerCount = _showViewerCount; break;
@@ -806,6 +825,8 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
     {
         if (_focusedTextBox == _channelBox)
             Settings.Channel = _channelBox.Text;
+        else if (_focusedTextBox == _kickChannelBox)
+            Settings.KickChannel = _kickChannelBox.Text;
         else if (_focusedTextBox == _fontSizeBox && double.TryParse(_fontSizeBox.Text, out var fs))
             Settings.FontSize = fs;
         else if (_focusedTextBox == _timeoutBox && int.TryParse(_timeoutBox.Text, out var to))
@@ -866,6 +887,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         _hoverShadowBrush?.Dispose();
         _themeDropdown.Dispose();
         _languageDropdown.Dispose();
+        _chatSourceDropdown.Dispose();
         _eventAlertSourceDropdown.Dispose();
         _audioDeviceDropdown.Dispose();
         _messageSoundPresetDropdown.Dispose();

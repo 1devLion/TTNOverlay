@@ -51,7 +51,7 @@ internal sealed partial class ChatRenderWindow
         if (!_imageLoadInFlight.Add(key))
             return null;
 
-        DebugLog.Write($"GetOrLoadImageBitmap: disparando carga nueva de {key} -- {url}");
+        DebugLog.Write($"GetOrLoadImageBitmap: firing new load from {key}. {url}");
         _ = LoadImageAsync(key, url, targetSize);
         return null;
     }
@@ -78,7 +78,7 @@ internal sealed partial class ChatRenderWindow
 
             if (_target is null)
             {
-                DebugLog.Write($"LoadImageAsync: {key} -- _target still null, not caching, will retry");
+                DebugLog.Write($"LoadImageAsync: {key}.  _target still null, not caching, will retry");
                 return;
             }
 
@@ -98,6 +98,38 @@ internal sealed partial class ChatRenderWindow
 
             RequestRender();
         });
+    }
+
+    /// <summary>
+    /// Resolves an embedded-resource badge (Kick role badges/sub_gifter tiers, see
+    /// KickBadgeIconLoader) into a cached ID2D1Bitmap. Unlike GetOrLoadImageBitmap, this has no
+    /// network round-trip -- the WebP is already in the assembly -- so it decodes and creates the
+    /// bitmap synchronously on first use instead of going through the async load-in-flight path.
+    /// </summary>
+    private ID2D1Bitmap? GetOrCreateLocalBadgeBitmap(ID2D1DCRenderTarget target, string cacheKey, string localIconKey)
+    {
+        if (_imageCache.TryGetValue(cacheKey, out var cached))
+            return cached;
+
+        var decoded = KickBadgeIconLoader.GetDecodedIcon(localIconKey);
+        if (decoded is null)
+        {
+            _imageCache.Set(cacheKey, null);
+            return null;
+        }
+
+        try
+        {
+            var bitmap = D2DBitmapLoader.CreateBitmap(target, decoded.Value, cacheKey);
+            _imageCache.Set(cacheKey, bitmap);
+            return bitmap;
+        }
+        catch (Exception ex)
+        {
+            DebugLog.WriteException($"GetOrCreateLocalBadgeBitmap ({cacheKey})", ex);
+            _imageCache.Set(cacheKey, null);
+            return null;
+        }
     }
 
     private ID2D1SolidColorBrush GetUsernameBrush(ID2D1DCRenderTarget target, string hex)
@@ -265,14 +297,14 @@ internal sealed partial class ChatRenderWindow
 
             if (_target is null)
             {
-                DebugLog.Write($"LoadAnimatedAsync: {key} -- _target still null, not caching");
+                DebugLog.Write($"LoadAnimatedAsync: {key}. _target still null, not caching");
                 return;
             }
 
             if (frames is null || frames.Count < 2)
             {
                 DebugLog.Write(
-                    $"LoadAnimatedAsync: {key} has no animation (frames<2) -- staying static, cached as null"
+                    $"LoadAnimatedAsync: {key} has no animation (frames<2). Staying static, cached as null"
                 );
                 _animatedImageCache.Set(key, null);
                 return;

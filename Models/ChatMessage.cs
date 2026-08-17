@@ -7,6 +7,22 @@ public class Badge
 {
     public string Name { get; set; } = "";
     public string Version { get; set; } = "";
+
+    /// <summary>
+    /// Direct image URL for this badge instance, when the source platform hands one back inline
+    /// (e.g. Kick's per-channel subscriber_badges, resolved by tenure months). Null for badges that
+    /// rely on the existing Name/Version lookup against a pre-fetched map (Twitch badges via
+    /// _badgeUrls). When set, DrawBadges uses this directly and skips the map lookup.
+    /// </summary>
+    public string? IconUrl { get; set; }
+
+    /// <summary>
+    /// Embedded resource key (see KickBadgeIconLoader) for badges with no Kick-hosted image URL.
+    /// Kick's fixed global role badges (moderator/vip/og/founder/broadcaster/verified/staff) and
+    /// sub_gifter tiers, extracted as WebP and shipped inside the app. Checked by DrawBadges only
+    /// when both IconUrl and the _badgeUrls map lookup come up empty.
+    /// </summary>
+    public string? LocalIcon { get; set; }
 }
 
 public enum EmoteSource
@@ -15,6 +31,7 @@ public enum EmoteSource
     Bttv,
     Ffz,
     SevenTv,
+    Kick,
 }
 
 public class EmotePosition
@@ -61,7 +78,7 @@ public class ChatMessage
 
     /// <summary>
     /// Canonical classification of <see cref="EventType"/>, derived via <see cref="EventTypeIds.Classify"/>.
-    /// Defaults to Unknown (the same "generic event" appearance as before this field existed) -- it is
+    /// Defaults to Unknown (the same "generic event" appearance as before this field existed). It is
     /// a convenience for switch-based icon/color/family logic, never a replacement for EventType, which
     /// remains the raw string that is actually persisted and always carries whatever Twitch/Streamlabs sent.
     /// </summary>

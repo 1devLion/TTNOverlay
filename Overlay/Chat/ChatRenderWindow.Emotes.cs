@@ -62,7 +62,7 @@ internal sealed partial class ChatRenderWindow
             TwitchAuthService.ClientId,
             token
         );
-        DebugLog.Write($"LoadThirdPartyEmotesAsync: {map.Count} emotes de terceros resueltos");
+        DebugLog.Write($"LoadThirdPartyEmotesAsync: {map.Count} resolved third-party emotes");
 
         PostToUiThread(() =>
         {
@@ -122,10 +122,24 @@ internal sealed partial class ChatRenderWindow
         foreach (var badge in badges)
         {
             string key = $"badge:{badge.Name}/{badge.Version}";
-            if (
-                _badgeUrls is null
-                || !_badgeUrls.TryGetValue($"{badge.Name}/{badge.Version}", out var url)
-            )
+            string? url = badge.IconUrl;
+            ID2D1Bitmap? bitmap;
+
+            if (url is not null)
+            {
+                bitmap = GetOrLoadImageBitmap(key, url, DecodeTargetSize((int)BadgeSize));
+            }
+            else if (_badgeUrls is not null && _badgeUrls.TryGetValue($"{badge.Name}/{badge.Version}", out url))
+            {
+                bitmap = GetOrLoadImageBitmap(key, url, DecodeTargetSize((int)BadgeSize));
+            }
+            else if (badge.LocalIcon is not null)
+            {
+                // Embedded WebP (Kick role badges/sub_gifter tiers). No network, resolved
+                // synchronously against the assembly's bundled resources.
+                bitmap = GetOrCreateLocalBadgeBitmap(target, key, badge.LocalIcon);
+            }
+            else
             {
                 if (_loggedWaitingBadges.Add(key))
                     DebugLog.Write(
@@ -133,13 +147,11 @@ internal sealed partial class ChatRenderWindow
                     );
                 continue;
             }
-
-            var bitmap = GetOrLoadImageBitmap(key, url, DecodeTargetSize((int)BadgeSize));
             if (bitmap is null)
             {
                 if (_loggedWaitingBadges.Add(key))
                     DebugLog.Write(
-                        $"DrawBadges: bitmap not available yet for {key}, no se repetirá este log hasta que resuelva"
+                        $"DrawBadges: bitmap not available yet for {key}, this log will not be repeated until resolved"
                     );
                 continue;
             }

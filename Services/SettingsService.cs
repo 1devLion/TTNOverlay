@@ -9,6 +9,21 @@ namespace TTNOverlay.Services;
 public class AppSettings
 {
     public string Channel { get; set; } = "";
+
+    /// <summary>"Twitch", "Kick", or "Multichat". Individual modes use Channel (Twitch) or
+    /// KickChannel (Kick) as-is, same as before this setting existed. Multichat additionally uses
+    /// MultichatTwitchEnabled/MultichatKickEnabled per-source, and MultichatUseSameChannel to decide
+    /// whether Channel alone feeds every enabled source or each source keeps its own channel box.</summary>
+    public string ChatSourceMode { get; set; } = "Twitch";
+
+    public string KickChannel { get; set; } = "";
+
+    public bool MultichatUseSameChannel { get; set; } = false;
+
+    public bool MultichatTwitchEnabled { get; set; } = true;
+
+    public bool MultichatKickEnabled { get; set; } = true;
+
     public double FontSize { get; set; } = 20;
     public int MessageTimeoutSeconds { get; set; } = 10;
     public int MaxMessages { get; set; } = 50;
