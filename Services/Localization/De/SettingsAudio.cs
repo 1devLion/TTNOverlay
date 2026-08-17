@@ -7,5 +7,6 @@ internal static partial class DeStrings
         ["Settings_Audio_OutputDevice"] = "Ausgabegerät",
         ["Settings_Audio_MessageVolume"] = "Nachrichtenlautstärke: ",
         ["Settings_Audio_EventVolume"] = "Ereignislautstärke: ",
+        ["Settings_Audio_SystemDefaultDevice"] = "Systemstandard",
     };
 }

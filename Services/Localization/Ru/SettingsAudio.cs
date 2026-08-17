@@ -7,5 +7,6 @@ internal static partial class RuStrings
         ["Settings_Audio_OutputDevice"] = "Устройство вывода",
         ["Settings_Audio_MessageVolume"] = "Громкость сообщений: ",
         ["Settings_Audio_EventVolume"] = "Громкость событий: ",
+        ["Settings_Audio_SystemDefaultDevice"] = "Системное по умолчанию",
     };
 }

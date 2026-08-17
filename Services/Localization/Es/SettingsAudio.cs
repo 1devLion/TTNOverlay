@@ -7,5 +7,6 @@ internal static partial class EsStrings
         ["Settings_Audio_OutputDevice"] = "Dispositivo de salida",
         ["Settings_Audio_MessageVolume"] = "Volumen de mensajes: ",
         ["Settings_Audio_EventVolume"] = "Volumen de eventos: ",
+        ["Settings_Audio_SystemDefaultDevice"] = "Predeterminado del sistema",
     };
 }

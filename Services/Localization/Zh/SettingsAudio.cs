@@ -7,5 +7,6 @@ internal static partial class ZhStrings
         ["Settings_Audio_OutputDevice"] = "输出设备",
         ["Settings_Audio_MessageVolume"] = "消息音量：",
         ["Settings_Audio_EventVolume"] = "事件音量：",
+        ["Settings_Audio_SystemDefaultDevice"] = "系统默认",
     };
 }

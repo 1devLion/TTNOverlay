@@ -7,5 +7,6 @@ internal static partial class PtStrings
         ["Settings_Audio_OutputDevice"] = "Dispositivo de saída",
         ["Settings_Audio_MessageVolume"] = "Volume de mensagens: ",
         ["Settings_Audio_EventVolume"] = "Volume de eventos: ",
+        ["Settings_Audio_SystemDefaultDevice"] = "Padrão do sistema",
     };
 }
