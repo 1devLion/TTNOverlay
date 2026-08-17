@@ -15,6 +15,7 @@ internal static partial class EsStrings
         ["Settings_Section_Alerts"] = "Alertas",
         ["Settings_Section_Audio"] = "Audio",
         ["Settings_Section_About"] = "Acerca de",
+        ["Settings_Section_ViewerCount"] = "Contador de espectadores",
         ["Settings_General_Theme"] = "Tema",
         ["Settings_Theme_Dark"] = "Oscuro",
         ["Settings_Theme_Light"] = "Claro",

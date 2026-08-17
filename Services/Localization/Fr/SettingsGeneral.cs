@@ -15,6 +15,7 @@ internal static partial class FrStrings
         ["Settings_Section_Alerts"] = "Alertes",
         ["Settings_Section_Audio"] = "Audio",
         ["Settings_Section_About"] = "À propos",
+        ["Settings_Section_ViewerCount"] = "Compteur de spectateurs",
         ["Settings_General_Theme"] = "Thème",
         ["Settings_Theme_Dark"] = "Sombre",
         ["Settings_Theme_Light"] = "Clair",

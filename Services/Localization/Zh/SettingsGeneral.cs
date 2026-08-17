@@ -15,6 +15,7 @@ internal static partial class ZhStrings
         ["Settings_Section_Alerts"] = "提醒",
         ["Settings_Section_Audio"] = "音频",
         ["Settings_Section_About"] = "关于",
+        ["Settings_Section_ViewerCount"] = "观众数",
         ["Settings_General_Theme"] = "主题",
         ["Settings_Theme_Dark"] = "暗色",
         ["Settings_Theme_Light"] = "亮色",

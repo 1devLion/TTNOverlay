@@ -115,6 +115,49 @@ public class KickChatClient : IKickChatClient
         }
     }
 
+    /// <inheritdoc />
+    public async Task<int?> GetViewerCountAsync()
+    {
+        if (string.IsNullOrEmpty(_channelSlug))
+            return null;
+
+        string? json = await ImpersonatedHttpResolver.GetAsync("kick.com", $"/api/v2/channels/{_channelSlug}");
+        if (json is null)
+        {
+            DebugLog.Write($"KickChatClient.GetViewerCountAsync: could not resolve /api/v2/channels/{_channelSlug}");
+            return null;
+        }
+
+        try
+        {
+            using var doc = JsonDocument.Parse(json);
+
+            // "livestream" is null (or absent) when the channel is offline — that's the expected,
+            // common case, not an error, so no viewer count is neither a bug nor worth a log line.
+            if (
+                doc.RootElement.TryGetProperty("livestream", out var live)
+                && live.ValueKind == JsonValueKind.Object
+                && live.TryGetProperty("viewer_count", out var viewerCountEl)
+            )
+            {
+                return viewerCountEl.ValueKind switch
+                {
+                    JsonValueKind.Number => (int)viewerCountEl.GetDouble(),
+                    _ => null,
+                };
+            }
+
+            return null;
+        }
+        catch (JsonException ex)
+        {
+            DebugLog.Write(
+                $"KickChatClient.GetViewerCountAsync: JSON from /api/v2/channels/{_channelSlug} not parseable ({ex.Message})"
+            );
+            return null;
+        }
+    }
+
     /// <summary>
     /// Resolves the numeric chatroom ID for a given channel slug.
     /// </summary>

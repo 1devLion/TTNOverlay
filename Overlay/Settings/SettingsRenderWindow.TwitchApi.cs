@@ -1,3 +1,4 @@
+using TTNOverlay.Native;
 using TTNOverlay.Overlay.Controls;
 using TTNOverlay.Services;
 using Vortice.Direct2D1;
@@ -9,34 +10,18 @@ namespace TTNOverlay.Overlay;
 
 /// <summary>
 /// SettingsRenderWindow partial: the Twitch API section (client credentials and moderator login).
+/// Viewer-count fields used to live here too, but that coupled the counter -- which also covers Kick
+/// and eventually YouTube -- to a Twitch-only settings screen. They now live in their own section,
+/// SettingsRenderWindow.ViewerCount.cs.
 /// </summary>
 internal sealed partial class SettingsRenderWindow
 {
 
     private readonly IModerationService _moderation;
     private bool _enableTwitchApi;
-    private bool _showViewerCount;
     private bool _showBadges;
     private bool _originalEnableTwitchApi;
-    private bool _originalShowViewerCount;
     private bool _originalShowBadges;
-
-    private readonly TextBox _viewerCountSizeBox = new() { MaxLength = 4 };
-    private string _viewerCountColorHex = "";
-    private byte _viewerCountColorAlpha = 0xAA;
-    private string _originalViewerCountColorHex = "";
-    private byte _originalViewerCountColorAlpha;
-    private double _originalViewerCountSize;
-    private Rect _viewerCountColorSwatchRect;
-    private Rect _pickViewerCountColorButtonRect;
-    private Rect _resetViewerCountColorButtonRect;
-    private Rect _viewerCountSizeFieldRect;
-
-    private string _viewerCountTextColorHex = "";
-    private string _originalViewerCountTextColorHex = "";
-    private Rect _viewerCountTextColorSwatchRect;
-    private Rect _pickViewerCountTextColorButtonRect;
-    private Rect _resetViewerCountTextColorButtonRect;
 
     private string? _twitchLoginTransientStatus;
     private bool _twitchLoginBusy;
@@ -47,31 +32,16 @@ internal sealed partial class SettingsRenderWindow
     private void InitTwitchApi()
     {
         _enableTwitchApi = Settings.EnableTwitchApi;
-        _showViewerCount = Settings.ShowViewerCount;
         _showBadges = Settings.ShowBadges;
-        _viewerCountColorHex = Settings.ViewerCountBackgroundColor;
-        _viewerCountColorAlpha = Settings.ViewerCountBackgroundAlpha;
-        _viewerCountTextColorHex = Settings.ViewerCountTextColor;
-        _viewerCountSizeBox.Text = Settings.ViewerCountSize.ToString(System.Globalization.CultureInfo.InvariantCulture);
 
         _originalEnableTwitchApi = _enableTwitchApi;
-        _originalShowViewerCount = _showViewerCount;
         _originalShowBadges = _showBadges;
-        _originalViewerCountColorHex = _viewerCountColorHex;
-        _originalViewerCountColorAlpha = _viewerCountColorAlpha;
-        _originalViewerCountTextColorHex = _viewerCountTextColorHex;
-        _originalViewerCountSize = Settings.ViewerCountSize;
     }
 
     private void RevertTwitchApi()
     {
         Settings.EnableTwitchApi = _originalEnableTwitchApi;
-        Settings.ShowViewerCount = _originalShowViewerCount;
         Settings.ShowBadges = _originalShowBadges;
-        Settings.ViewerCountBackgroundColor = _originalViewerCountColorHex;
-        Settings.ViewerCountBackgroundAlpha = _originalViewerCountColorAlpha;
-        Settings.ViewerCountTextColor = _originalViewerCountTextColorHex;
-        Settings.ViewerCountSize = _originalViewerCountSize;
     }
 
     private void DrawTwitchApiSection(ID2D1DCRenderTarget target, float x, float width)
@@ -88,10 +58,6 @@ internal sealed partial class SettingsRenderWindow
 
         _checkboxRects.Clear();
         y = DrawCheckboxField(target, x, width, y, "Settings_TwitchApi_Enable", _enableTwitchApi, "EnableTwitchApi");
-        y = DrawCheckboxField(target, x, width, y, "Settings_TwitchApi_ShowViewerCount", _showViewerCount, "ShowViewerCount");
-        y = DrawViewerCountColorRow(target, x, width, y);
-        y = DrawViewerCountTextColorRow(target, x, width, y);
-        y = DrawTextField(target, x, width, y, "Settings_TwitchApi_ViewerCountSize", _viewerCountSizeBox, out _viewerCountSizeFieldRect, out _, enabled: _showViewerCount, fieldWidth: 120f);
         y = DrawCheckboxField(target, x, width, y, "Settings_TwitchApi_ShowBadges", _showBadges, "ShowBadges");
         y += FieldGap;
 
@@ -106,6 +72,11 @@ internal sealed partial class SettingsRenderWindow
         DrawTwitchLoginButton(target, x, y);
     }
 
+    /// <summary>
+    /// Lays out the pick/reset button pair used by a color row. Shared with
+    /// SettingsRenderWindow.ViewerCount.cs. (MeasureButtonRect itself lives in
+    /// SettingsRenderWindow.cs, shared across every section partial.)
+    /// </summary>
     private float LayoutColorRowButtons(string pickLabel, string resetLabel, float rowX, float y, float buttonHeight, out Rect pickRect, out Rect resetRect)
     {
         pickRect = MeasureButtonRect(pickLabel, rowX + 24f + 8f, y, buttonHeight, minWidth: 90f);
@@ -115,112 +86,49 @@ internal sealed partial class SettingsRenderWindow
         return resetY + buttonHeight;
     }
 
-    private float DrawViewerCountColorRow(ID2D1DCRenderTarget target, float x, float width, float y)
+    private void DrawTwitchLoginButton(ID2D1DCRenderTarget target, float x, float y)
     {
-        using (var label = DWriteFactory.CreateTextLayout(LocalizationService.T("Settings_TwitchApi_ViewerCountBackground"), _labelFormat!, width, 18f))
-            target.DrawTextLayout(new System.Numerics.Vector2(x, y), label, _secondaryBrush!);
-        y += 18f + LabelGap;
+        _twitchLoginButtonFormat ??= TwitchLoginButtonStyle.CreateFormat(DWriteFactory, 13f);
+        string actionLabel = LocalizationService.T(_moderation.IsLoggedIn ? "Common_Logout" : "Common_LoginWithTwitch");
 
-        bool enabled = _showViewerCount;
-        bool hasCustomColor = !string.IsNullOrWhiteSpace(_viewerCountColorHex);
-        string swatchHex = hasCustomColor ? _viewerCountColorHex : (ThemeService.IsDark ? "#000000" : "#F2F2F2");
+        using var actionLabelLayout = DWriteFactory.CreateTextLayout(
+            actionLabel,
+            _twitchLoginButtonFormat,
+            float.MaxValue,
+            TwitchLoginButtonStyle.Height
+        );
+        _twitchLoginActionRect = TwitchLoginButtonStyle.Measure(actionLabelLayout, x, y);
+        bool hovered = _enableTwitchApi && Contains(_twitchLoginActionRect, _hoverMouseX, _hoverMouseY);
 
-        _viewerCountColorSwatchRect = new Rect(x, y, 24f, 24f);
-        if (ColorPickerWindow.TryParseHex(swatchHex, out var cr, out var cg, out var cb))
+        if (_enableTwitchApi && !_moderation.IsLoggedIn)
         {
-            using var swatchBrush = target.CreateSolidColorBrush(new Color4(cr / 255f, cg / 255f, cb / 255f, enabled ? _viewerCountColorAlpha / 255f : 0.3f));
-            target.FillRectangle(_viewerCountColorSwatchRect, swatchBrush);
+            _twitchLoginPrimaryFillBrush ??= target.CreateSolidColorBrush(TwitchLoginButtonStyle.PrimaryFill);
+            _twitchLoginPrimaryFillHoverBrush ??= target.CreateSolidColorBrush(TwitchLoginButtonStyle.PrimaryFillHover);
+            _twitchLoginPrimaryTextBrush ??= target.CreateSolidColorBrush(TwitchLoginButtonStyle.PrimaryText);
+            TwitchLoginButtonStyle.DrawPrimary(
+                target,
+                _twitchLoginActionRect,
+                actionLabelLayout,
+                hovered ? _twitchLoginPrimaryFillHoverBrush : _twitchLoginPrimaryFillBrush,
+                _twitchLoginPrimaryTextBrush,
+                GetOrCreateTwitchLoginIconBitmap(target, TwitchIconLoader.Variant.White)
+            );
+            return;
         }
-        target.DrawRectangle(_viewerCountColorSwatchRect, _fieldBorderBrush!, 1f);
 
-        string pickLabel = LocalizationService.T("Settings_Alerts_PickColor");
-        string resetLabel = LocalizationService.T("Settings_TwitchApi_ResetViewerCountColor");
-        float rowBottom = LayoutColorRowButtons(pickLabel, resetLabel, x, y, 24f, out _pickViewerCountColorButtonRect, out _resetViewerCountColorButtonRect);
-        DrawFooterButton(target, _pickViewerCountColorButtonRect, pickLabel, primary: false, enabled: enabled);
-        DrawFooterButton(target, _resetViewerCountColorButtonRect, resetLabel, primary: false, enabled: enabled && hasCustomColor);
-
-        return rowBottom + FieldGap;
-    }
-
-    private float DrawViewerCountTextColorRow(ID2D1DCRenderTarget target, float x, float width, float y)
-    {
-        using (var label = DWriteFactory.CreateTextLayout(LocalizationService.T("Settings_TwitchApi_ViewerCountTextColor"), _labelFormat!, width, 18f))
-            target.DrawTextLayout(new System.Numerics.Vector2(x, y), label, _secondaryBrush!);
-        y += 18f + LabelGap;
-
-        bool enabled = _showViewerCount;
-        bool hasCustomColor = !string.IsNullOrWhiteSpace(_viewerCountTextColorHex);
-        string swatchHex = hasCustomColor ? _viewerCountTextColorHex : (ThemeService.IsDark ? "#FFFFFF" : "#000000");
-
-        _viewerCountTextColorSwatchRect = new Rect(x, y, 24f, 24f);
-        if (ColorPickerWindow.TryParseHex(swatchHex, out var cr, out var cg, out var cb))
-        {
-            using var swatchBrush = target.CreateSolidColorBrush(new Color4(cr / 255f, cg / 255f, cb / 255f, enabled ? 1f : 0.3f));
-            target.FillRectangle(_viewerCountTextColorSwatchRect, swatchBrush);
-        }
-        target.DrawRectangle(_viewerCountTextColorSwatchRect, _fieldBorderBrush!, 1f);
-
-        string pickLabel = LocalizationService.T("Settings_Alerts_PickColor");
-        string resetLabel = LocalizationService.T("Settings_TwitchApi_ResetViewerCountColor");
-        float rowBottom = LayoutColorRowButtons(pickLabel, resetLabel, x, y, 24f, out _pickViewerCountTextColorButtonRect, out _resetViewerCountTextColorButtonRect);
-        DrawFooterButton(target, _pickViewerCountTextColorButtonRect, pickLabel, primary: false, enabled: enabled);
-        DrawFooterButton(target, _resetViewerCountTextColorButtonRect, resetLabel, primary: false, enabled: enabled && hasCustomColor);
-
-        return rowBottom + FieldGap;
-    }
-
-    private void OpenViewerCountTextColorPicker()
-    {
-        string current = string.IsNullOrWhiteSpace(_viewerCountTextColorHex)
-            ? (ThemeService.IsDark ? "#FFFFFF" : "#000000")
-            : _viewerCountTextColorHex;
-
-        ColorPickerWindow.Show(Hwnd, PostToUiThread, current, 0xFF, result =>
-        {
-            if (result is null)
-                return;
-            _viewerCountTextColorHex = result.Value.Hex;
-            Settings.ViewerCountTextColor = _viewerCountTextColorHex;
-            RequestRender();
-        });
-    }
-
-    private void ResetViewerCountTextColor()
-    {
-        _viewerCountTextColorHex = "";
-        Settings.ViewerCountTextColor = "";
-        RequestRender();
-    }
-
-    private void OpenViewerCountColorPicker()
-    {
-        string current = string.IsNullOrWhiteSpace(_viewerCountColorHex)
-            ? (ThemeService.IsDark ? "#000000" : "#F2F2F2")
-            : _viewerCountColorHex;
-
-        ColorPickerWindow.Show(Hwnd, PostToUiThread, current, _viewerCountColorAlpha, result =>
-        {
-            if (result is null)
-                return;
-            _viewerCountColorHex = result.Value.Hex;
-            _viewerCountColorAlpha = result.Value.Alpha;
-            Settings.ViewerCountBackgroundColor = _viewerCountColorHex;
-            Settings.ViewerCountBackgroundAlpha = _viewerCountColorAlpha;
-            RequestRender();
-        });
-    }
-
-    private void ResetViewerCountColor()
-    {
-        _viewerCountColorHex = "";
-        Settings.ViewerCountBackgroundColor = "";
-        RequestRender();
-    }
-
-    private void CommitViewerCountSize()
-    {
-        if (double.TryParse(_viewerCountSizeBox.Text, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var size))
-            Settings.ViewerCountSize = System.Math.Clamp(size, 8, 32);
+        _twitchLoginSecondaryFillBrush ??= target.CreateSolidColorBrush(TwitchLoginButtonStyle.SecondaryFill(ThemeService.IsDark));
+        _twitchLoginSecondaryFillHoverBrush ??= target.CreateSolidColorBrush(TwitchLoginButtonStyle.SecondaryFillHover(ThemeService.IsDark));
+        _twitchLoginSecondaryBorderBrush ??= target.CreateSolidColorBrush(TwitchLoginButtonStyle.SecondaryBorder(ThemeService.IsDark));
+        _twitchLoginSecondaryTextBrush ??= target.CreateSolidColorBrush(TwitchLoginButtonStyle.SecondaryText(ThemeService.IsDark));
+        TwitchLoginButtonStyle.DrawSecondary(
+            target,
+            _twitchLoginActionRect,
+            actionLabelLayout,
+            hovered ? _twitchLoginSecondaryFillHoverBrush : _twitchLoginSecondaryFillBrush,
+            _twitchLoginSecondaryBorderBrush,
+            _enableTwitchApi ? _twitchLoginSecondaryTextBrush : _secondaryBrush!,
+            GetOrCreateTwitchLoginIconBitmap(target, ThemeService.IsDark ? TwitchIconLoader.Variant.White : TwitchIconLoader.Variant.Dark)
+        );
     }
 
     private IDWriteTextFormat? _twitchLoginButtonFormat;
@@ -270,51 +178,6 @@ internal sealed partial class SettingsRenderWindow
 
         }
         return _twitchLoginIconWhiteBitmap;
-    }
-
-    private void DrawTwitchLoginButton(ID2D1DCRenderTarget target, float x, float y)
-    {
-        _twitchLoginButtonFormat ??= TwitchLoginButtonStyle.CreateFormat(DWriteFactory, 13f);
-        string actionLabel = LocalizationService.T(_moderation.IsLoggedIn ? "Common_Logout" : "Common_LoginWithTwitch");
-
-        using var actionLabelLayout = DWriteFactory.CreateTextLayout(
-            actionLabel,
-            _twitchLoginButtonFormat,
-            float.MaxValue,
-            TwitchLoginButtonStyle.Height
-        );
-        _twitchLoginActionRect = TwitchLoginButtonStyle.Measure(actionLabelLayout, x, y);
-        bool hovered = _enableTwitchApi && Contains(_twitchLoginActionRect, _hoverMouseX, _hoverMouseY);
-
-        if (_enableTwitchApi && !_moderation.IsLoggedIn)
-        {
-            _twitchLoginPrimaryFillBrush ??= target.CreateSolidColorBrush(TwitchLoginButtonStyle.PrimaryFill);
-            _twitchLoginPrimaryFillHoverBrush ??= target.CreateSolidColorBrush(TwitchLoginButtonStyle.PrimaryFillHover);
-            _twitchLoginPrimaryTextBrush ??= target.CreateSolidColorBrush(TwitchLoginButtonStyle.PrimaryText);
-            TwitchLoginButtonStyle.DrawPrimary(
-                target,
-                _twitchLoginActionRect,
-                actionLabelLayout,
-                hovered ? _twitchLoginPrimaryFillHoverBrush : _twitchLoginPrimaryFillBrush,
-                _twitchLoginPrimaryTextBrush,
-                GetOrCreateTwitchLoginIconBitmap(target, TwitchIconLoader.Variant.White)
-            );
-            return;
-        }
-
-        _twitchLoginSecondaryFillBrush ??= target.CreateSolidColorBrush(TwitchLoginButtonStyle.SecondaryFill(ThemeService.IsDark));
-        _twitchLoginSecondaryFillHoverBrush ??= target.CreateSolidColorBrush(TwitchLoginButtonStyle.SecondaryFillHover(ThemeService.IsDark));
-        _twitchLoginSecondaryBorderBrush ??= target.CreateSolidColorBrush(TwitchLoginButtonStyle.SecondaryBorder(ThemeService.IsDark));
-        _twitchLoginSecondaryTextBrush ??= target.CreateSolidColorBrush(TwitchLoginButtonStyle.SecondaryText(ThemeService.IsDark));
-        TwitchLoginButtonStyle.DrawSecondary(
-            target,
-            _twitchLoginActionRect,
-            actionLabelLayout,
-            hovered ? _twitchLoginSecondaryFillHoverBrush : _twitchLoginSecondaryFillBrush,
-            _twitchLoginSecondaryBorderBrush,
-            _enableTwitchApi ? _twitchLoginSecondaryTextBrush : _secondaryBrush!,
-            GetOrCreateTwitchLoginIconBitmap(target, ThemeService.IsDark ? TwitchIconLoader.Variant.White : TwitchIconLoader.Variant.Dark)
-        );
     }
 
     private void DisposeTwitchLoginButtonResources()
@@ -397,14 +260,6 @@ internal sealed partial class SettingsRenderWindow
         {
             HandleTwitchLoginAction();
             return;
-        }
-
-        if (_showViewerCount)
-        {
-            if (Contains(_pickViewerCountColorButtonRect, clientX, clientY)) { OpenViewerCountColorPicker(); return; }
-            if (!string.IsNullOrWhiteSpace(_viewerCountColorHex) && Contains(_resetViewerCountColorButtonRect, clientX, clientY)) { ResetViewerCountColor(); return; }
-            if (Contains(_pickViewerCountTextColorButtonRect, clientX, clientY)) { OpenViewerCountTextColorPicker(); return; }
-            if (!string.IsNullOrWhiteSpace(_viewerCountTextColorHex) && Contains(_resetViewerCountTextColorButtonRect, clientX, clientY)) { ResetViewerCountTextColor(); return; }
         }
     }
 }

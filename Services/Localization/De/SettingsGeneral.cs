@@ -15,6 +15,7 @@ internal static partial class DeStrings
         ["Settings_Section_Alerts"] = "Alarme",
         ["Settings_Section_Audio"] = "Audio",
         ["Settings_Section_About"] = "Über",
+        ["Settings_Section_ViewerCount"] = "Zuschauerzahl",
         ["Settings_General_Theme"] = "Design",
         ["Settings_Theme_Dark"] = "Dunkel",
         ["Settings_Theme_Light"] = "Hell",

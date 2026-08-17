@@ -15,6 +15,7 @@ internal static partial class EnStrings
         ["Settings_Section_Alerts"] = "Alerts",
         ["Settings_Section_Audio"] = "Audio",
         ["Settings_Section_About"] = "About",
+        ["Settings_Section_ViewerCount"] = "Viewer Count",
         ["Settings_General_Theme"] = "Theme",
         ["Settings_Theme_Dark"] = "Dark",
         ["Settings_Theme_Light"] = "Light",

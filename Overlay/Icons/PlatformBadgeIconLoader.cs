@@ -13,12 +13,16 @@ internal static class PlatformBadgeIconLoader
 {
     /// <summary>
     /// Keys match Badge.LocalIcon as set by ChatRenderWindow.Feed.cs (PlatformBadge helper):
-    /// "platform/twitch" and "platform/kick".
+    /// "platform/twitch", "platform/kick", "platform/youtube". youtube.webp isn't bundled as an
+    /// embedded resource yet -- until it is, GetDecodedIcon("platform/youtube") just logs a "not
+    /// found" and returns null (same as any other missing resource), so this entry is safe to keep
+    /// ahead of the asset landing.
     /// </summary>
     private static readonly Dictionary<string, string> ResourceNames = new()
     {
         ["platform/twitch"] = "twitch.webp",
         ["platform/kick"] = "kick.webp",
+        ["platform/youtube"] = "youtube.webp",
     };
 
     private static readonly Dictionary<string, D2DBitmapLoader.DecodedImage?> _cache = new();

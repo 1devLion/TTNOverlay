@@ -14,7 +14,7 @@ namespace TTNOverlay.Overlay;
 internal sealed partial class SettingsRenderWindow : OverlayWindowBase
 {
 
-    /// <summary>Ideal size on a large-enough screen. Actual creation size is clamped to fit the monitor's work area — see Win32.GetSizeFittingScreen.</summary>
+    /// <summary>Ideal size on a large-enough screen. Actual creation size is clamped to fit the monitor's work area. See Win32.GetSizeFittingScreen.</summary>
     internal const int PreferredWidth = 1024;
     internal const int PreferredHeight = 768;
 
@@ -51,8 +51,16 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         "Settings_Section_Streamlabs",
         "Settings_Section_Alerts",
         "Settings_Section_Audio",
+        "Settings_Section_ViewerCount",
         "Settings_Section_About",
     };
+
+    /// <summary>Sidebar index of the Viewer Count section. Kept second-to-last, directly above About.</summary>
+    private const int ViewerCountSectionIndex = 6;
+
+    /// <summary>Sidebar index of the About section. Always the last row. Keep this in sync with
+    /// SectionLabelKeys above if any other section is ever appended.</summary>
+    private const int AboutSectionIndex = 7;
 
     public AppSettings Settings { get; }
 
@@ -118,8 +126,8 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
     {
         _themeDropdown.Width = 160f;
         _languageDropdown.Width = 160f;
-        // 160f (shared with Theme/Language) was too narrow once "Multichat (Twitch + Kick)" existed --
-        // it fits in English but overflows the box/dropdown-item text in longer languages (Russian,
+        // 160f (shared with Theme/Language) was too narrow once "Multichat (Twitch + Kick)" existed
+        // It fits in English but overflows the box/dropdown-item text in longer languages (Russian,
         // Portuguese, Japanese full-width text). 260f matches the other dropdowns here that also carry
         // longer entries (_eventAlertSourceDropdown, _audioDeviceDropdown).
         _chatSourceDropdown.Width = 260f;
@@ -131,6 +139,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         InitGeneral();
         InitHotkeys();
         InitTwitchApi();
+        InitViewerCount();
         InitStreamlabs();
         InitAudio();
         InitAlerts();
@@ -211,7 +220,9 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
             DrawAlertsSection(target, contentX, contentWidth, height);
         else if (_selectedSection == 5)
             DrawAudioSection(target, contentX, contentWidth);
-        else if (_selectedSection == 6)
+        else if (_selectedSection == ViewerCountSectionIndex)
+            DrawViewerCountSection(target, contentX, contentWidth);
+        else if (_selectedSection == AboutSectionIndex)
             DrawAboutSection(target, contentX, contentWidth, height);
 
         DrawFooter(target, width, height);
@@ -224,6 +235,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         _messageSoundPresetDropdown.Draw(target, DWriteFactory, _textBrush);
         _eventSoundPresetDropdown.Draw(target, DWriteFactory, _textBrush);
         _eventColorModeDropdown.Draw(target, DWriteFactory, _textBrush);
+        _viewerCountModeDropdown.Draw(target, DWriteFactory, _textBrush);
     }
 
     private void DrawTitleBar(ID2D1DCRenderTarget target, float width)
@@ -296,16 +308,22 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         float y = TitleBarHeight + Padding;
         for (int i = 0; i < SectionLabelKeys.Length; i++)
         {
-            var rowRect = new Rect(0f, y, SidebarWidth, SidebarRowHeight);
+            // Row height is measured per-label instead of using the fixed SidebarRowHeight: verbose
+            // languages (e.g. Spanish "Contador de espectadores") can wrap to two lines in the narrow
+            // sidebar column, and a fixed 40px row let the second line spill below the highlight/hover
+            // rect into the next row. Rows that fit on one line keep the original 40px height exactly.
+            using var layout = DWriteFactory.CreateTextLayout(LocalizationService.T(SectionLabelKeys[i]), _sidebarFormat!, SidebarWidth - Padding, 1000f);
+            float rowHeight = System.Math.Max(SidebarRowHeight, layout.Metrics.Height + LabelGap * 2f);
+
+            var rowRect = new Rect(0f, y, SidebarWidth, rowHeight);
             _sidebarRowRects.Add(rowRect);
 
             if (i == _selectedSection)
                 target.FillRectangle(rowRect, _sidebarSelectedBrush!);
 
-            using var layout = DWriteFactory.CreateTextLayout(LocalizationService.T(SectionLabelKeys[i]), _sidebarFormat!, SidebarWidth - Padding, SidebarRowHeight);
-            target.DrawTextLayout(new System.Numerics.Vector2(Padding, y + (SidebarRowHeight - 18f) / 2f), layout, i == _selectedSection ? _textBrush! : _secondaryBrush!);
+            target.DrawTextLayout(new System.Numerics.Vector2(Padding, y + (rowHeight - layout.Metrics.Height) / 2f), layout, i == _selectedSection ? _textBrush! : _secondaryBrush!);
 
-            y += SidebarRowHeight;
+            y += rowHeight;
         }
 
         target.DrawLine(
@@ -472,12 +490,12 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
     }
 
     /// <summary>
-    /// True while any of the 7 dropdowns in this window has its item list expanded.
+    /// True while any of the 8 dropdowns in this window has its item list expanded.
     /// </summary>
     private bool AnyDropdownOpen() =>
         _themeDropdown.IsOpen || _languageDropdown.IsOpen || _chatSourceDropdown.IsOpen || _eventAlertSourceDropdown.IsOpen
         || _audioDeviceDropdown.IsOpen || _messageSoundPresetDropdown.IsOpen || _eventSoundPresetDropdown.IsOpen
-        || _eventColorModeDropdown.IsOpen;
+        || _eventColorModeDropdown.IsOpen || _viewerCountModeDropdown.IsOpen;
 
     protected override void OnClientLButtonDown(int clientX, int clientY)
     {
@@ -499,7 +517,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
             return;
         }
 
-        if (_selectedSection != 0 && _selectedSection != 2 && _selectedSection != 3)
+        if (_selectedSection != 0 && _selectedSection != 3 && _selectedSection != ViewerCountSectionIndex)
             return;
 
         bool shift = (Win32.GetKeyState(Win32.VK_SHIFT) & 0x8000) != 0;
@@ -519,7 +537,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
             else
                 BlurFocusedTextBox();
         }
-        else if (_selectedSection == 2)
+        else if (_selectedSection == ViewerCountSectionIndex)
         {
             if (_showViewerCount && Contains(_viewerCountSizeFieldRect, clientX, clientY))
                 FocusTextBox(_viewerCountSizeBox, _viewerCountSizeFieldRect, clientX, shift);
@@ -598,6 +616,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         _messageSoundPresetDropdown.HandleMouseMove(clientX, clientY);
         _eventSoundPresetDropdown.HandleMouseMove(clientX, clientY);
         _eventColorModeDropdown.HandleMouseMove(clientX, clientY);
+        _viewerCountModeDropdown.HandleMouseMove(clientX, clientY);
 
         if (_focusedTextBox is null)
             return;
@@ -653,7 +672,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
 
         if (_themeDropdown.HandleClick(clientX, clientY) || _languageDropdown.HandleClick(clientX, clientY) || _chatSourceDropdown.HandleClick(clientX, clientY) || _eventAlertSourceDropdown.HandleClick(clientX, clientY)
             || _audioDeviceDropdown.HandleClick(clientX, clientY) || _messageSoundPresetDropdown.HandleClick(clientX, clientY) || _eventSoundPresetDropdown.HandleClick(clientX, clientY)
-            || _eventColorModeDropdown.HandleClick(clientX, clientY))
+            || _eventColorModeDropdown.HandleClick(clientX, clientY) || _viewerCountModeDropdown.HandleClick(clientX, clientY))
         {
             RequestRender();
             return;
@@ -701,7 +720,13 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
             return;
         }
 
-        if (_selectedSection == 6)
+        if (_selectedSection == ViewerCountSectionIndex)
+        {
+            HandleViewerCountSectionClick(clientX, clientY);
+            return;
+        }
+
+        if (_selectedSection == AboutSectionIndex)
         {
             HandleAboutSectionClick(clientX, clientY);
             return;
@@ -760,6 +785,9 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
             case "EnableGlobalHotkeys": _enableGlobalHotkeys = !_enableGlobalHotkeys; Settings.EnableGlobalHotkeys = _enableGlobalHotkeys; break;
             case "EnableTwitchApi": _enableTwitchApi = !_enableTwitchApi; Settings.EnableTwitchApi = _enableTwitchApi; break;
             case "ShowViewerCount": _showViewerCount = !_showViewerCount; Settings.ShowViewerCount = _showViewerCount; break;
+            case "ViewerCountIncludeTwitch": _viewerCountIncludeTwitch = !_viewerCountIncludeTwitch; Settings.ViewerCountIncludeTwitch = _viewerCountIncludeTwitch; break;
+            case "ViewerCountIncludeKick": _viewerCountIncludeKick = !_viewerCountIncludeKick; Settings.ViewerCountIncludeKick = _viewerCountIncludeKick; break;
+            case "ViewerCountIncludeYouTube": _viewerCountIncludeYouTube = !_viewerCountIncludeYouTube; Settings.ViewerCountIncludeYouTube = _viewerCountIncludeYouTube; break;
             case "ShowBadges": _showBadges = !_showBadges; Settings.ShowBadges = _showBadges; break;
             case "EnableStreamlabsEvents":
                 _enableStreamlabsEvents = !_enableStreamlabsEvents;
@@ -783,6 +811,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         RevertGeneral();
         RevertHotkeys();
         RevertTwitchApi();
+        RevertViewerCount();
         RevertStreamlabs();
         RevertAudio();
         RevertAlerts();
@@ -902,6 +931,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         _messageSoundPresetDropdown.Dispose();
         _eventSoundPresetDropdown.Dispose();
         _eventColorModeDropdown.Dispose();
+        _viewerCountModeDropdown.Dispose();
         DisposeGifThumbnailCache();
     }
 

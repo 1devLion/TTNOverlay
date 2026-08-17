@@ -15,6 +15,7 @@ internal static partial class JaStrings
         ["Settings_Section_Alerts"] = "アラート",
         ["Settings_Section_Audio"] = "オーディオ",
         ["Settings_Section_About"] = "バージョン情報",
+        ["Settings_Section_ViewerCount"] = "視聴者数",
         ["Settings_General_Theme"] = "テーマ",
         ["Settings_Theme_Dark"] = "ダーク",
         ["Settings_Theme_Light"] = "ライト",

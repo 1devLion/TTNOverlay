@@ -15,6 +15,7 @@ internal static partial class RuStrings
         ["Settings_Section_Alerts"] = "Оповещения",
         ["Settings_Section_Audio"] = "Аудио",
         ["Settings_Section_About"] = "О программе",
+        ["Settings_Section_ViewerCount"] = "Счётчик зрителей",
         ["Settings_General_Theme"] = "Тема",
         ["Settings_Theme_Dark"] = "Тёмная",
         ["Settings_Theme_Light"] = "Светлая",

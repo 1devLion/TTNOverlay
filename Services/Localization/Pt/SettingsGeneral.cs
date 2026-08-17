@@ -15,6 +15,7 @@ internal static partial class PtStrings
         ["Settings_Section_Alerts"] = "Alertas",
         ["Settings_Section_Audio"] = "Áudio",
         ["Settings_Section_About"] = "Sobre",
+        ["Settings_Section_ViewerCount"] = "Contador de espectadores",
         ["Settings_General_Theme"] = "Tema",
         ["Settings_Theme_Dark"] = "Escuro",
         ["Settings_Theme_Light"] = "Claro",

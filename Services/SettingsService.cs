@@ -85,6 +85,21 @@ public class AppSettings
     public bool DisableAlertCooldown { get; set; } = false;
 
     public bool ShowViewerCount { get; set; } = true;
+
+    /// <summary>
+    /// "Sum" (single badge, all included active sources added together) or "PerPlatform" (one badge
+    /// per included active source, stacked). With a single active source both modes look the same.
+    /// </summary>
+    public string ViewerCountDisplayMode { get; set; } = "Sum";
+
+    public bool ViewerCountIncludeTwitch { get; set; } = true;
+    public bool ViewerCountIncludeKick { get; set; } = true;
+
+    /// <summary>Reserved for when the YouTube integration lands — no fetch exists yet, so this
+    /// toggle currently has no effect, but the setting is here so the UI/persistence don't need
+    /// another migration later.</summary>
+    public bool ViewerCountIncludeYouTube { get; set; } = true;
+
     public string ViewerCountBackgroundColor { get; set; } = "";
     public byte ViewerCountBackgroundAlpha { get; set; } = 0xAA;
     public string ViewerCountTextColor { get; set; } = "";

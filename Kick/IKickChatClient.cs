@@ -14,4 +14,10 @@ public interface IKickChatClient : IAsyncDisposable
     event Action<Exception>? Error;
 
     Task ConnectAsync(string channelSlug);
+
+    /// <summary>
+    /// Fetches the current viewer count for the connected channel (null if offline, unresolved,
+    /// or not connected yet).
+    /// </summary>
+    Task<int?> GetViewerCountAsync();
 }
