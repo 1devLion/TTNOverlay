@@ -71,6 +71,16 @@ public static class ThemeService
 
     /// <summary>Pure white/black. Used where a hover tint or icon needs full contrast rather than the softer text grays above.</summary>
     public static Color4 PureContrastTint => IsDark
-        ? new Color4(1f, 1f, 1f, 1f)
-        : new Color4(0f, 0f, 0f, 1f);
+             ? new Color4(1f, 1f, 1f, 1f)
+             : new Color4(0f, 0f, 0f, 1f);
+
+    /// <summary>Track fill for the thin vertical scrollbar indicator...</summary>
+    public static Color4 ScrollbarTrack => IsDark
+        ? new Color4(1f, 1f, 1f, 0.05f)
+        : new Color4(0f, 0f, 0f, 0.05f);
+
+    /// <summary>Thumb fill for the thin vertical scrollbar indicator...</summary>
+    public static Color4 ScrollbarThumb => IsDark
+        ? new Color4(1f, 1f, 1f, 0.25f)
+        : new Color4(0f, 0f, 0f, 0.25f);
 }

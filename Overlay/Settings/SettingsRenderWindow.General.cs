@@ -7,11 +7,11 @@ using Rect = Vortice.Mathematics.Rect;
 namespace TTNOverlay.Overlay;
 
 /// <summary>
-/// SettingsRenderWindow partial: the General section (channel, font size, message limits, appearance).
+/// Partial implementation of SettingsRenderWindow for the General section.
+/// Handles channel, font size, message limits, appearance, and chat source settings.
 /// </summary>
 internal sealed partial class SettingsRenderWindow
 {
-
     private readonly Dropdown _themeDropdown = new();
     private readonly Dropdown _languageDropdown = new();
     private readonly Dropdown _chatSourceDropdown = new();
@@ -58,9 +58,10 @@ internal sealed partial class SettingsRenderWindow
     private Rect _maxMessagesFieldRect;
     private readonly List<(Rect Bounds, string Field)> _checkboxRects = new();
 
+    private ScrollState _generalScroll;
+
     private void InitGeneral()
     {
-
         _channelBox.Text = Settings.Channel ?? "";
         _kickChannelBox.Text = Settings.KickChannel ?? "";
         _chatSourceMode = Settings.ChatSourceMode;
@@ -119,10 +120,29 @@ internal sealed partial class SettingsRenderWindow
         Settings.HighQualityMedia = _originalHighQualityMedia;
     }
 
-    private void DrawGeneralSection(ID2D1DCRenderTarget target, float x, float width)
+    /// <summary>
+    /// Draws the General section with scrolling support.
+    /// </summary>
+    private void DrawGeneralSection(ID2D1DCRenderTarget target, float x, float width, float winHeight)
     {
-        float y = TitleBarHeight + Padding;
+        float viewportTop = TitleBarHeight;
+        float viewportHeight = System.Math.Max(0f, winHeight - FooterHeight - viewportTop);
 
+        float totalHeight = MeasureGeneralContentHeight();
+        _generalScroll.RecomputeOverflow(totalHeight, viewportHeight);
+
+        _checkboxRects.Clear();
+
+        var viewportRect = new Rect(x, viewportTop, width, viewportHeight);
+        target.PushAxisAlignedClip(viewportRect, AntialiasMode.PerPrimitive);
+        DrawGeneralContent(target, x, width, viewportTop + Padding - _generalScroll.Offset);
+        target.PopAxisAlignedClip();
+
+        ScrollbarRenderer.Draw(target, viewportRect, _generalScroll, _scrollbarTrackBrush!, _scrollbarThumbBrush!);
+    }
+
+    private void DrawGeneralContent(ID2D1DCRenderTarget target, float x, float width, float y)
+    {
         using (var header = DWriteFactory.CreateTextLayout(LocalizationService.T("Settings_Section_General"), _headerFormat!, width, 24f))
             target.DrawTextLayout(new System.Numerics.Vector2(x, y), header, _textBrush!);
         y += 32f;
@@ -131,7 +151,6 @@ internal sealed partial class SettingsRenderWindow
         y = DrawDropdownField(target, x, width, ref y, "Settings_Language", _languageDropdown, Settings.Language, out _languageFieldRect);
         y = DrawDropdownField(target, x, width, ref y, "Settings_General_ChatSource", _chatSourceDropdown, ChatSourceLabel(_chatSourceMode), out _chatSourceFieldRect);
 
-        _checkboxRects.Clear();
         y = DrawChatSourceFields(target, x, width, y);
 
         y = DrawTextField(target, x, width, y, "Settings_General_FontSize", _fontSizeBox, out _fontSizeFieldRect, out _);
@@ -145,6 +164,49 @@ internal sealed partial class SettingsRenderWindow
         DrawCheckboxField(target, x, width, y, "Settings_General_HighQualityMedia", _highQualityMedia, "HighQualityMedia");
     }
 
+    /// <summary>
+    /// Calculates the total height of the General section content.
+    /// </summary>
+    private float MeasureGeneralContentHeight()
+    {
+        const float dropdownField = 18f + LabelGap + FieldHeight + FieldGap;
+        const float textField = 18f + LabelGap + FieldHeight + FieldGap;
+        const float textFieldWithBelowInfo = textField + 28f + 4f;
+        const float checkboxField = CheckboxSize + FieldGap;
+
+        float h = Padding;
+        h += 32f; // header
+        h += dropdownField * 3; // Theme, Language, ChatSource
+
+        h += MeasureChatSourceFieldsHeight();
+
+        h += textField; // FontSize
+        h += textFieldWithBelowInfo; // MessageLifetime (+ info line)
+        h += textField; // MaxMessages
+
+        h += checkboxField * 5; // ClickThrough, ThirdPartyEmotes, EventsPanel, ModerationPanel, HighQualityMedia
+
+        return h;
+    }
+
+    /// <summary>
+    /// Calculates the height contributed by the chat source fields.
+    /// </summary>
+    private float MeasureChatSourceFieldsHeight()
+    {
+        const float textField = 18f + LabelGap + FieldHeight + FieldGap;
+        const float checkboxField = CheckboxSize + FieldGap;
+
+        if (_chatSourceMode == "Kick" || _chatSourceMode != "Multichat")
+            return textField; // single channel box (Kick or Twitch)
+
+        if (_multichatUseSameChannel)
+            return textField + checkboxField; // shared channel box + "use same channel" checkbox
+
+        // Twitch channel + its enable checkbox, Kick channel + its enable checkbox, "use same channel"
+        return textField + checkboxField + textField + checkboxField + checkboxField;
+    }
+
     private static string ChatSourceLabel(string mode) => mode switch
     {
         "Kick" => LocalizationService.T("Settings_ChatSource_Kick"),
@@ -153,11 +215,7 @@ internal sealed partial class SettingsRenderWindow
     };
 
     /// <summary>
-    /// Draws the channel field(s) for the currently selected chat source. Individual Twitch/Kick
-    /// modes keep the single-box layout that existed before Multichat. Multichat either shows one
-    /// box per enabled-or-not source (each with its own "Enable" checkbox) or, when
-    /// MultichatUseSameChannel is on, collapses back down to the single shared box. Always
-    /// followed by the "use the same channel" checkbox itself so the user can toggle back.
+    /// Draws channel input fields based on the selected chat source mode.
     /// </summary>
     private float DrawChatSourceFields(ID2D1DCRenderTarget target, float x, float width, float y)
     {
@@ -222,9 +280,7 @@ internal sealed partial class SettingsRenderWindow
     {
         _chatSourceMode = mode;
         Settings.ChatSourceMode = mode;
-        // Switching away from a mode that owned a focused box (e.g. the Kick box, hidden outside
-        // Kick/Multichat) would otherwise leave a dangling focus with no visible caret to blur it.
-        BlurFocusedTextBox();
+        BlurFocusedTextBox(); // Clear focus when switching modes.
     }
 
     private void OpenLanguageDropdown()
@@ -233,7 +289,6 @@ internal sealed partial class SettingsRenderWindow
         _languageDropdown.Open(_languageFieldRect.Left, _languageFieldRect.Bottom, client.Right - client.Left, client.Bottom - client.Top,
             new List<Dropdown.Item>
             {
-
                 new() { Label = "English", OnSelect = () => { Settings.Language = "English"; LocalizationService.Instance.SetLanguage(AppLanguage.English); } },
                 new() { Label = "Deutsch", OnSelect = () => { Settings.Language = "Deutsch"; LocalizationService.Instance.SetLanguage(AppLanguage.Deutsch); } },
                 new() { Label = "French", OnSelect = () => { Settings.Language = "French"; LocalizationService.Instance.SetLanguage(AppLanguage.French); } },
@@ -242,10 +297,8 @@ internal sealed partial class SettingsRenderWindow
                 new() { Label = "Русский", OnSelect = () => { Settings.Language = "Русский"; LocalizationService.Instance.SetLanguage(AppLanguage.Русский); } },
                 new() { Label = "Spanish", OnSelect = () => { Settings.Language = "Spanish"; LocalizationService.Instance.SetLanguage(AppLanguage.Spanish); } },
                 new() { Label = "简体中文", OnSelect = () => { Settings.Language = "简体中文"; LocalizationService.Instance.SetLanguage(AppLanguage.简体中文); } },
-
             },
             _fieldFormat!);
         RequestRender();
     }
-
 }

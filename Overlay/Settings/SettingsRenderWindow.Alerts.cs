@@ -9,11 +9,11 @@ using Rect = Vortice.Mathematics.Rect;
 namespace TTNOverlay.Overlay;
 
 /// <summary>
-/// SettingsRenderWindow partial: the Alerts section (event flash color, per-event colors, and event GIFs).
+/// Partial implementation of SettingsRenderWindow for the Alerts section.
+/// Handles visual flash, per‑event colors, and event GIFs.
 /// </summary>
 internal sealed partial class SettingsRenderWindow
 {
-
     private bool _enableVisualFlash;
     private bool _disableAlertCooldown;
     private string _flashColorHex = "#FFD700";
@@ -133,9 +133,12 @@ internal sealed partial class SettingsRenderWindow
             _pendingGifThumbnails.Clear();
         }
 
-        target.PushAxisAlignedClip(new Rect(x, viewportTop, width, viewportHeight), AntialiasMode.PerPrimitive);
+        var viewportRect = new Rect(x, viewportTop, width, viewportHeight);
+        target.PushAxisAlignedClip(viewportRect, AntialiasMode.PerPrimitive);
         DrawAlertsContent(target, x, width, viewportTop + Padding - _alertsScroll.Offset);
         target.PopAxisAlignedClip();
+
+        ScrollbarRenderer.Draw(target, viewportRect, _alertsScroll, _scrollbarTrackBrush!, _scrollbarThumbBrush!);
     }
 
     private float MeasureAlertsContentHeight()
@@ -450,10 +453,7 @@ internal sealed partial class SettingsRenderWindow
         _ => LocalizationService.T("Settings_Alerts_ColorMode_Theme"),
     };
 
-    // Keys are the exact strings persisted in settings.json (EventBoxColorModes/EventBoxColors), sourced
-    // from EventTypeIds instead of typed out by hand. Same values as before, just centralized. Adding
-    // a Kick/YouTube event to this list later means adding its id block + constants in EventTypeIds and
-    // one line here; nothing about the rendering/parsing logic elsewhere needs to change for that.
+    // Constants for event types – keys match the strings persisted in settings.
     private static readonly (string Key, string LocKey, string DefaultHex)[] AllEventTypesForColor =
     {
         (EventTypeIds.Twitch.Sub, "EventType_Sub", "#9B4DCA"),
@@ -670,11 +670,18 @@ internal sealed partial class SettingsRenderWindow
 
     protected override void OnMouseWheel(int delta, int clientX, int clientY)
     {
+        const float stepPerNotch = 48f;
+
+        if (_selectedSection == 0 && _generalScroll.Overflow > 0f)
+        {
+            _generalScroll.ApplyWheel(delta / 120f * stepPerNotch, invert: true);
+            RequestRender();
+            return;
+        }
+
         if (_selectedSection != 4 || _alertsScroll.Overflow <= 0f)
             return;
-        const float stepPerNotch = 48f;
         _alertsScroll.ApplyWheel(delta / 120f * stepPerNotch, invert: true);
         RequestRender();
     }
-
 }

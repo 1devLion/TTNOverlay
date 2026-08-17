@@ -83,6 +83,9 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
     private ID2D1SolidColorBrush? _selectionBrush;
     private ID2D1SolidColorBrush? _hoverShadowBrush;
 
+    private ID2D1SolidColorBrush? _scrollbarTrackBrush;
+    private ID2D1SolidColorBrush? _scrollbarThumbBrush;
+
     private ID2D1SolidColorBrush? _windowBackgroundBrushInverse;
     private IDWriteTextFormat? _headerFormat;
     private IDWriteTextFormat? _labelFormat;
@@ -115,7 +118,11 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
     {
         _themeDropdown.Width = 160f;
         _languageDropdown.Width = 160f;
-        _chatSourceDropdown.Width = 160f;
+        // 160f (shared with Theme/Language) was too narrow once "Multichat (Twitch + Kick)" existed --
+        // it fits in English but overflows the box/dropdown-item text in longer languages (Russian,
+        // Portuguese, Japanese full-width text). 260f matches the other dropdowns here that also carry
+        // longer entries (_eventAlertSourceDropdown, _audioDeviceDropdown).
+        _chatSourceDropdown.Width = 260f;
         _eventAlertSourceDropdown.Width = 260f;
         _audioDeviceDropdown.Width = 260f;
         _messageSoundPresetDropdown.Width = 220f;
@@ -157,6 +164,8 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         _selectionBrush ??= target.CreateSolidColorBrush(new Color4(0.30f, 0.62f, 0.98f, 0.35f));
 
         _hoverShadowBrush ??= target.CreateSolidColorBrush(new Color4(0f, 0f, 0f, 1f));
+        _scrollbarTrackBrush ??= target.CreateSolidColorBrush(ThemeService.ScrollbarTrack);
+        _scrollbarThumbBrush ??= target.CreateSolidColorBrush(ThemeService.ScrollbarThumb);
         _headerFormat ??= DWriteFactory.CreateTextFormat("Segoe UI", FontWeight.Bold, Vortice.DirectWrite.FontStyle.Normal, 18f);
         _labelFormat ??= DWriteFactory.CreateTextFormat("Segoe UI", FontWeight.Normal, Vortice.DirectWrite.FontStyle.Normal, 15f);
         _fieldFormat ??= DWriteFactory.CreateTextFormat("Segoe UI", FontWeight.Normal, Vortice.DirectWrite.FontStyle.Normal, 16f);
@@ -191,7 +200,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
             return;
 
         if (_selectedSection == 0)
-            DrawGeneralSection(target, contentX, contentWidth);
+            DrawGeneralSection(target, contentX, contentWidth, height);
         else if (_selectedSection == 1)
             DrawHotkeysSection(target, contentX, contentWidth);
         else if (_selectedSection == 2)
@@ -905,6 +914,8 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         _sidebarSelectedBrush?.Dispose(); _sidebarSelectedBrush = null;
         _windowBackgroundBrush?.Dispose(); _windowBackgroundBrush = null;
         _caretBrush?.Dispose(); _caretBrush = null;
+        _scrollbarTrackBrush?.Dispose(); _scrollbarTrackBrush = null;
+        _scrollbarThumbBrush?.Dispose(); _scrollbarThumbBrush = null;
         DisposeTwitchLoginButtonResources();
     }
 }
