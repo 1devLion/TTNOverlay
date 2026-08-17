@@ -46,19 +46,93 @@ internal sealed partial class ChatRenderWindow
         float labelWidth = bordersRect.Left - labelX;
         if (labelWidth > 0)
         {
-
             var labelClipRect = new Rect(labelX, 0f, labelWidth, TitleBarHeight);
             target.PushAxisAlignedClip(labelClipRect, AntialiasMode.Aliased);
-            using var labelLayout = DWriteFactory.CreateTextLayout(
-                _connectionStatusText,
-                _titleBarLabelFormat,
-                labelWidth,
-                TitleBarHeight
-            );
-            target.DrawTextLayout(new Vector2(labelX, 0f), labelLayout, _titleBarForegroundBrush);
+
+            if (_twitchActive && _kickActive)
+            {
+                // Both sources active (Multichat): "Twitch: conectado  |  Kick: conectado" doesn't
+                // fit comfortably and repeats itself. Two small status dots carry the same
+                // information (connecting/connected/error per source) far more compactly.
+                DrawConnectionDots(target, labelX, labelWidth);
+            }
+            else
+            {
+                using var labelLayout = DWriteFactory.CreateTextLayout(
+                    _connectionStatusText,
+                    _titleBarLabelFormat,
+                    labelWidth,
+                    TitleBarHeight
+                );
+                target.DrawTextLayout(new Vector2(labelX, 0f), labelLayout, _titleBarForegroundBrush);
+            }
+
             target.PopAxisAlignedClip();
         }
     }
+
+    private const float ConnectionDotRadius = 4f;
+    private const float ConnectionDotGap = 6f; // between a dot and its letter
+    private const float ConnectionDotGroupGap = 14f; // between the Twitch group and the Kick group
+
+    /// <summary>
+    /// Draws "T ●  K ●" in the title bar: one letter + colored dot per active source.
+    /// </summary>
+    private void DrawConnectionDots(ID2D1DCRenderTarget target, float x, float maxWidth)
+    {
+        _connectionDotConnectedBrush ??= target.CreateSolidColorBrush(new Color4(0.23f, 0.65f, 0.36f, 1f)); // green
+        _connectionDotConnectingBrush ??= target.CreateSolidColorBrush(new Color4(0.98f, 0.65f, 0.10f, 1f)); // amber
+        _connectionDotErrorBrush ??= target.CreateSolidColorBrush(new Color4(0.93f, 0.27f, 0.27f, 1f)); // red
+
+        float cursor = x;
+        float rightEdge = x + maxWidth;
+        float centerY = TitleBarHeight / 2f;
+
+        cursor = DrawOneConnectionDot(target, "T", _twitchStatusKey, cursor, rightEdge, centerY);
+        cursor += ConnectionDotGroupGap;
+        DrawOneConnectionDot(target, "K", _kickStatusKey, cursor, rightEdge, centerY);
+    }
+
+    private float DrawOneConnectionDot(
+        ID2D1DCRenderTarget target,
+        string letter,
+        string? statusKey,
+        float x,
+        float rightEdge,
+        float centerY
+    )
+    {
+        using var letterLayout = DWriteFactory.CreateTextLayout(
+            letter,
+            _titleBarLabelFormat!,
+            rightEdge - x,
+            TitleBarHeight
+        );
+        float letterWidth = (float)letterLayout.Metrics.WidthIncludingTrailingWhitespace;
+        target.DrawTextLayout(new Vector2(x, 0f), letterLayout, _titleBarForegroundBrush);
+
+        float dotCenterX = x + letterWidth + ConnectionDotGap + ConnectionDotRadius;
+        var brush = ConnectionDotBrushFor(statusKey);
+        if (brush is not null && dotCenterX + ConnectionDotRadius <= rightEdge)
+        {
+            target.FillEllipse(
+                new Ellipse(new Vector2(dotCenterX, centerY), ConnectionDotRadius, ConnectionDotRadius),
+                brush
+            );
+        }
+
+        return dotCenterX + ConnectionDotRadius;
+    }
+
+    private ID2D1SolidColorBrush? ConnectionDotBrushFor(string? statusKey) =>
+        statusKey switch
+        {
+            "MainWindow_ChannelConnected" => _connectionDotConnectedBrush,
+            "MainWindow_Connecting" => _connectionDotConnectingBrush,
+            "MainWindow_Disconnected" => _connectionDotErrorBrush,
+            "MainWindow_ErrorLabel" => _connectionDotErrorBrush,
+            _ => _connectionDotConnectingBrush,
+        };
 
     private const float TitleBarHoverCornerRadius = 4f;
 

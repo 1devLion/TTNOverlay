@@ -73,6 +73,13 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
     private ID2D1SolidColorBrush? _titleBarHoverBrush;
     private ID2D1SolidColorBrush? _closeHoverBrush;
 
+    // Connection status dots (title bar, Multichat with both sources active). See
+    // ChatRenderWindow.TitleBar.cs DrawConnectionDots. One brush per state, shared by both
+    // Twitch's and Kick's dot so there's no duplicate GPU resource for the same color.
+    private ID2D1SolidColorBrush? _connectionDotConnectedBrush;
+    private ID2D1SolidColorBrush? _connectionDotConnectingBrush;
+    private ID2D1SolidColorBrush? _connectionDotErrorBrush;
+
     private IDWriteTextFormat? _titleBarLabelFormat;
 
     private ID2D1SolidColorBrush? _bodyBrush;
@@ -288,6 +295,9 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
         _titleBarLabelFormat?.Dispose();
         _titleBarHoverBrush?.Dispose();
         _closeHoverBrush?.Dispose();
+        _connectionDotConnectedBrush?.Dispose();
+        _connectionDotConnectingBrush?.Dispose();
+        _connectionDotErrorBrush?.Dispose();
         _hoverAnimationTimer?.Dispose();
         _viewerCountBadgeBrush?.Dispose();
         _viewerCountTextBrush?.Dispose();
