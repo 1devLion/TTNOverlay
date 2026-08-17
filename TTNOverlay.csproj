@@ -54,6 +54,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <EmbeddedResource Include="Resources\PlatformBadges\*.webp">
+      <Link>PlatformBadges\%(Filename)%(Extension)</Link>
+    </EmbeddedResource>
+  </ItemGroup>
+
+  <ItemGroup>
     <AssemblyAttribute Include="System.Runtime.CompilerServices.InternalsVisibleToAttribute">
       <_Parameter1>TTNOverlay.Tests</_Parameter1>
     </AssemblyAttribute>

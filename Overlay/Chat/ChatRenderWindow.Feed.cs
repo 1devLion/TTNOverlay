@@ -244,7 +244,11 @@ internal sealed partial class ChatRenderWindow
         }
     }
 
-    private void OnKickMessageReceived(ChatMessage msg) => OnChatMessageReceived(msg);
+    private void OnKickMessageReceived(ChatMessage msg)
+    {
+        AddPlatformBadgeIfMultichat(msg, Platform.Kick);
+        OnChatMessageReceived(msg);
+    }
 
     // ---------- Shared incoming-message handling (both sources funnel through here) -----------
 
@@ -252,7 +256,35 @@ internal sealed partial class ChatRenderWindow
 
     private int _droppedChatMessageCount;
 
-    private void OnIrcMessageReceived(ChatMessage msg) => OnChatMessageReceived(msg);
+    private void OnIrcMessageReceived(ChatMessage msg)
+    {
+        AddPlatformBadgeIfMultichat(msg, Platform.Twitch);
+        OnChatMessageReceived(msg);
+    }
+
+    /// <summary>
+    /// Tags a message with its source platform (Twitch/Kick logo) so it's identifiable at a glance
+    /// when both feeds are mixed together in one list. Only relevant while both sources are
+    /// simultaneously active (Multichat with Twitch+Kick both enabled) — with a single source
+    /// there's nothing to disambiguate, so we skip it there rather than add noise to every message.
+    /// Inserted at index 0 so it's always the leftmost badge, in a consistent position regardless of
+    /// how many role/sub badges the message also carries.
+    /// </summary>
+    private void AddPlatformBadgeIfMultichat(ChatMessage msg, Platform platform)
+    {
+        if (!_twitchActive || !_kickActive)
+            return;
+
+        msg.Badges.Insert(
+            0,
+            new Badge
+            {
+                Name = "platform",
+                Version = platform == Platform.Twitch ? "twitch" : "kick",
+                LocalIcon = platform == Platform.Twitch ? "platform/twitch" : "platform/kick",
+            }
+        );
+    }
 
     private void OnChatMessageReceived(ChatMessage msg)
     {

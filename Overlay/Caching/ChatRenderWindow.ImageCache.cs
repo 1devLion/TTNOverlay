@@ -101,17 +101,21 @@ internal sealed partial class ChatRenderWindow
     }
 
     /// <summary>
-    /// Resolves an embedded-resource badge (Kick role badges/sub_gifter tiers, see
-    /// KickBadgeIconLoader) into a cached ID2D1Bitmap. Unlike GetOrLoadImageBitmap, this has no
-    /// network round-trip. The WebP is already in the assembly. So it decodes and creates the
-    /// bitmap synchronously on first use instead of going through the async load-in-flight path.
+    /// Resolves an embedded-resource badge into a cached ID2D1Bitmap. Unlike GetOrLoadImageBitmap,
+    /// this has no network round-trip; the WebP is already in the assembly, so it decodes and
+    /// creates the bitmap synchronously on first use instead of going through the async
+    /// load-in-flight path. Covers two unrelated local icon sets sharing this path: Kick's role
+    /// badges/sub_gifter tiers (KickBadgeIconLoader) and the Multichat platform-origin badges
+    /// (PlatformBadgeIconLoader, keys prefixed "platform/").
     /// </summary>
     private ID2D1Bitmap? GetOrCreateLocalBadgeBitmap(ID2D1DCRenderTarget target, string cacheKey, string localIconKey)
     {
         if (_imageCache.TryGetValue(cacheKey, out var cached))
             return cached;
 
-        var decoded = KickBadgeIconLoader.GetDecodedIcon(localIconKey);
+        var decoded = PlatformBadgeIconLoader.HasIcon(localIconKey)
+            ? PlatformBadgeIconLoader.GetDecodedIcon(localIconKey)
+            : KickBadgeIconLoader.GetDecodedIcon(localIconKey);
         if (decoded is null)
         {
             _imageCache.Set(cacheKey, null);
