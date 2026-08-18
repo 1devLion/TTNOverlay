@@ -264,6 +264,7 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
 
         InvalidateWordLayoutCache();
         InvalidateBodyLayoutCache();
+        InvalidateUsernameLayoutCache();
 
         _eventTextBrush?.Dispose();
         _eventTextBrush = null;
@@ -317,6 +318,7 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
         DisposeTwitchButtonResources();
         InvalidateWordLayoutCache();
         InvalidateBodyLayoutCache();
+        InvalidateUsernameLayoutCache();
         _eventTextBrush?.Dispose();
         _eventIconFormat?.Dispose();
         _eventNameFormat?.Dispose();

@@ -35,6 +35,7 @@ internal sealed partial class ChatRenderWindow
     {
         _messageHeightCache.Remove(msg);
         RemoveBodyLayoutCacheEntry(msg);
+        RemoveUsernameLayoutCacheEntry(msg);
     }
 
     /// <summary>
@@ -93,6 +94,64 @@ internal sealed partial class ChatRenderWindow
         else
         {
             _bodyLayoutCache.Add(msg, new BodyLayoutCacheEntry { Layout = layout, Width = maxWidth, Format = format });
+        }
+
+        return layout;
+    }
+
+    /// <summary>
+    /// Caches the IDWriteTextLayout used to draw a message's username prefix (badges label +
+    /// display name), keyed per ChatMessage by reference. Same rationale and lifecycle as
+    /// BodyLayoutCacheEntry above — this used to be recreated from scratch on every draw/measure
+    /// pass (up to twice per visible message with a mention, every frame), even though the
+    /// username text and its available width rarely change between frames.
+    /// </summary>
+    private sealed class UsernameLayoutCacheEntry
+    {
+        public IDWriteTextLayout Layout = null!;
+        public float Width;
+        public IDWriteTextFormat Format = null!;
+    }
+
+    private readonly Dictionary<ChatMessage, UsernameLayoutCacheEntry> _usernameLayoutCache = new();
+
+    private void InvalidateUsernameLayoutCache()
+    {
+        foreach (var entry in _usernameLayoutCache.Values)
+            entry.Layout.Dispose();
+        _usernameLayoutCache.Clear();
+    }
+
+    /// <summary>Removes and disposes a single message's cached username layout. Call this at every
+    /// point where a ChatMessage is dropped from _messages or _dashboardEvents, mirroring
+    /// RemoveBodyLayoutCacheEntry.</summary>
+    private void RemoveUsernameLayoutCacheEntry(ChatMessage msg)
+    {
+        if (_usernameLayoutCache.Remove(msg, out var entry))
+            entry.Layout.Dispose();
+    }
+
+    private IDWriteTextLayout GetOrCreateUsernameLayout(ChatMessage msg, string prefix, IDWriteTextFormat format, float maxWidth)
+    {
+        if (_usernameLayoutCache.TryGetValue(msg, out var cached)
+            && cached.Width == maxWidth
+            && ReferenceEquals(cached.Format, format))
+        {
+            return cached.Layout;
+        }
+
+        var layout = DWriteFactory.CreateTextLayout(prefix, format, maxWidth, UnboundedLayoutHeight);
+
+        if (cached is not null)
+        {
+            cached.Layout.Dispose();
+            cached.Layout = layout;
+            cached.Width = maxWidth;
+            cached.Format = format;
+        }
+        else
+        {
+            _usernameLayoutCache.Add(msg, new UsernameLayoutCacheEntry { Layout = layout, Width = maxWidth, Format = format });
         }
 
         return layout;
@@ -411,7 +470,7 @@ internal sealed partial class ChatRenderWindow
         float usernameX = x + badgesWidth;
         float usernameMaxWidth = Math.Max(maxWidth - badgesWidth, 20f);
 
-        using var usernameLayout = DWriteFactory.CreateTextLayout(prefix, _usernameFormat!, usernameMaxWidth, UnboundedLayoutHeight);
+        var usernameLayout = GetOrCreateUsernameLayout(msg, prefix, _usernameFormat!, usernameMaxWidth);
         float usernameLineHeight = Math.Max((float)usernameLayout.Metrics.Height, badgesWidth > 0 ? BadgeSize : 0f);
         float badgesY = y + (usernameLineHeight - BadgeSize) / 2f;
 

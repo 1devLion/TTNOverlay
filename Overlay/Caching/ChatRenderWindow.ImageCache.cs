@@ -39,7 +39,7 @@ internal sealed partial class ChatRenderWindow
             return 0;
         long total = 0;
         foreach (var f in frames)
-            total += (long)f.Bitmap.Size.Width * f.Bitmap.Size.Height * 4;
+            total += (long)(f.Bitmap.Size.Width * f.Bitmap.Size.Height * 4);
         return (int)Math.Min(total, int.MaxValue);
     }
 
