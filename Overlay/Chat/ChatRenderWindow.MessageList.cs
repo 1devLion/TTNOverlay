@@ -7,6 +7,70 @@ namespace TTNOverlay.Overlay;
 /// </summary>
 internal sealed partial class ChatRenderWindow
 {
+    /// <summary>
+    /// Backs _messages. Wraps a List&lt;ChatMessage&gt; with a lazily-advanced head index instead
+    /// of calling List&lt;T&gt;.RemoveAt(0) on every trim. RemoveAt(0) is O(n) — it shifts every
+    /// remaining element down one slot — so calling it once per incoming chat message forever, at
+    /// steady state once MaxMessages is reached, makes sustained throughput O(n) per message in
+    /// high-traffic channels with a high MaxMessages setting. RemoveOldest() instead just advances
+    /// _head (O(1)); the backing list is only physically compacted (a single List.RemoveRange)
+    /// once the dead space in front of _head grows large enough, amortizing that cost across many
+    /// trims instead of paying it on every single one. Implements IReadOnlyList&lt;ChatMessage&gt;
+    /// so it's a drop-in replacement everywhere _messages is read (Count, indexer, foreach), and
+    /// so it shares a common type with _dashboardEvents (still a plain List&lt;ChatMessage&gt;,
+    /// small and fixed-size — not worth this) wherever both are used interchangeably.
+    /// </summary>
+    private sealed class MessageBuffer : IReadOnlyList<ChatMessage>
+    {
+        private const int MinCompactionSlack = 64;
+
+        private readonly List<ChatMessage> _items = new();
+        private int _head;
+
+        public int Count => _items.Count - _head;
+
+        public ChatMessage this[int index] => _items[_head + index];
+
+        public void Add(ChatMessage msg) => _items.Add(msg);
+
+        /// <summary>Removes and returns the oldest (index 0) message.</summary>
+        public ChatMessage RemoveOldest()
+        {
+            var removed = _items[_head];
+            _head++;
+            if (_head >= MinCompactionSlack && _head * 2 >= _items.Count)
+                Compact();
+            return removed;
+        }
+
+        public int RemoveAll(Predicate<ChatMessage> match)
+        {
+            Compact();
+            return _items.RemoveAll(match);
+        }
+
+        public void Clear()
+        {
+            _items.Clear();
+            _head = 0;
+        }
+
+        private void Compact()
+        {
+            if (_head == 0)
+                return;
+            _items.RemoveRange(0, _head);
+            _head = 0;
+        }
+
+        public IEnumerator<ChatMessage> GetEnumerator()
+        {
+            for (int i = _head; i < _items.Count; i++)
+                yield return _items[i];
+        }
+
+        System.Collections.IEnumerator System.Collections.IEnumerable.GetEnumerator() => GetEnumerator();
+    }
 
     private void EnsureExpirySweepTimerRunning()
     {
@@ -41,12 +105,9 @@ internal sealed partial class ChatRenderWindow
     private void AddMessage(ChatMessage msg)
     {
         _messages.Add(msg);
-        while (_messages.Count > Math.Max(1, _settings.MaxMessages))
-        {
-            RemoveMessageCaches(_messages[0]);
-            _messages.RemoveAt(0);
-        }
-
+        int max = Math.Max(1, _settings.MaxMessages);
+        while (_messages.Count > max)
+            RemoveMessageCaches(_messages.RemoveOldest());
     }
 
     private void SeedWelcomeGuide()

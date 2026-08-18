@@ -32,7 +32,7 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
     private const float MentionCornerRadius = 4f;
     private const float MentionBorderThickness = 1f;
 
-    private readonly List<ChatMessage> _messages = new();
+    private readonly MessageBuffer _messages = new();
     private bool _clickThroughEnabled;
 
     private ScrollState _messagesScroll;
