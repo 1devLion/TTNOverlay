@@ -66,7 +66,7 @@ internal sealed class LayeredRenderer : IDisposable
         if (!needsGrow && !needsShrink)
             return;
 
-        MemoryDiag.Log($"Resize:antes w={width} h={height} shrink={needsShrink}");
+        MemoryDiag.Log($"Resize:before w={width} h={height} shrink={needsShrink}");
 
         _allocatedWidth = needsShrink ? width : Math.Max(width, _allocatedWidth);
         _allocatedHeight = needsShrink ? height : Math.Max(height, _allocatedHeight);

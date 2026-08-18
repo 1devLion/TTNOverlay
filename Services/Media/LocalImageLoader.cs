@@ -42,7 +42,7 @@ internal static class LocalImageLoader
         }
         catch (Exception ex)
         {
-            DebugLog.Write($"LocalImageLoader: decode animado falló. {ex.GetType().Name}: {ex.Message}");
+            DebugLog.Write($"LocalImageLoader: animated decode failed. {ex.GetType().Name}: {ex.Message}");
             return null;
         }
     }
@@ -74,7 +74,7 @@ internal static class LocalImageLoader
         }
         catch (Exception ex)
         {
-            DebugLog.Write($"LocalImageLoader: decode estático falló. {ex.GetType().Name}: {ex.Message}");
+            DebugLog.Write($"LocalImageLoader: static decode failed. {ex.GetType().Name}: {ex.Message}");
             return null;
         }
     }

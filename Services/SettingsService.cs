@@ -167,9 +167,12 @@ public static class SettingsService
             var json = JsonSerializer.Serialize(settings, SettingsJsonContext.Default.AppSettings);
             File.WriteAllText(FilePath, json);
         }
-        catch
+        catch (Exception ex)
         {
-
+            // Unlike Load()'s silent catch (falling back to new AppSettings() is a reasonable
+            // degradation), a failed Save() means the user changed a setting, the UI reflected it
+            // as applied, but it was never persisted. Worth a log line so this is diagnosable.
+            DebugLog.WriteException("SettingsService.Save", ex);
         }
     }
 }

@@ -36,7 +36,7 @@ public sealed class DisposingLruCache<TKey, TValue> where TKey : notnull
     /// <param name="onEvict">Called for every value removed from the cache, whether by explicit removal or by LRU eviction.</param>
     public DisposingLruCache(int capacity, Func<TValue, int>? weigher = null, Action<TKey, TValue>? onEvict = null)
     {
-        if (capacity <= 0) throw new ArgumentOutOfRangeException(nameof(capacity), "La capacidad debe ser mayor que cero.");
+        if (capacity <= 0) throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be greater than zero.");
         _capacity = capacity;
         _weigher = weigher ?? (_ => 1);
         _onEvict = onEvict ?? ((_, _) => { });
