@@ -14,6 +14,14 @@ internal static class SharedGraphicsResources
     private static ID2D1Factory1? _d2dFactory;
     private static IDWriteFactory? _dwriteFactory;
 
+    // ChatRenderWindow corre en el hilo principal y SettingsRenderWindow corre en su propio hilo
+    // dedicado (ver RunSettingsWindow en ChatRenderWindow.TrayHotkeys.cs); ambos pueden llegar a pedir
+    // estos factories "por primera vez" en paralelo (p.ej. si Configuración se abre apenas arranca la
+    // app, antes de que el hilo principal ya los haya inicializado). El "??=" de abajo no es atómico:
+    // sin este lock, dos hilos podrían ver _d2dFactory==null a la vez, crear DOS factories, y que el
+    // que "pierde" la carrera quede huérfano mientras otro código ya tiene una referencia viva a él.
+    private static readonly object InitLock = new();
+
     private static readonly Guid DxgiDebugAll = new("e48ae283-da80-490b-87e6-43e9a9cfda08");
 
 #if DEBUG
@@ -22,14 +30,34 @@ internal static class SharedGraphicsResources
     private const DebugLevel D2DDebugLevel = DebugLevel.None;
 #endif
 
-    public static ID2D1Factory1 D2DFactory =>
-        _d2dFactory ??= D2D1.D2D1CreateFactory<ID2D1Factory1>(
-            Vortice.Direct2D1.FactoryType.MultiThreaded,
-            D2DDebugLevel
-        );
+    public static ID2D1Factory1 D2DFactory
+    {
+        get
+        {
+            if (_d2dFactory is not null)
+                return _d2dFactory;
+            lock (InitLock)
+            {
+                return _d2dFactory ??= D2D1.D2D1CreateFactory<ID2D1Factory1>(
+                    Vortice.Direct2D1.FactoryType.MultiThreaded,
+                    D2DDebugLevel
+                );
+            }
+        }
+    }
 
-    public static IDWriteFactory DWriteFactory =>
-        _dwriteFactory ??= DWrite.DWriteCreateFactory<IDWriteFactory>(Vortice.DirectWrite.FactoryType.Shared);
+    public static IDWriteFactory DWriteFactory
+    {
+        get
+        {
+            if (_dwriteFactory is not null)
+                return _dwriteFactory;
+            lock (InitLock)
+            {
+                return _dwriteFactory ??= DWrite.DWriteCreateFactory<IDWriteFactory>(Vortice.DirectWrite.FactoryType.Shared);
+            }
+        }
+    }
 
     #if DEBUG
     public static void DumpLiveD2DObjects(string label)
