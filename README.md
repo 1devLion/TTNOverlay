@@ -3,7 +3,7 @@
 
   # TTNOverlay
 
-  A multi-function Twitch overlay for Windows: live chat, event alerts, viewer count, and in-app moderation. Transparent, click-through, fully customizable!
+  A multi-function Twitch & Kick overlay for Windows: live chat, event alerts, viewer count, and in-app moderation. Transparent, click-through, fully customizable!
 
   <a href="https://github.com/1devLion/TTNOverlay/releases/latest">
     <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/1devLion/TTNOverlay">
@@ -35,10 +35,12 @@
 
 ## Features
 
+- **Multichat**: watch Twitch and Kick chat together in one window, with a small badge on each message showing where it came from
 - **Chat**: Twitch emotes, badges, and third-party emotes from BTTV, FFZ, and 7TV
 - **Event alerts**: subs, resubs, raids, and announcements straight from IRC. Donations, follows, hosts, and merch from Streamlabs if you connect it. Events reported by both sources get merged, not shown twice
 - **In-app moderation**: timeout, ban, warn, and unban without ever tabbing out of your game (needs a moderator or broadcaster login)
-- **Viewer count & badges**: shown once you sign in through the Twitch Helix API
+- **Viewer count & badges**: shown once you sign in, now combining Twitch and Kick viewer counts (YouTube support coming)
+- **Connection status at a glance**: a small colored dot in the title bar shows whether chat is connected, connecting, or disconnected
 - **Sound & flash alerts**: every event type gets its own color and can trigger a sound or a screen flash
 - **Custom alert colors**: pick any RGB for each visual alert
 - **Custom event colors**: color the event box per event type *and* per source (Streamlabs vs IRC)
@@ -77,6 +79,7 @@ vpk pack -u TTNOverlay -v <version> -p publish -e TTNOverlay.exe --icon Resource
 
 - .NET 10, Win32 (P/Invoke) + **Vortice.Direct2D1** for a layered, GPU-drawn window.
 - Twitch **IRC over WebSocket** for chat (anonymous, no login required)
+- **Kick chat** over its Pusher WebSocket, with a browser-TLS-fingerprint HTTPS client (via BouncyCastle) to get past Cloudflare's bot protection
 - Twitch **Helix API** + user OAuth for viewer count, badges, and moderation
 - **Streamlabs Socket API** (optional) for donations, follows, hosts, and merch
 - Cloudflare Worker as OAuth token broker (keeps the Twitch client secret off the client)
