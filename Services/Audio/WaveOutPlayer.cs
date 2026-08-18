@@ -15,7 +15,7 @@ public static class WaveOutPlayer
 
     public static IReadOnlyList<(int Id, string Name)> GetOutputDevices()
     {
-        var list = new List<(int, string)> { (WaveMapper, "Predeterminado del sistema") };
+        var list = new List<(int, string)> { (WaveMapper, LocalizationService.T("Settings_Audio_SystemDefaultDevice")) };
 
         try
         {
@@ -40,6 +40,12 @@ public static class WaveOutPlayer
 
     public static void SetDevice(int deviceId) => _deviceId = deviceId;
 
+    private const uint CallbackFunction = 0x00030000;
+    private const int MM_WOM_DONE = 0x3BD;
+
+    [UnmanagedFunctionPointer(CallingConvention.StdCall)]
+    private delegate void WaveOutProc(IntPtr hwo, uint uMsg, IntPtr dwInstance, IntPtr dwParam1, IntPtr dwParam2);
+
     public static void Play(byte[] wav, float volume)
     {
         if (!TryParseWav(wav, out var fmt, out var dataOffset, out var dataLength))
@@ -48,23 +54,10 @@ public static class WaveOutPlayer
         var hWaveOut = IntPtr.Zero;
         var bufferHandle = default(GCHandle);
         var headerHandle = default(GCHandle);
+        var callbackHandle = default(GCHandle);
 
         try
         {
-            var openResult = waveOutOpen(
-                out hWaveOut,
-                (UIntPtr)unchecked((uint)_deviceId),
-                ref fmt,
-                IntPtr.Zero,
-                IntPtr.Zero,
-                0
-            );
-            if (openResult != MmsyserrNoError)
-                return;
-
-            var vol16 = (ushort)(Math.Clamp(volume, 0f, 1f) * 0xFFFF);
-            waveOutSetVolume(hWaveOut, (uint)vol16 | ((uint)vol16 << 16));
-
             var buffer = new byte[dataLength];
             Array.Copy(wav, dataOffset, buffer, 0, dataLength);
             bufferHandle = GCHandle.Alloc(buffer, GCHandleType.Pinned);
@@ -78,35 +71,66 @@ public static class WaveOutPlayer
             var headerPtr = headerHandle.AddrOfPinnedObject();
             var headerSize = (uint)Marshal.SizeOf<WAVEHDR>();
 
+            // Closes over bufferHandle/headerHandle/callbackHandle by reference (they're locals
+            // in this method's scope), so it sees the final GCHandle values even though it's
+            // built before waveOutOpen assigns/uses them.
+            WaveOutProc callback = (hwo, uMsg, _, _, _) =>
+            {
+                if (uMsg != MM_WOM_DONE)
+                    return;
+
+                // winmm forbids calling blocking functions like waveOutClose or
+                // waveOutUnprepareHeader directly from inside this callback (risk of deadlock).
+                // Hand the actual cleanup off to the thread pool instead of doing it here, and
+                // instead of the old Thread.Sleep(estimatedDuration) approach that held a
+                // threadpool thread hostage for the whole playback.
+                ThreadPool.QueueUserWorkItem(_ =>
+                {
+                    try
+                    {
+                        waveOutUnprepareHeader(hwo, headerPtr, headerSize);
+                        waveOutClose(hwo);
+                    }
+                    catch (Exception ex)
+                    {
+                        DebugLog.WriteException("WaveOutPlayer.Play(cleanup)", ex);
+                    }
+                    finally
+                    {
+                        if (bufferHandle.IsAllocated)
+                            bufferHandle.Free();
+                        if (headerHandle.IsAllocated)
+                            headerHandle.Free();
+                        if (callbackHandle.IsAllocated)
+                            callbackHandle.Free();
+                    }
+                });
+            };
+            // Keeps the delegate (and the native thunk winmm calls into) alive for as long as
+            // winmm might invoke it — freed alongside the other handles once MM_WOM_DONE fires.
+            callbackHandle = GCHandle.Alloc(callback);
+
+            var openResult = waveOutOpen(
+                out hWaveOut,
+                (UIntPtr)unchecked((uint)_deviceId),
+                ref fmt,
+                Marshal.GetFunctionPointerForDelegate(callback),
+                IntPtr.Zero,
+                CallbackFunction
+            );
+            if (openResult != MmsyserrNoError)
+            {
+                bufferHandle.Free();
+                headerHandle.Free();
+                callbackHandle.Free();
+                return;
+            }
+
+            var vol16 = (ushort)(Math.Clamp(volume, 0f, 1f) * 0xFFFF);
+            waveOutSetVolume(hWaveOut, (uint)vol16 | ((uint)vol16 << 16));
+
             waveOutPrepareHeader(hWaveOut, headerPtr, headerSize);
             waveOutWrite(hWaveOut, headerPtr, headerSize);
-
-            var closureWaveOut = hWaveOut;
-            var closureBufferHandle = bufferHandle;
-            var closureHeaderHandle = headerHandle;
-            var durationMs = (int)((long)dataLength * 1000 / Math.Max(1, fmt.nAvgBytesPerSec)) + 150;
-
-            Task.Run(() =>
-            {
-                Thread.Sleep(durationMs);
-                try
-                {
-                    waveOutReset(closureWaveOut);
-                    waveOutUnprepareHeader(closureWaveOut, headerPtr, headerSize);
-                    waveOutClose(closureWaveOut);
-                }
-                catch (Exception ex)
-                {
-                    DebugLog.WriteException("WaveOutPlayer.Play(cleanup)", ex);
-                }
-                finally
-                {
-                    if (closureBufferHandle.IsAllocated)
-                        closureBufferHandle.Free();
-                    if (closureHeaderHandle.IsAllocated)
-                        closureHeaderHandle.Free();
-                }
-            });
         }
         catch (Exception ex)
         {
@@ -115,6 +139,8 @@ public static class WaveOutPlayer
                 bufferHandle.Free();
             if (headerHandle.IsAllocated)
                 headerHandle.Free();
+            if (callbackHandle.IsAllocated)
+                callbackHandle.Free();
             if (hWaveOut != IntPtr.Zero)
                 waveOutClose(hWaveOut);
         }
@@ -242,9 +268,6 @@ public static class WaveOutPlayer
 
     [DllImport("winmm.dll")]
     private static extern int waveOutClose(IntPtr hWaveOut);
-
-    [DllImport("winmm.dll")]
-    private static extern int waveOutReset(IntPtr hWaveOut);
 
     [DllImport("winmm.dll")]
     private static extern int waveOutSetVolume(IntPtr hWaveOut, uint dwVolume);
