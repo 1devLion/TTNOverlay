@@ -427,8 +427,8 @@ public abstract class OverlayWindowBase : IDisposable
 
     protected void RequestRender()
     {
-
         _renderDirty = true;
+        EnsureRenderLoopRunning();
     }
 
     private DateTime _lastLiveMoveRenderUtc = DateTime.MinValue;
@@ -437,7 +437,10 @@ public abstract class OverlayWindowBase : IDisposable
     private void RenderIfDirty()
     {
         if (!_renderDirty)
+        {
+            PauseRenderLoop();
             return;
+        }
 
         if (_inLiveResize)
         {
@@ -449,15 +452,51 @@ public abstract class OverlayWindowBase : IDisposable
 
         _renderDirty = false;
         _renderer?.Render(OnRender);
+
+        // Nothing re-marked dirty during this render (by OnRender itself, or by anything else
+        // that ran on the UI thread before this callback), so there's nothing to wait for —
+        // pause instead of continuing to tick at RenderTargetFps while idle.
+        if (!_renderDirty)
+            PauseRenderLoop();
+    }
+
+    /// <summary>
+    /// True while _renderLoopTimer is actively ticking at RenderTargetFps. Distinct from whether
+    /// the Timer object itself exists (that lives for the whole window lifetime, see
+    /// StartRenderLoop/StopRenderLoop) — this tracks whether it's currently *running*, so idle
+    /// windows (nothing dirty, no animation in flight) don't wake up 60 times a second for
+    /// nothing. Only ever read/written on the UI thread: RequestRender/RenderIfDirty/PauseRenderLoop
+    /// all run there (RequestRender is always called from UI-thread code, and the timer callback
+    /// itself hands off to the UI thread via PostToUiThread before touching any of this state).
+    /// </summary>
+    private bool _renderLoopActive;
+
+    private void EnsureRenderLoopRunning()
+    {
+        if (_renderLoopActive || _renderLoopTimer is null)
+            return;
+        _renderLoopActive = true;
+        _renderLoopTimer.Change(0, 1000 / RenderTargetFps);
+    }
+
+    private void PauseRenderLoop()
+    {
+        if (!_renderLoopActive)
+            return;
+        _renderLoopActive = false;
+        _renderLoopTimer?.Change(System.Threading.Timeout.Infinite, System.Threading.Timeout.Infinite);
     }
 
     private void StartRenderLoop()
     {
+        // Created paused (Infinite/Infinite) — RequestRender() is what actually starts it
+        // ticking, and RenderIfDirty pauses it again once nothing is left to draw. This avoids
+        // waking every overlay window up at RenderTargetFps forever, even while idle/hidden.
         _renderLoopTimer ??= new System.Threading.Timer(
             _ => PostToUiThread(RenderIfDirty),
             null,
-            0,
-            1000 / RenderTargetFps
+            System.Threading.Timeout.Infinite,
+            System.Threading.Timeout.Infinite
         );
     }
 
@@ -465,6 +504,7 @@ public abstract class OverlayWindowBase : IDisposable
     {
         _renderLoopTimer?.Dispose();
         _renderLoopTimer = null;
+        _renderLoopActive = false;
     }
 
     protected abstract void OnRender(ID2D1DCRenderTarget target);
