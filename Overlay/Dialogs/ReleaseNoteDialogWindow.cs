@@ -50,6 +50,8 @@ internal sealed class ReleaseNotesDialogWindow : OverlayWindowBase
     private ID2D1SolidColorBrush? _fieldBackgroundBrush;
     private ID2D1SolidColorBrush? _fieldBorderBrush;
     private ID2D1SolidColorBrush? _hoverShadowBrush;
+    private ID2D1SolidColorBrush? _scrollbarTrackBrush;
+    private ID2D1SolidColorBrush? _scrollbarThumbBrush;
     private bool? _lastKnownIsDark;
     private IDWriteTextFormat? _titleFormat;
     private IDWriteTextFormat? _messageFormat;
@@ -146,6 +148,8 @@ internal sealed class ReleaseNotesDialogWindow : OverlayWindowBase
         _fieldBackgroundBrush ??= target.CreateSolidColorBrush(ThemeService.FieldBackground);
         _fieldBorderBrush ??= target.CreateSolidColorBrush(ThemeService.FieldBorder);
         _hoverShadowBrush ??= target.CreateSolidColorBrush(new Color4(1f, 1f, 1f, 0.06f));
+        _scrollbarTrackBrush ??= target.CreateSolidColorBrush(ThemeService.ScrollbarTrack);
+        _scrollbarThumbBrush ??= target.CreateSolidColorBrush(ThemeService.ScrollbarThumb);
         _titleFormat ??= DWriteFactory.CreateTextFormat("Segoe UI", FontWeight.Bold, Vortice.DirectWrite.FontStyle.Normal, 16f);
         _messageFormat ??= DWriteFactory.CreateTextFormat("Segoe UI", FontWeight.Normal, Vortice.DirectWrite.FontStyle.Normal, 13f);
         _buttonFormat ??= DWriteFactory.CreateTextFormat("Segoe UI", FontWeight.SemiBold, Vortice.DirectWrite.FontStyle.Normal, 13f);
@@ -186,12 +190,8 @@ internal sealed class ReleaseNotesDialogWindow : OverlayWindowBase
         }
         target.PopAxisAlignedClip();
 
-        if (_scroll.Overflow > 0.5f)
-        {
-            using var hintFormat = DWriteFactory.CreateTextFormat("Segoe UI", FontWeight.Normal, Vortice.DirectWrite.FontStyle.Normal, 11f);
-            using var hint = DWriteFactory.CreateTextLayout("▼ " + LocalizationService.T("Update_ScrollHint"), hintFormat, contentWidth, 16f);
-            target.DrawTextLayout(new Vector2(x, y + visibleMessageHeight - 16f), hint, _secondaryBrush!);
-        }
+        ScrollbarRenderer.Draw(target, new Rect(x, y, contentWidth, visibleMessageHeight), _scroll, _scrollbarTrackBrush!, _scrollbarThumbBrush!);
+
         y += _messageHeight + MessageGap;
 
         _closeButtonRect = new Rect(x + contentWidth - ButtonWidth, y, ButtonWidth, ButtonHeight);
@@ -214,6 +214,8 @@ internal sealed class ReleaseNotesDialogWindow : OverlayWindowBase
         _fieldBackgroundBrush?.Dispose(); _fieldBackgroundBrush = null;
         _fieldBorderBrush?.Dispose(); _fieldBorderBrush = null;
         _hoverShadowBrush?.Dispose(); _hoverShadowBrush = null;
+        _scrollbarTrackBrush?.Dispose(); _scrollbarTrackBrush = null;
+        _scrollbarThumbBrush?.Dispose(); _scrollbarThumbBrush = null;
     }
 
     protected override void OnDestroyed()

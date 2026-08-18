@@ -107,7 +107,16 @@ public abstract class OverlayWindowBase : IDisposable
         _renderer.Resize(width, height);
 
         StartRenderLoop();
-        OnCreated();
+        try
+        {
+            OnCreated();
+        }
+        catch (Exception ex)
+        {
+            DebugLog.Write($"OverlayWindowBase.Create: unhandled exception in OnCreated ({_className}). {ex}");
+            DebugLog.FlushNow();
+            throw;
+        }
 
         Win32.SetFocus(Hwnd);
         RequestRender();
@@ -372,6 +381,13 @@ public abstract class OverlayWindowBase : IDisposable
 
                 StopRenderLoop();
                 OnDestroyed();
+
+                // The window is gone at the OS level the moment DestroyWindow() returns (which
+                // already happened by the time we get here — WM_DESTROY is sent synchronously
+                // from within DestroyWindow). Clear Hwnd now so a later Dispose() call (e.g. the
+                // one queued by ReleaseNotesDialogWindow.Show via the Destroyed event below)
+                // doesn't call DestroyWindow a second time on an already-invalid handle.
+                Hwnd = IntPtr.Zero;
 
                 Destroyed?.Invoke();
 
