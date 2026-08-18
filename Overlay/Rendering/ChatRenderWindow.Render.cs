@@ -257,7 +257,7 @@ internal sealed partial class ChatRenderWindow
         {
             _welcomeLoginButtonRect = null;
 
-            var activeList = _showingEvents ? _dashboardEvents : _messages;
+            IReadOnlyList<ChatMessage> activeList = _showingEvents ? _dashboardEvents : _messages;
 
             float measureY = 0f;
             float addedAtBottomHeight = 0f;
