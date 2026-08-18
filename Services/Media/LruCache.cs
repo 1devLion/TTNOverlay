@@ -20,7 +20,7 @@ public class LruCache<TKey, TValue> where TKey : notnull
 
     public LruCache(int capacity, Func<TValue, int>? weigher = null)
     {
-        if (capacity <= 0) throw new ArgumentOutOfRangeException(nameof(capacity), "La capacidad debe ser mayor que cero.");
+        if (capacity <= 0) throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be greater than zero.");
         _capacity = capacity;
         _weigher = weigher;
     }
@@ -45,27 +45,35 @@ public class LruCache<TKey, TValue> where TKey : notnull
 
             EvictIfNeeded();
 
-            if (_weigher is not null)
+            _ = task.ContinueWith(t =>
             {
-                _ = task.ContinueWith(t =>
+                lock (_cache)
                 {
-                    if (!t.IsCompletedSuccessfully)
+                    if (!_cache.TryGetValue(key, out var current) || !ReferenceEquals(current, entry))
                         return;
 
-                    lock (_cache)
+                    if (!t.IsCompletedSuccessfully)
                     {
+                        // Don't let a transient failure (e.g. a network timeout downloading an
+                        // animated emote) stay cached forever. Remove it so the next GetOrAdd
+                        // triggers a fresh factory() call instead of returning the same failed
+                        // Task until LRU pressure eventually evicts it.
+                        _order.Remove(current.Node);
+                        _totalWeight -= current.Weight;
+                        _cache.Remove(key);
+                        return;
+                    }
 
-                        if (!_cache.TryGetValue(key, out var current) || !ReferenceEquals(current, entry))
-                            return;
-
+                    if (_weigher is not null)
+                    {
                         _totalWeight -= entry.Weight;
                         entry.Weight = Math.Max(1, _weigher(t.Result));
                         _totalWeight += entry.Weight;
 
                         EvictIfNeeded();
                     }
-                }, TaskScheduler.Default);
-            }
+                }
+            }, TaskScheduler.Default);
 
             return task;
         }
