@@ -53,6 +53,23 @@ public abstract class OverlayWindowBase : IDisposable
 
     public event Action? Destroyed;
 
+    /// <summary>
+    /// Keeps every live window's managed instance rooted for as long as its native HWND exists.
+    /// Without this, a window created and only referenced by a local variable inside a static
+    /// Show()-style factory (as every dialog window is: ConfirmDialogWindow, ColorPickerWindow,
+    /// UpdateProgressDialogWindow, ReleaseNoteDialogWindow, GifPreviewWindow) becomes unreachable
+    /// to the GC the moment that factory method returns — its own event subscriptions
+    /// (Destroyed/ResultReady etc.) don't count as external roots, since they're fields on the
+    /// object itself. Windows sends messages to the HWND on its own schedule, referencing the
+    /// instance only via the raw native function pointer created from _wndProcDelegate, which the
+    /// GC has no visibility into. If a collection happens in that window, Windows later calls into
+    /// a WndProc delegate that's already been collected, and the CLR FailFasts (observed as
+    /// EventID 1000/1025 crashes citing Win32.WndProcDelegate.Invoke). Registering here for the
+    /// object's entire native lifetime (Create → WM_DESTROY/Dispose) closes that gap for every
+    /// window type, current and future, without each Show() method needing to manage it itself.
+    /// </summary>
+    private static readonly System.Collections.Concurrent.ConcurrentDictionary<OverlayWindowBase, byte> _liveWindows = new();
+
     protected OverlayWindowBase(string className)
     {
         _className = className;
@@ -64,6 +81,11 @@ public abstract class OverlayWindowBase : IDisposable
     public void Create(string title, int x, int y, int width, int height, bool visible = true)
     {
         _uiThreadId ??= Environment.CurrentManagedThreadId;
+
+        // See _liveWindows: rooted from here until WM_DESTROY (or Dispose, as a fallback if the
+        // window never finishes creating) so the GC can't collect us while the native side can
+        // still call back into _wndProcDelegate.
+        _liveWindows[this] = 0;
 
         _hInstance = Marshal.GetHINSTANCE(GetType().Module);
 
@@ -396,6 +418,10 @@ public abstract class OverlayWindowBase : IDisposable
                 StopRenderLoop();
                 OnDestroyed();
 
+                // Native lifetime is over; safe for the GC to collect us from here on (Dispose()
+                // below also removes this as a fallback, for the case Create() never got this far).
+                _liveWindows.TryRemove(this, out _);
+
                 // The window is gone at the OS level the moment DestroyWindow() returns (which
                 // already happened by the time we get here — WM_DESTROY is sent synchronously
                 // from within DestroyWindow). Clear Hwnd now so a later Dispose() call (e.g. the
@@ -640,6 +666,10 @@ public abstract class OverlayWindowBase : IDisposable
 
     public void Dispose()
     {
+        // Fallback for the case Create() registered us but the window never reached WM_DESTROY
+        // (e.g. CreateWindowEx itself failed). Idempotent with the WM_DESTROY removal above.
+        _liveWindows.TryRemove(this, out _);
+
         if (Hwnd != IntPtr.Zero)
         {
             Win32.DestroyWindow(Hwnd);
