@@ -61,7 +61,7 @@ public abstract class OverlayWindowBase : IDisposable
 
     protected virtual void OnDeviceResourcesInvalidated() { }
 
-    public void Create(string title, int x, int y, int width, int height)
+    public void Create(string title, int x, int y, int width, int height, bool visible = true)
     {
         _uiThreadId ??= Environment.CurrentManagedThreadId;
 
@@ -89,7 +89,7 @@ public abstract class OverlayWindowBase : IDisposable
             exStyle,
             _className,
             title,
-            Win32.WS_POPUP | Win32.WS_VISIBLE,
+            Win32.WS_POPUP | (visible ? Win32.WS_VISIBLE : 0),
             x,
             y,
             width,
@@ -120,6 +120,20 @@ public abstract class OverlayWindowBase : IDisposable
 
         Win32.SetFocus(Hwnd);
         RequestRender();
+    }
+
+    /// <summary>
+    /// Reveals a window created with <c>visible: false</c> (e.g. the main overlay held back until a
+    /// startup check like an update prompt has been resolved). Safe to call from any thread (hops to
+    /// the UI thread internally); no-op if the window is already visible.
+    /// </summary>
+    public void ShowWindow()
+    {
+        PostToUiThread(() =>
+        {
+            Win32.ShowWindow(Hwnd, Win32.SW_SHOW);
+            RequestRender();
+        });
     }
 
     /// <summary>

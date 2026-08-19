@@ -83,15 +83,13 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
         string? confirmText,
         Action<bool> callback)
     {
-        DebugLog.Write($"ConfirmDialogWindow.Show: entrando, message.Length={message?.Length ?? -1}");
+        DebugLog.Write($"ConfirmDialogWindow.Show: entrando, message.Length={message.Length}");
 
-        int x = 100, y = 100;
-        if (Win32.GetWindowRect(ownerHwnd, out var ownerRect))
-        {
-            x = ownerRect.Left + ((ownerRect.Right - ownerRect.Left) - FixedWidth) / 2;
-            y = ownerRect.Top + ((ownerRect.Bottom - ownerRect.Top) - 180) / 2;
-        }
-        DebugLog.Write($"ConfirmDialogWindow.Show: GetWindowRect ok, x={x} y={y}");
+        // Centered on the work area of the monitor nearest the owner, not on the owner window's own
+        // rect: the overlay itself can be resized down quite small, and centering over its rect used
+        // to leave part of the dialog spilling outside the overlay bounds.
+        Win32.TryGetCenteredPosition(ownerHwnd, FixedWidth, 180, out int x, out int y);
+        DebugLog.Write($"ConfirmDialogWindow.Show: centered on screen, x={x} y={y}");
 
         var wnd = new ConfirmDialogWindow(title, message, confirmText, ownerHwnd);
         wnd.ResultReady += callback;
@@ -102,12 +100,15 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
         DebugLog.Write("ConfirmDialogWindow.Show: wnd.Create retornó");
     }
 
-    private void PositionOverOwner()
+    /// <summary>
+    /// Re-centers the dialog on the work area of the monitor nearest the owner, using its now-final
+    /// (measured) size. Deliberately screen-centered rather than over the owner's own rect: the
+    /// overlay can be resized down quite small, and centering over its bounds used to leave part of
+    /// the dialog spilling outside it.
+    /// </summary>
+    private void PositionOnScreen()
     {
         if (_ownerHwnd == IntPtr.Zero)
-            return;
-
-        if (!Win32.GetWindowRect(_ownerHwnd, out var ownerRect))
             return;
 
         if (!Win32.GetWindowRect(Hwnd, out var dialogRect))
@@ -115,8 +116,9 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
 
         int width = dialogRect.Right - dialogRect.Left;
         int height = dialogRect.Bottom - dialogRect.Top;
-        int left = ownerRect.Left + ((ownerRect.Right - ownerRect.Left) - width) / 2;
-        int top = ownerRect.Top + ((ownerRect.Bottom - ownerRect.Top) - height) / 2;
+
+        if (!Win32.TryGetCenteredPosition(_ownerHwnd, width, height, out int left, out int top))
+            return;
 
         Win32.SetWindowPos(
             Hwnd,
@@ -139,7 +141,7 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
         using var probeFormat = DWriteFactory.CreateTextFormat("Segoe UI", FontWeight.Normal, Vortice.DirectWrite.FontStyle.Normal, 13f);
         probeFormat.WordWrapping = Vortice.DirectWrite.WordWrapping.Wrap;
         float messageWidth = FixedWidth - Padding * 2f;
-        DebugLog.Write($"ConfirmDialogWindow.OnCreated: por medir texto, messageWidth={messageWidth}, _message.Length={_message?.Length ?? -1}");
+        DebugLog.Write($"ConfirmDialogWindow.OnCreated: por medir texto, messageWidth={messageWidth}, _message.Length={_message.Length}");
 
         using (var probe = DWriteFactory.CreateTextLayout(_message, probeFormat, messageWidth, float.MaxValue))
             _messageHeight = probe.Metrics.Height;
@@ -149,10 +151,10 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
         DebugLog.Write($"ConfirmDialogWindow.OnCreated: _computedHeight={_computedHeight}, por llamar a Resize");
 
         Resize(FixedWidth, _computedHeight);
-        DebugLog.Write("ConfirmDialogWindow.OnCreated: Resize retornó, por llamar a PositionOverOwner");
+        DebugLog.Write("ConfirmDialogWindow.OnCreated: Resize retornó, por llamar a PositionOnScreen");
 
-        PositionOverOwner();
-        DebugLog.Write("ConfirmDialogWindow.OnCreated: PositionOverOwner retornó, saliendo de OnCreated");
+        PositionOnScreen();
+        DebugLog.Write("ConfirmDialogWindow.OnCreated: PositionOnScreen retornó, saliendo de OnCreated");
     }
 
     protected override void OnRender(ID2D1DCRenderTarget target)

@@ -55,12 +55,9 @@ internal sealed class UpdateProgressDialogWindow : OverlayWindowBase
 
     public static UpdateProgressDialogWindow Show(IntPtr ownerHwnd, Action<Action> postToOwnerUiThread, string title)
     {
-        int x = 100, y = 100;
-        if (Win32.GetWindowRect(ownerHwnd, out var ownerRect))
-        {
-            x = ownerRect.Left + ((ownerRect.Right - ownerRect.Left) - FixedWidth) / 2;
-            y = ownerRect.Top + ((ownerRect.Bottom - ownerRect.Top) - FixedHeight) / 2;
-        }
+        // Centered on screen rather than over the (possibly tiny) overlay rect, same reasoning as
+        // ConfirmDialogWindow.
+        Win32.TryGetCenteredPosition(ownerHwnd, FixedWidth, FixedHeight, out int x, out int y);
 
         var wnd = new UpdateProgressDialogWindow(title, ownerHwnd);
         wnd.Destroyed += () => postToOwnerUiThread(wnd.Dispose);
