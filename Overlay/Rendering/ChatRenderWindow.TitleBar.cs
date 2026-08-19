@@ -39,7 +39,7 @@ internal sealed partial class ChatRenderWindow
         DrawTitleBarHoverBackground(target, closeRect, _closeHoverBrush, _closeHoverProgress, 1f);
 
         DrawTitleBarSymbol(target, settingsRect, "\u2699");
-        DrawTitleBarSymbol(target, bordersRect, "\u26F6");
+        DrawBordersSymbol(target, bordersRect);
         DrawTitleBarSymbol(target, closeRect, "\u2715");
 
         float labelX = settingsRect.Right + 4f;
@@ -166,6 +166,41 @@ internal sealed partial class ChatRenderWindow
 
         using var layout = DWriteFactory.CreateTextLayout(symbol, _titleBarButtonFormat!, w, h);
         target.DrawTextLayout(new Vector2(rect.Left, rect.Top), layout, _titleBarForegroundBrush!);
+    }
+
+    private const float BordersIconSize = 11f;
+    private const float BordersIconCornerLength = 4f;
+    private const float BordersIconStrokeWidth = 1.4f;
+
+    /// <summary>
+    /// Draws the "toggle borders" icon as four vector corner brackets instead of the
+    /// U+26F6 (⛶) glyph. That codepoint isn't present in "Segoe UI Symbol" on every
+    /// Windows install/font config, and when it's missing DirectWrite falls back to a
+    /// ".notdef" box glyph — a plain rectangle, not the intended icon. Drawing it with
+    /// primitives renders identically everywhere, regardless of installed fonts.
+    /// </summary>
+    private void DrawBordersSymbol(ID2D1DCRenderTarget target, Rect rect)
+    {
+        float cx = (rect.Left + rect.Right) / 2f;
+        float cy = (rect.Top + rect.Bottom) / 2f;
+        float half = BordersIconSize / 2f;
+        float left = cx - half;
+        float right = cx + half;
+        float top = cy - half;
+        float bottom = cy + half;
+        float len = BordersIconCornerLength;
+        var brush = _titleBarForegroundBrush!;
+
+        void Corner(Vector2 corner, Vector2 horizontal, Vector2 vertical)
+        {
+            target.DrawLine(corner, corner + horizontal, brush, BordersIconStrokeWidth);
+            target.DrawLine(corner, corner + vertical, brush, BordersIconStrokeWidth);
+        }
+
+        Corner(new Vector2(left, top), new Vector2(len, 0f), new Vector2(0f, len));
+        Corner(new Vector2(right, top), new Vector2(-len, 0f), new Vector2(0f, len));
+        Corner(new Vector2(left, bottom), new Vector2(len, 0f), new Vector2(0f, -len));
+        Corner(new Vector2(right, bottom), new Vector2(-len, 0f), new Vector2(0f, -len));
     }
 
     private IDWriteTextFormat CreateTitleBarFormat(
