@@ -339,6 +339,12 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
         _hitTestCatcherBrush = null;
         _flashBrush?.Dispose();
         _flashBrush = null;
+        _connectionDotConnectedBrush?.Dispose();
+        _connectionDotConnectedBrush = null;
+        _connectionDotConnectingBrush?.Dispose();
+        _connectionDotConnectingBrush = null;
+        _connectionDotErrorBrush?.Dispose();
+        _connectionDotErrorBrush = null;
 
         DisposeImageCaches();
     }
