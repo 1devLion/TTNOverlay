@@ -15,6 +15,24 @@ internal sealed partial class ChatRenderWindow
     private readonly ITwitchIrcClient _irc = new TwitchIrcClient();
     private readonly IKickChatClient _kick = new KickChatClient();
 
+    // Auto-reconnect state for each source. Chat is push-based (a persistent WebSocket), unlike
+    // the viewer count widget's polling timer (ChatRenderWindow.ViewerCount.cs), which recovers
+    // from a dropped connection "for free" because it keeps re-firing every 60s regardless of
+    // whether the previous tick succeeded. A WebSocket has no equivalent built-in retry: once
+    // ReceiveLoopAsync exits (network drop, router hiccup, etc.) nothing ever calls ConnectAsync
+    // again on its own, so the chat stayed dark forever even after the internet came back. These
+    // timers give both sources the same self-healing behavior the viewer count already had.
+    private const int ReconnectInitialDelaySeconds = 5;
+    private const int ReconnectMaxDelaySeconds = 60;
+
+    private string _twitchChannel = "";
+    private System.Threading.Timer? _twitchReconnectTimer;
+    private int _twitchReconnectDelaySeconds = ReconnectInitialDelaySeconds;
+
+    private string _kickChannelSlug = "";
+    private System.Threading.Timer? _kickReconnectTimer;
+    private int _kickReconnectDelaySeconds = ReconnectInitialDelaySeconds;
+
     // Whether this session actually wired up each source. Set by ConnectFeed based on
     // ChatSourceMode, read by DisconnectFeed/ReconnectFeedAsync so they only unwire what was
     // actually wired (Multichat can have either source active on its own).
@@ -132,6 +150,7 @@ internal sealed partial class ChatRenderWindow
 
     private void ConnectTwitch(string channel)
     {
+        _twitchChannel = channel;
         _twitchActive = true;
         SetTwitchStatus("MainWindow_Connecting", channel);
 
@@ -148,6 +167,7 @@ internal sealed partial class ChatRenderWindow
     private void OnIrcConnected(string channel) =>
         PostToUiThread(() =>
         {
+            _twitchReconnectDelaySeconds = ReconnectInitialDelaySeconds;
             SetTwitchStatus("MainWindow_ChannelConnected", channel);
             DebugLog.Write($"ConnectFeed: connected to Twitch #{channel}");
             RequestRender();
@@ -159,6 +179,7 @@ internal sealed partial class ChatRenderWindow
             SetTwitchStatus("MainWindow_Disconnected", reason);
             DebugLog.Write($"ConnectFeed: Twitch disconnected ({reason})");
             RequestRender();
+            ScheduleTwitchReconnect();
         });
 
     private void OnIrcError(Exception ex) =>
@@ -167,7 +188,42 @@ internal sealed partial class ChatRenderWindow
             SetTwitchStatus("MainWindow_ErrorLabel", ex.Message);
             DebugLog.WriteException("ConnectFeed._irc.Error", ex);
             RequestRender();
+            ScheduleTwitchReconnect();
         });
+
+    /// <summary>
+    /// Schedules a single retry attempt after a backoff delay (5s, 10s, 20s, ... capped at 60s,
+    /// reset to 5s on the next successful connect). No-ops if the feed was deliberately torn down
+    /// (_twitchActive false) or a retry is already pending, so overlapping Disconnected/Error
+    /// events for the same drop don't stack multiple timers.
+    /// </summary>
+    private void ScheduleTwitchReconnect()
+    {
+        if (!_twitchActive || _twitchReconnectTimer is not null)
+            return;
+
+        int delaySeconds = _twitchReconnectDelaySeconds;
+        _twitchReconnectDelaySeconds = Math.Min(_twitchReconnectDelaySeconds * 2, ReconnectMaxDelaySeconds);
+
+        DebugLog.Write($"ScheduleTwitchReconnect: retrying in {delaySeconds}s");
+        _twitchReconnectTimer = new System.Threading.Timer(
+            _ => PostToUiThread(() =>
+            {
+                _twitchReconnectTimer?.Dispose();
+                _twitchReconnectTimer = null;
+
+                if (!_twitchActive)
+                    return;
+
+                SetTwitchStatus("MainWindow_Connecting", _twitchChannel);
+                RequestRender();
+                _ = TryConnectIrcAsync(_twitchChannel);
+            }),
+            null,
+            TimeSpan.FromSeconds(delaySeconds),
+            System.Threading.Timeout.InfiniteTimeSpan
+        );
+    }
 
     private async Task TryConnectIrcAsync(string channel)
     {
@@ -183,6 +239,7 @@ internal sealed partial class ChatRenderWindow
             {
                 SetTwitchStatus("MainWindow_ErrorLabel", ex.Message);
                 RequestRender();
+                ScheduleTwitchReconnect();
             });
         }
     }
@@ -191,6 +248,7 @@ internal sealed partial class ChatRenderWindow
 
     private void ConnectKick(string channelSlug)
     {
+        _kickChannelSlug = channelSlug;
         _kickActive = true;
         SetKickStatus("MainWindow_Connecting", channelSlug);
 
@@ -205,6 +263,7 @@ internal sealed partial class ChatRenderWindow
     private void OnKickConnected(string channelSlug) =>
         PostToUiThread(() =>
         {
+            _kickReconnectDelaySeconds = ReconnectInitialDelaySeconds;
             SetKickStatus("MainWindow_ChannelConnected", channelSlug);
             DebugLog.Write($"ConnectFeed: connected to Kick '{channelSlug}'");
             RequestRender();
@@ -216,6 +275,7 @@ internal sealed partial class ChatRenderWindow
             SetKickStatus("MainWindow_Disconnected", reason);
             DebugLog.Write($"ConnectFeed: Kick disconnected ({reason})");
             RequestRender();
+            ScheduleKickReconnect();
         });
 
     private void OnKickError(Exception ex) =>
@@ -224,7 +284,37 @@ internal sealed partial class ChatRenderWindow
             SetKickStatus("MainWindow_ErrorLabel", ex.Message);
             DebugLog.WriteException("ConnectFeed._kick.Error", ex);
             RequestRender();
+            ScheduleKickReconnect();
         });
+
+    /// <summary>Kick counterpart of ScheduleTwitchReconnect — same backoff/guard behavior.</summary>
+    private void ScheduleKickReconnect()
+    {
+        if (!_kickActive || _kickReconnectTimer is not null)
+            return;
+
+        int delaySeconds = _kickReconnectDelaySeconds;
+        _kickReconnectDelaySeconds = Math.Min(_kickReconnectDelaySeconds * 2, ReconnectMaxDelaySeconds);
+
+        DebugLog.Write($"ScheduleKickReconnect: retrying in {delaySeconds}s");
+        _kickReconnectTimer = new System.Threading.Timer(
+            _ => PostToUiThread(() =>
+            {
+                _kickReconnectTimer?.Dispose();
+                _kickReconnectTimer = null;
+
+                if (!_kickActive)
+                    return;
+
+                SetKickStatus("MainWindow_Connecting", _kickChannelSlug);
+                RequestRender();
+                _ = TryConnectKickAsync(_kickChannelSlug);
+            }),
+            null,
+            TimeSpan.FromSeconds(delaySeconds),
+            System.Threading.Timeout.InfiniteTimeSpan
+        );
+    }
 
     private async Task TryConnectKickAsync(string channelSlug)
     {
@@ -240,6 +330,7 @@ internal sealed partial class ChatRenderWindow
             {
                 SetKickStatus("MainWindow_ErrorLabel", ex.Message);
                 RequestRender();
+                ScheduleKickReconnect();
             });
         }
     }
@@ -328,6 +419,9 @@ internal sealed partial class ChatRenderWindow
             _ = _irc.DisposeAsync().AsTask();
             _twitchActive = false;
         }
+        _twitchReconnectTimer?.Dispose();
+        _twitchReconnectTimer = null;
+        _twitchReconnectDelaySeconds = ReconnectInitialDelaySeconds;
 
         if (_kickActive)
         {
@@ -338,6 +432,9 @@ internal sealed partial class ChatRenderWindow
             _ = _kick.DisposeAsync().AsTask();
             _kickActive = false;
         }
+        _kickReconnectTimer?.Dispose();
+        _kickReconnectTimer = null;
+        _kickReconnectDelaySeconds = ReconnectInitialDelaySeconds;
 
         DisconnectStreamlabs();
     }
@@ -373,6 +470,9 @@ internal sealed partial class ChatRenderWindow
             await _irc.DisposeAsync();
             _twitchActive = false;
         }
+        _twitchReconnectTimer?.Dispose();
+        _twitchReconnectTimer = null;
+        _twitchReconnectDelaySeconds = ReconnectInitialDelaySeconds;
 
         if (_kickActive)
         {
@@ -383,6 +483,9 @@ internal sealed partial class ChatRenderWindow
             await _kick.DisposeAsync();
             _kickActive = false;
         }
+        _kickReconnectTimer?.Dispose();
+        _kickReconnectTimer = null;
+        _kickReconnectDelaySeconds = ReconnectInitialDelaySeconds;
 
         DisconnectStreamlabs();
         ConnectFeed();
