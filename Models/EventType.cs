@@ -119,4 +119,9 @@ public enum EventType
     /// A viewer milestone event.
     /// </summary>
     ViewerMilestone,
+
+    /// <summary>
+    /// A channel points redemption (custom or automatic reward). Comes from EventSub, not from IRC USERNOTICEs.
+    /// </summary>
+    ChannelPointsRedemption,
 }

@@ -37,5 +37,18 @@ internal static partial class ZhStrings
         ["EventMsg_WatchStreak_Other"] = "达成了连续 {0} 场直播的观看连击！",
         ["EventMsg_BonusGift_One"] = "获得了由 {1} 赞助的 {0} 份额外订阅！",
         ["EventMsg_BonusGift_Other"] = "获得了由 {1} 赞助的 {0} 份额外订阅！",
+        ["EventMsg_Redemption_One"] = "兑换了 {0}（{1} 积分）。",
+        ["EventMsg_Redemption_Other"] = "兑换了 {0}（{1} 积分）。",
+        ["EventMsg_RedemptionNoCost"] = "兑换了 {0}。",
+        ["EventMsg_RedemptionGeneric"] = "兑换了一项频道积分奖励。",
+        ["EventMsg_RedemptionNeedsLogin"] = "要查看频道积分兑换，请在设置中重新使用 Twitch 登录（使用频道所有者的账号）。",
+        ["Redemption_Auto_send_highlighted_message"] = "突出显示我的消息",
+        ["Redemption_Auto_single_message_bypass_sub_mode"] = "在仅订阅者模式下发送消息",
+        ["Redemption_Auto_random_sub_emote_unlock"] = "随机解锁订阅表情",
+        ["Redemption_Auto_chosen_sub_emote_unlock"] = "选择要解锁的表情",
+        ["Redemption_Auto_chosen_modified_sub_emote_unlock"] = "修改单个表情",
+        ["Redemption_Auto_message_effect"] = "消息特效",
+        ["Redemption_Auto_gigantify_an_emote"] = "巨型化表情",
+        ["Redemption_Auto_celebration"] = "屏幕庆祝",
     };
 }

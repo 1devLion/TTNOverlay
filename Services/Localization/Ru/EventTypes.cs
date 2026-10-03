@@ -37,5 +37,6 @@ internal static partial class RuStrings
         ["EventType_Short_AnonGiftedSub"] = "Подаренная подписка (анонимно)",
         ["EventType_Short_MysterySub"] = "Таинственная подписка",
         ["EventType_Short_AnonMysterySub"] = "Таинственная подписка (анонимно)",
+        ["EventType_Redemption"] = "Награда за баллы канала",
     };
 }

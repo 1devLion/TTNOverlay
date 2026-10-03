@@ -37,5 +37,18 @@ internal static partial class FrStrings
         ["EventMsg_WatchStreak_Other"] = "A atteint une série de {0} streams consécutifs !",
         ["EventMsg_BonusGift_One"] = "A reçu {0} abonnement supplémentaire sponsorisé par {1} !",
         ["EventMsg_BonusGift_Other"] = "A reçu {0} abonnements supplémentaires sponsorisés par {1} !",
+        ["EventMsg_Redemption_One"] = "A échangé {0} ({1} point).",
+        ["EventMsg_Redemption_Other"] = "A échangé {0} ({1} points).",
+        ["EventMsg_RedemptionNoCost"] = "A échangé {0}.",
+        ["EventMsg_RedemptionGeneric"] = "A échangé une récompense de points de chaîne.",
+        ["EventMsg_RedemptionNeedsLogin"] = "Pour voir les échanges de points de chaîne, reconnectez-vous à Twitch depuis les Paramètres (avec le compte du propriétaire de la chaîne).",
+        ["Redemption_Auto_send_highlighted_message"] = "Mettre mon message en avant",
+        ["Redemption_Auto_single_message_bypass_sub_mode"] = "Envoyer un message en mode abonnés uniquement",
+        ["Redemption_Auto_random_sub_emote_unlock"] = "Débloquer un emote d'abonné aléatoire",
+        ["Redemption_Auto_chosen_sub_emote_unlock"] = "Choisir un emote à débloquer",
+        ["Redemption_Auto_chosen_modified_sub_emote_unlock"] = "Modifier un emote",
+        ["Redemption_Auto_message_effect"] = "Effet de message",
+        ["Redemption_Auto_gigantify_an_emote"] = "Agrandir un emote",
+        ["Redemption_Auto_celebration"] = "Célébration à l'écran",
     };
 }

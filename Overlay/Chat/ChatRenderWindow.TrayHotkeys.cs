@@ -191,6 +191,7 @@ internal sealed partial class ChatRenderWindow
                 else
                 {
                     ReconnectStreamlabs();
+                    ConnectEventSubIfEligible();
                 }
 
                 _eventsHotkey?.Rebind(

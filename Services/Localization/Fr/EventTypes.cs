@@ -37,5 +37,6 @@ internal static partial class FrStrings
         ["EventType_Short_AnonGiftedSub"] = "Abonnement offert (anonyme)",
         ["EventType_Short_MysterySub"] = "Abonnement mystère",
         ["EventType_Short_AnonMysterySub"] = "Abonnement mystère (anonyme)",
+        ["EventType_Redemption"] = "Échange de points de chaîne",
     };
 }

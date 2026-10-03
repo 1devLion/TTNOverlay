@@ -37,5 +37,6 @@ internal static partial class EsStrings
         ["EventType_Short_AnonGiftedSub"] = "Suscripción regalada (anónimo)",
         ["EventType_Short_MysterySub"] = "Suscripción misteriosa",
         ["EventType_Short_AnonMysterySub"] = "Suscripción misteriosa (anónimo)",
+        ["EventType_Redemption"] = "Canje de puntos de canal",
     };
 }

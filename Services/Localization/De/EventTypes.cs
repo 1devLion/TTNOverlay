@@ -37,5 +37,6 @@ internal static partial class DeStrings
         ["EventType_Short_AnonGiftedSub"] = "Verschenktes Abonnement (anonym)",
         ["EventType_Short_MysterySub"] = "Mystery-Abonnement",
         ["EventType_Short_AnonMysterySub"] = "Mystery-Abonnement (anonym)",
+        ["EventType_Redemption"] = "Kanalpunkte-Einlösung",
     };
 }

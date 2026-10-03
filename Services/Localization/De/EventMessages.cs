@@ -37,5 +37,18 @@ internal static partial class DeStrings
         ["EventMsg_WatchStreak_Other"] = "Hat eine Serie von {0} Streams in Folge erreicht!",
         ["EventMsg_BonusGift_One"] = "Hat {0} zusätzliches Abo gesponsert von {1} erhalten!",
         ["EventMsg_BonusGift_Other"] = "Hat {0} zusätzliche Abos gesponsert von {1} erhalten!",
+        ["EventMsg_Redemption_One"] = "Hat {0} eingelöst ({1} Punkt).",
+        ["EventMsg_Redemption_Other"] = "Hat {0} eingelöst ({1} Punkte).",
+        ["EventMsg_RedemptionNoCost"] = "Hat {0} eingelöst.",
+        ["EventMsg_RedemptionGeneric"] = "Hat eine Kanalpunkte-Belohnung eingelöst.",
+        ["EventMsg_RedemptionNeedsLogin"] = "Um Kanalpunkte-Einlösungen zu sehen, melden Sie sich in den Einstellungen erneut bei Twitch an (mit dem Konto des Kanalinhabers).",
+        ["Redemption_Auto_send_highlighted_message"] = "Meine Nachricht hervorheben",
+        ["Redemption_Auto_single_message_bypass_sub_mode"] = "Nachricht im Nur-Abonnenten-Modus senden",
+        ["Redemption_Auto_random_sub_emote_unlock"] = "Zufälliges Abo-Emote freischalten",
+        ["Redemption_Auto_chosen_sub_emote_unlock"] = "Emote zum Freischalten wählen",
+        ["Redemption_Auto_chosen_modified_sub_emote_unlock"] = "Ein Emote modifizieren",
+        ["Redemption_Auto_message_effect"] = "Nachrichteneffekt",
+        ["Redemption_Auto_gigantify_an_emote"] = "Ein Emote vergrößern",
+        ["Redemption_Auto_celebration"] = "Feier auf dem Bildschirm",
     };
 }

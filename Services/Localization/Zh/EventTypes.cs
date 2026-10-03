@@ -37,5 +37,6 @@ internal static partial class ZhStrings
         ["EventType_Short_AnonGiftedSub"] = "赠送的订阅（匿名）",
         ["EventType_Short_MysterySub"] = "神秘订阅",
         ["EventType_Short_AnonMysterySub"] = "神秘订阅（匿名）",
+        ["EventType_Redemption"] = "频道积分兑换",
     };
 }

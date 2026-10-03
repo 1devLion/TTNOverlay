@@ -28,6 +28,12 @@ public static class EventTypeIds
         public const string Bonus = "bonus";
         public const string BonusGift = "bonusgift";
         public const string ViewerMilestone = "viewermilestone";
+
+        /// <summary>
+        /// Not an IRC msg-id: the raw id given to channel points redemptions, which arrive via EventSub.
+        /// It is persisted as the key in EventBoxColorModes/IrcEventGifPaths, so don't rename it.
+        /// </summary>
+        public const string ChannelPointsRedemption = "channelpointsredemption";
     }
 
     /// <summary>
@@ -95,6 +101,7 @@ public static class EventTypeIds
             Twitch.Bonus => EventType.BonusGift,
             Twitch.BonusGift => EventType.BonusGift,
             Twitch.ViewerMilestone => EventType.ViewerMilestone,
+            Twitch.ChannelPointsRedemption => EventType.ChannelPointsRedemption,
             _ => EventType.Unknown,
         };
 

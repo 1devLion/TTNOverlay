@@ -149,6 +149,24 @@ public class TwitchIrcClient : ITwitchIrcClient
         if (string.IsNullOrEmpty(msg.DisplayName))
             msg.DisplayName = msg.Username;
 
+        // Channel points redemptions that carry a message arrive as ordinary PRIVMSGs: tagged with the reward id
+        // (custom rewards) or with a well-known msg-id (two built-in rewards). IRC never sends the reward's title
+        // or cost, so these tags only feed the fallback used when EventSub (broadcaster login) isn't active.
+        var customRewardId = parsed.Tags.GetValueOrDefault("custom-reward-id");
+        if (!string.IsNullOrEmpty(customRewardId))
+        {
+            msg.RewardId = customRewardId;
+        }
+        else
+        {
+            msg.AutoRewardType = parsed.Tags.GetValueOrDefault("msg-id") switch
+            {
+                "highlighted-message" => "send_highlighted_message",
+                "skip-subs-mode-message" => "single_message_bypass_sub_mode",
+                _ => null,
+            };
+        }
+
         MessageReceived?.Invoke(msg);
     }
 

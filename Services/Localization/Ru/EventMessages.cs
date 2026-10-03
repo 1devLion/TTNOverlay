@@ -37,5 +37,18 @@ internal static partial class RuStrings
         ["EventMsg_WatchStreak_Other"] = "Достиг серии из {0} стримов подряд!",
         ["EventMsg_BonusGift_One"] = "Получил {0} дополнительную подписку, спонсированную {1}!",
         ["EventMsg_BonusGift_Other"] = "Получил {0} дополнительных подписок, спонсированных {1}!",
+        ["EventMsg_Redemption_One"] = "Активировал(а) награду «{0}» (баллов: {1}).",
+        ["EventMsg_Redemption_Other"] = "Активировал(а) награду «{0}» (баллов: {1}).",
+        ["EventMsg_RedemptionNoCost"] = "Активировал(а) награду «{0}».",
+        ["EventMsg_RedemptionGeneric"] = "Активировал(а) награду за баллы канала.",
+        ["EventMsg_RedemptionNeedsLogin"] = "Чтобы видеть награды за баллы канала, войдите в Twitch заново в Настройках (через аккаунт владельца канала).",
+        ["Redemption_Auto_send_highlighted_message"] = "Выделить моё сообщение",
+        ["Redemption_Auto_single_message_bypass_sub_mode"] = "Сообщение в режиме только для подписчиков",
+        ["Redemption_Auto_random_sub_emote_unlock"] = "Случайный эмоут подписчика",
+        ["Redemption_Auto_chosen_sub_emote_unlock"] = "Выбрать эмоут для разблокировки",
+        ["Redemption_Auto_chosen_modified_sub_emote_unlock"] = "Изменить эмоут",
+        ["Redemption_Auto_message_effect"] = "Эффект сообщения",
+        ["Redemption_Auto_gigantify_an_emote"] = "Гигантский эмоут",
+        ["Redemption_Auto_celebration"] = "Празднование на экране",
     };
 }

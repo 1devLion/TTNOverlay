@@ -144,6 +144,7 @@ internal sealed partial class ChatRenderWindow
             ConnectKick(kickChannel);
 
         ConnectStreamlabsIfConfigured();
+        ConnectEventSubIfEligible();
     }
 
     // ----------------------------- Twitch -----------------------------------
@@ -400,6 +401,7 @@ internal sealed partial class ChatRenderWindow
                 return;
             }
 
+            TryShowIrcRedemptionFallback(msg);
             AugmentWithThirdPartyEmotes(msg);
             AddMessage(msg);
             if (!msg.IsSystem)
@@ -437,6 +439,7 @@ internal sealed partial class ChatRenderWindow
         _kickReconnectDelaySeconds = ReconnectInitialDelaySeconds;
 
         DisconnectStreamlabs();
+        DisconnectEventSub();
     }
 
     private void ResetForChannelChange()
@@ -488,6 +491,7 @@ internal sealed partial class ChatRenderWindow
         _kickReconnectDelaySeconds = ReconnectInitialDelaySeconds;
 
         DisconnectStreamlabs();
+        DisconnectEventSub();
         ConnectFeed();
     }
 }

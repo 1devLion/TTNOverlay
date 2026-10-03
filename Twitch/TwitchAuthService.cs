@@ -18,7 +18,8 @@ public static partial class TwitchAuthService
     private const string WorkerBaseUrl = "https://ttnoverlay-auth.ttnoverlay.workers.dev";
     private const string Scopes =
         "moderator:read:chatters moderator:manage:banned_users moderator:read:banned_users "
-        + "moderator:manage:warnings moderator:read:chat_settings moderator:manage:chat_settings";
+        + "moderator:manage:warnings moderator:read:chat_settings moderator:manage:chat_settings "
+        + "channel:read:redemptions";
     private static readonly HttpClient Http = SharedHttpClient.Instance;
 
     public class AuthResult

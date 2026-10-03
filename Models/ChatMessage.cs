@@ -91,4 +91,16 @@ public class ChatMessage
     public string? SubPlanName { get; set; }
 
     public string? EventImageUrl { get; set; }
+
+    /// <summary>
+    /// Twitch IRC only: the "custom-reward-id" tag of a PRIVMSG sent as part of a custom channel points reward
+    /// redemption that asks for text. Only used as a fallback signal (IRC carries no reward title or cost).
+    /// </summary>
+    public string? RewardId { get; set; }
+
+    /// <summary>
+    /// Twitch IRC only: EventSub-style reward type inferred from the PRIVMSG's msg-id tag for the two built-in
+    /// rewards that show up in IRC (highlighted-message, skip-subs-mode-message). Null otherwise.
+    /// </summary>
+    public string? AutoRewardType { get; set; }
 }

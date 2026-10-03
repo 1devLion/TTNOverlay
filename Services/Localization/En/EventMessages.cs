@@ -37,5 +37,18 @@ internal static partial class EnStrings
         ["EventMsg_WatchStreak_Other"] = "Reached a streak of {0} streams in a row!",
         ["EventMsg_BonusGift_One"] = "Received {0} extra subscription sponsored by {1}!",
         ["EventMsg_BonusGift_Other"] = "Received {0} extra subscriptions sponsored by {1}!",
+        ["EventMsg_Redemption_One"] = "Redeemed {0} ({1} point).",
+        ["EventMsg_Redemption_Other"] = "Redeemed {0} ({1} points).",
+        ["EventMsg_RedemptionNoCost"] = "Redeemed {0}.",
+        ["EventMsg_RedemptionGeneric"] = "Redeemed a channel points reward.",
+        ["EventMsg_RedemptionNeedsLogin"] = "To see channel points redemptions, log in with Twitch again from Settings (using the channel owner's account).",
+        ["Redemption_Auto_send_highlighted_message"] = "Highlight My Message",
+        ["Redemption_Auto_single_message_bypass_sub_mode"] = "Send a Message in Sub-Only Mode",
+        ["Redemption_Auto_random_sub_emote_unlock"] = "Unlock a Random Sub Emote",
+        ["Redemption_Auto_chosen_sub_emote_unlock"] = "Choose an Emote to Unlock",
+        ["Redemption_Auto_chosen_modified_sub_emote_unlock"] = "Modify a Single Emote",
+        ["Redemption_Auto_message_effect"] = "Message Effect",
+        ["Redemption_Auto_gigantify_an_emote"] = "Gigantify an Emote",
+        ["Redemption_Auto_celebration"] = "On-Screen Celebration",
     };
 }

@@ -13,5 +13,7 @@ public static class ChatColors
     public const string TwitchAnnouncement = "#9146FF";
 
     public const string StreamlabsEvent = "#5CD68A";
+
+    public const string ChannelPointsRedemption = "#12B886";
 }
 

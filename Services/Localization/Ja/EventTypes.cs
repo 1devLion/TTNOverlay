@@ -37,5 +37,6 @@ internal static partial class JaStrings
         ["EventType_Short_AnonGiftedSub"] = "ギフトサブスクリプション (匿名)",
         ["EventType_Short_MysterySub"] = "ミステリーサブスクリプション",
         ["EventType_Short_AnonMysterySub"] = "ミステリーサブスクリプション (匿名)",
+        ["EventType_Redemption"] = "チャンネルポイントの交換",
     };
 }

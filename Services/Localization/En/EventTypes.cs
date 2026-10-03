@@ -37,5 +37,6 @@ internal static partial class EnStrings
         ["EventType_Short_AnonGiftedSub"] = "Gifted subscription (anonymous)",
         ["EventType_Short_MysterySub"] = "Mystery subscription",
         ["EventType_Short_AnonMysterySub"] = "Mystery subscription (anonymous)",
+        ["EventType_Redemption"] = "Channel points redemption",
     };
 }

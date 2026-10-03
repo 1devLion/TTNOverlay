@@ -61,12 +61,14 @@ internal sealed partial class ChatRenderWindow
             return;
         }
 
+        PostToUiThread(ConnectEventSubIfEligible);
         await RefreshModerationStateAsync();
     }
 
     private void LogoutFromTwitch()
     {
         _moderation?.Logout();
+        DisconnectEventSub();
         _moderationChatters = new();
         _moderationBanned = null;
 

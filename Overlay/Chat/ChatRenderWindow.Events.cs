@@ -171,6 +171,7 @@ internal sealed partial class ChatRenderWindow
             (EventType.Merch, _) => ("🛍️", new Color4(0xFF / 255f, 0x7A / 255f, 0x00 / 255f, 1f)),
             (EventType.Bits, _) => ("💎", new Color4(0x00 / 255f, 0x90 / 255f, 0xFF / 255f, 1f)),
             (EventType.PowerUp, _) => ("⚡", new Color4(0x00 / 255f, 0x90 / 255f, 0xFF / 255f, 1f)),
+            (EventType.ChannelPointsRedemption, _) => ("💠", new Color4(0x12 / 255f, 0xB8 / 255f, 0x86 / 255f, 1f)),
 
             _ => ("ℹ️", new Color4(0x60 / 255f, 0x60 / 255f, 0x60 / 255f, 1f)),
         };

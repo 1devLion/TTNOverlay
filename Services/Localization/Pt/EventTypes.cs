@@ -37,5 +37,6 @@ internal static partial class PtStrings
         ["EventType_Short_AnonGiftedSub"] = "Inscrição presenteada (anônimo)",
         ["EventType_Short_MysterySub"] = "Inscrição misteriosa",
         ["EventType_Short_AnonMysterySub"] = "Inscrição misteriosa (anônimo)",
+        ["EventType_Redemption"] = "Resgate de pontos do canal",
     };
 }

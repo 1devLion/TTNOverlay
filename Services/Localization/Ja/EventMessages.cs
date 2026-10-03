@@ -37,5 +37,18 @@ internal static partial class JaStrings
         ["EventMsg_WatchStreak_Other"] = "{0}回連続の配信視聴ストリークを達成しました！",
         ["EventMsg_BonusGift_One"] = "{1} 提供の追加サブスクを{0}件受け取りました！",
         ["EventMsg_BonusGift_Other"] = "{1} 提供の追加サブスクを{0}件受け取りました！",
+        ["EventMsg_Redemption_One"] = "{0}を交換しました（{1}ポイント）。",
+        ["EventMsg_Redemption_Other"] = "{0}を交換しました（{1}ポイント）。",
+        ["EventMsg_RedemptionNoCost"] = "{0}を交換しました。",
+        ["EventMsg_RedemptionGeneric"] = "チャンネルポイントの報酬を交換しました。",
+        ["EventMsg_RedemptionNeedsLogin"] = "チャンネルポイントの交換を表示するには、設定からTwitchに再ログインしてください（チャンネル所有者のアカウントで）。",
+        ["Redemption_Auto_send_highlighted_message"] = "自分のメッセージを目立たせる",
+        ["Redemption_Auto_single_message_bypass_sub_mode"] = "サブスクライバー限定モードでメッセージを送信",
+        ["Redemption_Auto_random_sub_emote_unlock"] = "ランダムなサブスクライバーエモートを解除",
+        ["Redemption_Auto_chosen_sub_emote_unlock"] = "解除するエモートを選ぶ",
+        ["Redemption_Auto_chosen_modified_sub_emote_unlock"] = "エモートを1つ変更",
+        ["Redemption_Auto_message_effect"] = "メッセージエフェクト",
+        ["Redemption_Auto_gigantify_an_emote"] = "エモートを巨大化",
+        ["Redemption_Auto_celebration"] = "画面上のお祝い",
     };
 }

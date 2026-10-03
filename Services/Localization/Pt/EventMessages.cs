@@ -37,5 +37,18 @@ internal static partial class PtStrings
         ["EventMsg_WatchStreak_Other"] = "Alcançou uma sequência de {0} streams consecutivas!",
         ["EventMsg_BonusGift_One"] = "Recebeu {0} assinatura extra patrocinada por {1}!",
         ["EventMsg_BonusGift_Other"] = "Recebeu {0} assinaturas extras patrocinadas por {1}!",
+        ["EventMsg_Redemption_One"] = "Resgatou {0} ({1} ponto).",
+        ["EventMsg_Redemption_Other"] = "Resgatou {0} ({1} pontos).",
+        ["EventMsg_RedemptionNoCost"] = "Resgatou {0}.",
+        ["EventMsg_RedemptionGeneric"] = "Resgatou uma recompensa de pontos do canal.",
+        ["EventMsg_RedemptionNeedsLogin"] = "Para ver os resgates de pontos do canal, entre novamente com a Twitch em Configurações (com a conta do dono do canal).",
+        ["Redemption_Auto_send_highlighted_message"] = "Destacar minha mensagem",
+        ["Redemption_Auto_single_message_bypass_sub_mode"] = "Enviar mensagem no modo somente assinantes",
+        ["Redemption_Auto_random_sub_emote_unlock"] = "Desbloquear um emote de assinante aleatório",
+        ["Redemption_Auto_chosen_sub_emote_unlock"] = "Escolher um emote para desbloquear",
+        ["Redemption_Auto_chosen_modified_sub_emote_unlock"] = "Modificar um emote",
+        ["Redemption_Auto_message_effect"] = "Efeito de mensagem",
+        ["Redemption_Auto_gigantify_an_emote"] = "Gigantizar um emote",
+        ["Redemption_Auto_celebration"] = "Celebração na tela",
     };
 }
