@@ -11,10 +11,26 @@
   <a href="https://github.com/1devLion/TTNOverlay/issues?q=is%3Aissue+is%3Aopen+sort%3Aupdated-desc">
     <img alt="GitHub issues" src="https://img.shields.io/github/issues/1devLion/TTNOverlay">
   </a>
+    <a href="https://github.com/1devLion/TTNOverlay/blob/main/LICENSE">
+    <img alt="GitHub license" src="https://img.shields.io/github/license/1devLion/TTNOverlay">
+  </a>
+  <img alt="Languages" src="https://img.shields.io/badge/Languages-8-blue">
   <br/>
   <a href="https://ko-fi.com/enubia">
     <img src="https://img.shields.io/badge/Ko--fi-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white" alt="Ko-Fi" width="92" />
   </a>
+
+<br/><br/>
+  <b>Supported Languages</b>
+  <br/>
+  <img src="https://flagcdn.com/w40/us.png" width="26" alt="English" title="English"/>
+  <img src="https://flagcdn.com/w40/es.png" width="26" alt="Español" title="Español"/>
+  <img src="https://flagcdn.com/w40/br.png" width="26" alt="Português" title="Português"/>
+  <img src="https://flagcdn.com/w40/de.png" width="26" alt="Deutsch" title="Deutsch"/>
+  <img src="https://flagcdn.com/w40/fr.png" width="26" alt="Français" title="Français"/>
+  <img src="https://flagcdn.com/w40/jp.png" width="26" alt="日本語" title="日本語"/>
+  <img src="https://flagcdn.com/w40/cn.png" width="26" alt="中文" title="中文"/>
+  <img src="https://flagcdn.com/w40/ru.png" width="26" alt="Русский" title="Русский"/>
 
   ---
 
@@ -83,6 +99,3 @@ vpk pack -u TTNOverlay -v <version> -p publish -e TTNOverlay.exe --icon Resource
 - Twitch **Helix API** + user OAuth for viewer count, badges, and moderation
 - **Streamlabs Socket API** (optional) for donations, follows, hosts, and merch
 - Cloudflare Worker as OAuth token broker (keeps the Twitch client secret off the client)
-
-## License
-MIT licensed, see more [here](https://github.com/1devLion/TTNOverlay/blob/main/LICENSE)
