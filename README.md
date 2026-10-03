@@ -97,3 +97,7 @@ vpk pack -u TTNOverlay -v <version> -p publish -e TTNOverlay.exe --icon Resource
 - Twitch **Helix API** + user OAuth for viewer count, badges, and moderation
 - **Streamlabs Socket API** (optional) for donations, follows, hosts, and merch
 - Cloudflare Worker as OAuth token broker (keeps the Twitch client secret off the client)
+
+## Code Signing Policy
+
+This project is applying to the SignPath Foundation's free code signing program. Until enrollment in the program is complete, Windows installers are released without a digital signature. Once accepted, only artifacts that comply with this policy will be signed.
