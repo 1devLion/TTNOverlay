@@ -16,7 +16,7 @@
   </a>
   <img alt="Languages" src="https://img.shields.io/badge/Languages-8-blue">
   <br/>
-  <a href="https://ko-fi.com/enubia">
+  <a href="https://ko-fi.com/1devLion">
     <img src="https://img.shields.io/badge/Ko--fi-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white" alt="Ko-Fi" width="92" />
   </a>
 
@@ -63,8 +63,6 @@
 - **Custom event GIFs**: swap in your own GIF for any event type, right from Settings
 - **Custom alert sounds**: default presets included, or bring your own
 - **Streamlabs integration**: unlock its alert box events (donations, custom messages, GIFs) via Widget Token + Socket API Token. One-click login coming soon
-- **Dark/Light theme**, switchable live
-- Multi-language support **(EN/ES/PT/DE/FR/JA/ZH/RU)**
 
 ---
 
