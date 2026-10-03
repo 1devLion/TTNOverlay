@@ -1,11 +1,11 @@
 # v1.4.0
 
-## Novedades
+## What's New
 
-- **Canjes de puntos de canal**: ahora se muestran tanto en el chat como en el panel de alertas, con el nombre de la recompensa y el costo en puntos. Antes solo se veían (sin detalle) si el canje incluía un mensaje de texto.
-- Para ver el detalle completo necesitás volver a iniciar sesión con Twitch una vez desde Configuración, usando la cuenta dueña del canal (Twitch solo permite esta información a esa cuenta, ni siquiera a moderadores). Sin volver a loguearte, la app sigue mostrando lo que ya mostraba antes.
+- **Channel points redemptions**: now shown in both the chat and the alerts panel, with the reward name and point cost. Previously they were only visible (without detail) when the redemption included a chat message.
+- To see the full detail, you need to log in with Twitch once more from Settings, using the account that owns the channel (Twitch only grants this information to that account, not even to moderators). Without re-logging in, the app keeps showing what it showed before.
 
-## Correcciones
+## Fixes
 
-- Solucionado un cierre inesperado al abrir el diálogo de notas de versión al iniciar la app tras una actualización.
-- La barra de scroll de ese diálogo ahora tiene el mismo estilo que el resto de la app, en vez del texto "▼ Scroll for more".
+- Fixed a crash when opening the release notes dialog on startup after an update.
+- That dialog's scrollbar now matches the rest of the app's style, instead of the "▼ Scroll for more" text.
