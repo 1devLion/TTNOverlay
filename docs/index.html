@@ -4,16 +4,59 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title data-i18n="meta_title">TTNOverlay | Native Twitch overlay for Windows</title>
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; connect-src https://api.github.com; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title data-i18n="meta_title">TTNOverlay | Native Twitch &amp; Kick overlay for Windows</title>
   <meta name="description" data-i18n="meta_description"
-    content="A transparent, click-through Twitch overlay for Windows.">
+    content="A transparent, click-through Twitch and Kick overlay for Windows: multichat, event alerts, viewer count and in-app moderation. Drawn directly with Direct2D. No Electron, no WebView2, no WPF.">
+  <link rel="canonical" href="https://1devlion.github.io/TTNOverlay/">
+  <meta name="theme-color" content="#0d1420" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f4f5f8" media="(prefers-color-scheme: light)">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="TTNOverlay">
+  <meta property="og:title" content="TTNOverlay | Native Twitch &amp; Kick overlay for Windows">
+  <meta property="og:description" content="A transparent, click-through Twitch and Kick overlay for Windows: multichat, event alerts, viewer count and in-app moderation. Drawn directly with Direct2D. No Electron, no WebView2, no WPF.">
+  <meta property="og:url" content="https://1devlion.github.io/TTNOverlay/">
+  <meta property="og:image" content="https://1devlion.github.io/TTNOverlay/img/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="TTNOverlay: a transparent Twitch and Kick chat overlay for Windows">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="TTNOverlay | Native Twitch &amp; Kick overlay for Windows">
+  <meta name="twitter:description" content="A transparent, click-through Twitch and Kick overlay for Windows: multichat, event alerts, viewer count and in-app moderation. Drawn directly with Direct2D. No Electron, no WebView2, no WPF.">
+  <meta name="twitter:image" content="https://1devlion.github.io/TTNOverlay/img/og-image.png">
+
   <link rel="icon" type="image/webp" href="img/logo_nobg.webp">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-    rel="stylesheet">
+  <link rel="preload" href="fonts/inter-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
+  <script src="js/theme-init.js"></script>
   <link rel="stylesheet" href="css/style.css">
+
+  <script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "TTNOverlay",
+  "description": "A transparent, click-through Twitch and Kick overlay for Windows: multichat, event alerts, viewer count and in-app moderation.",
+  "applicationCategory": "MultimediaApplication",
+  "operatingSystem": "Windows 10, Windows 11",
+  "url": "https://1devlion.github.io/TTNOverlay/",
+  "downloadUrl": "https://github.com/1devLion/TTNOverlay/releases/latest",
+  "image": "https://1devlion.github.io/TTNOverlay/img/og-image.png",
+  "license": "https://github.com/1devLion/TTNOverlay/blob/main/LICENSE",
+  "isAccessibleForFree": true,
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "author": {
+    "@type": "Person",
+    "name": "1devLion",
+    "url": "https://github.com/1devLion"
+  }
+}
+  </script>
 </head>
 
 <body>
@@ -38,15 +81,15 @@
       <div class="header-controls">
         <div class="lang-switch">
           <label class="sr-only" for="lang-select" data-i18n="lang_label">Language</label>
-          <select id="lang-select" aria-label="Language"></select>
+          <select id="lang-select"></select>
         </div>
-        <button id="theme-toggle" class="theme-toggle" type="button" aria-pressed="false">
+        <button id="theme-toggle" class="theme-toggle" type="button">
           <span class="theme-toggle-track">
             <span class="theme-toggle-thumb" aria-hidden="true"></span>
           </span>
           <span class="sr-only" id="theme-toggle-label" data-i18n="theme_toggle_label">Switch to light theme</span>
         </button>
-        <a class="btn btn-ghost btn-small header-gh" href="#" data-repo-link="source" target="_blank" rel="noopener"
+        <a class="btn btn-ghost btn-small header-gh" href="https://github.com/1devLion/TTNOverlay" data-repo-link="source" target="_blank" rel="noopener"
           aria-label="GitHub">
           <svg viewBox="0 0 16 16" width="18" height="18" aria-hidden="true">
             <path fill="currentColor"
@@ -55,7 +98,8 @@
         </a>
       </div>
 
-      <button id="nav-toggle" class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav-mobile">
+      <button id="nav-toggle" class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav-mobile"
+        aria-label="Menu" data-i18n-aria-label="nav_menu_label">
         <span></span><span></span><span></span>
       </button>
     </div>
@@ -67,7 +111,7 @@
       <a href="#feedback" data-i18n="nav_feedback">Feedback</a>
       <div class="lang-switch">
         <label class="sr-only" for="lang-select-mobile" data-i18n="lang_label">Language</label>
-        <select id="lang-select-mobile" class="lang-select" aria-label="Language"></select>
+        <select id="lang-select-mobile" class="lang-select"></select>
       </div>
     </nav>
   </header>
@@ -80,19 +124,19 @@
         <div class="hero-copy">
           <p class="eyebrow">
             <span data-i18n="hero_eyebrow">Windows · Free &amp; open source</span>
-            <span class="hero-version" id="hero-version" hidden> · <a href="#" data-repo-link="release"
+            <span class="hero-version" id="hero-version" hidden> · <a href="https://github.com/1devLion/TTNOverlay/releases/latest" data-repo-link="release"
                 target="_blank" rel="noopener" id="hero-version-tag"></a></span>
           </p>
           <h1>
-            <span data-i18n="hero_title_1">A Twitch overlay</span><br>
+            <span data-i18n="hero_title_1">A Twitch &amp; Kick overlay</span><br>
             <span class="accent" data-i18n="hero_title_2">that stays out of your way.</span>
           </h1>
           <p class="hero-subtitle" data-i18n="hero_subtitle">Live chat, event alerts, viewer count and in-app
             moderation, drawn as a transparent, click-through window on top of whatever you're playing.</p>
           <div class="hero-ctas">
-            <a class="btn btn-accent" href="#" data-repo-link="release" data-i18n="hero_cta_download">Download for
+            <a class="btn btn-accent" href="https://github.com/1devLion/TTNOverlay/releases/latest/download/TTNOverlay-win-Setup.exe" data-repo-link="installer" data-i18n="hero_cta_download">Download for
               Windows</a>
-            <a class="btn btn-ghost" href="#" data-repo-link="source" target="_blank" rel="noopener"
+            <a class="btn btn-ghost" href="https://github.com/1devLion/TTNOverlay" data-repo-link="source" target="_blank" rel="noopener"
               data-i18n="hero_cta_source">View source on GitHub</a>
           </div>
           <p class="hero-note" data-i18n="hero_note">Chat works with no login at all. Sign in only for viewer count,
@@ -103,7 +147,8 @@
           <div class="hero-shot" data-hero-shot>
             <img data-theme-src-dark="img/screenshots/hero_dark.webp"
               data-theme-src-light="img/screenshots/hero_light.webp" src="img/screenshots/hero_dark.webp"
-              alt="TTNOverlay">
+              width="493" height="623" fetchpriority="high" data-i18n-alt="hero_alt"
+              alt="TTNOverlay chat overlay showing live chat messages with emotes">
             <div class="hero-shot-placeholder">
               <span data-i18n="feat_image_pending">Add a screenshot</span>
               <code data-hero-placeholder-name>hero_dark.webp</code>
@@ -123,7 +168,7 @@
 
           <article class="feature-item feature-item-media">
             <div class="feature-media">
-              <img class="zoomable" src="img/features/streamlabs_feature.webp" alt="" loading="lazy" tabindex="0"
+              <img class="zoomable" src="img/features/streamlabs_feature.webp" alt="Streamlabs integration" data-i18n-alt="feat_streamlabs_title" width="1024" height="768" loading="lazy" tabindex="0"
                 role="button" data-lightbox-caption="feat_streamlabs_title">
               <span class="zoom-hint" aria-hidden="true">
                 <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
@@ -143,7 +188,7 @@
 
           <article class="feature-item feature-item-media">
             <div class="feature-media">
-              <img class="zoomable" src="img/features/events_feature.webp" alt="" loading="lazy" tabindex="0"
+              <img class="zoomable" src="img/features/events_feature.webp" alt="Event alerts" data-i18n-alt="feat_events_title" width="394" height="506" loading="lazy" tabindex="0"
                 role="button" data-lightbox-caption="feat_events_title">
               <span class="zoom-hint" aria-hidden="true">
                 <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
@@ -163,7 +208,7 @@
 
           <article class="feature-item feature-item-media">
             <div class="feature-media">
-              <img class="zoomable" src="img/features/modpanel_feature.webp" alt="" loading="lazy" tabindex="0"
+              <img class="zoomable" src="img/features/modpanel_feature.webp" alt="In-app moderation" data-i18n-alt="feat_mod_title" width="420" height="520" loading="lazy" tabindex="0"
                 role="button" data-lightbox-caption="feat_mod_title">
               <span class="zoom-hint" aria-hidden="true">
                 <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
@@ -182,7 +227,7 @@
 
           <article class="feature-item feature-item-media">
             <div class="feature-media">
-              <img class="zoomable" src="img/features/alerts_feature.webp" alt="" loading="lazy" tabindex="0"
+              <img class="zoomable" src="img/features/alerts_feature.webp" alt="Sound &amp; flash alerts" data-i18n-alt="feat_alerts_title" width="394" height="506" loading="lazy" tabindex="0"
                 role="button" data-lightbox-caption="feat_alerts_title">
               <span class="zoom-hint" aria-hidden="true">
                 <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
@@ -201,7 +246,7 @@
 
           <article class="feature-item feature-item-media">
             <div class="feature-media">
-              <img class="zoomable" src="img/features/viewers_feature.webp" alt="" loading="lazy" tabindex="0"
+              <img class="zoomable" src="img/features/viewers_feature.webp" alt="Viewer count &amp; badges" data-i18n-alt="feat_viewers_title" width="394" height="506" loading="lazy" tabindex="0"
                 role="button" data-lightbox-caption="feat_viewers_title">
               <span class="zoom-hint" aria-hidden="true">
                 <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
@@ -219,7 +264,7 @@
 
           <article class="feature-item feature-item-media">
             <div class="feature-media">
-              <img class="zoomable" src="img/features/alerts_visualalertcolor_customizable_feature.webp" alt="" loading="lazy" tabindex="0"
+              <img class="zoomable" src="img/features/alerts_visualalertcolor_customizable_feature.webp" alt="Custom alert colors" data-i18n-alt="feat_alertcolor_title" width="492" height="626" loading="lazy" tabindex="0"
                 role="button" data-lightbox-caption="feat_alertcolor_title">
               <span class="zoom-hint" aria-hidden="true">
                 <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
@@ -237,7 +282,7 @@
 
           <article class="feature-item feature-item-media">
             <div class="feature-media">
-              <img class="zoomable" src="img/features/events_customizable_box_feature.webp" alt="" loading="lazy" tabindex="0"
+              <img class="zoomable" src="img/features/events_customizable_box_feature.webp" alt="Custom event colors" data-i18n-alt="feat_eventbox_title" width="1024" height="768" loading="lazy" tabindex="0"
                 role="button" data-lightbox-caption="feat_eventbox_title">
               <span class="zoom-hint" aria-hidden="true">
                 <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
@@ -256,7 +301,7 @@
 
           <article class="feature-item feature-item-media">
             <div class="feature-media">
-              <img class="zoomable" src="img/features/events_customizable_gif_feature.webp" alt="" loading="lazy" tabindex="0"
+              <img class="zoomable" src="img/features/events_customizable_gif_feature.webp" alt="Custom event GIFs" data-i18n-alt="feat_eventgif_title" width="1024" height="768" loading="lazy" tabindex="0"
                 role="button" data-lightbox-caption="feat_eventgif_title">
               <span class="zoom-hint" aria-hidden="true">
                 <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
@@ -275,7 +320,7 @@
 
           <article class="feature-item feature-item-media">
             <div class="feature-media">
-              <img class="zoomable" src="img/features/alerts_audio_customizable_feature.webp" alt="" loading="lazy" tabindex="0"
+              <img class="zoomable" src="img/features/alerts_audio_customizable_feature.webp" alt="Custom alert sounds" data-i18n-alt="feat_alertsound_title" width="1024" height="768" loading="lazy" tabindex="0"
                 role="button" data-lightbox-caption="feat_alertsound_title">
               <span class="zoom-hint" aria-hidden="true">
                 <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
@@ -301,13 +346,12 @@
       <div class="wrap">
         <p class="eyebrow center" data-i18n="screenshots_eyebrow">See it in action</p>
         <h2 class="center" data-i18n="screenshots_title">Screenshots</h2>
-        <p class="section-subtitle center" data-i18n="screenshots_subtitle">Drop image files into img/screenshots/ using
-          the names below and they'll show up here automatically.</p>
+        <p class="section-subtitle center" data-i18n="screenshots_subtitle">A look at the chat overlay, event alerts, moderation panel and visual alerts, exactly as they render in the app.</p>
 
         <div class="shot-grid">
           <figure class="shot">
             <div class="shot-media">
-              <img class="zoomable" src="img/screenshots/chat_finished.webp" alt="" loading="lazy" tabindex="0"
+              <img class="zoomable" src="img/screenshots/chat_finished_1280.webp" data-full="img/screenshots/chat_finished.webp" alt="Chat overlay" data-i18n-alt="shot_chat_caption" width="1280" height="720" loading="lazy" tabindex="0"
                 role="button" data-lightbox-caption="shot_chat_caption">
               <span class="zoom-hint" aria-hidden="true">
                 <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
@@ -325,7 +369,7 @@
 
           <figure class="shot">
             <div class="shot-media">
-              <img class="zoomable" src="img/screenshots/events_finished.webp" alt="" loading="lazy" tabindex="0"
+              <img class="zoomable" src="img/screenshots/events_finished_1280.webp" data-full="img/screenshots/events_finished.webp" alt="Event alerts" data-i18n-alt="shot_events_caption" width="1280" height="720" loading="lazy" tabindex="0"
                 role="button" data-lightbox-caption="shot_events_caption">
               <span class="zoom-hint" aria-hidden="true">
                 <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
@@ -343,7 +387,7 @@
 
           <figure class="shot">
             <div class="shot-media">
-              <img class="zoomable" src="img/screenshots/modpanel_finished.webp" alt="" loading="lazy" tabindex="0"
+              <img class="zoomable" src="img/screenshots/modpanel_finished_1280.webp" data-full="img/screenshots/modpanel_finished.webp" alt="Moderation panel" data-i18n-alt="shot_modpanel_caption" width="1280" height="720" loading="lazy" tabindex="0"
                 role="button" data-lightbox-caption="shot_modpanel_caption">
               <span class="zoom-hint" aria-hidden="true">
                 <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
@@ -361,7 +405,7 @@
 
           <figure class="shot">
             <div class="shot-media">
-              <img class="zoomable" src="img/screenshots/visualalert_finished.webp" alt="" loading="lazy" tabindex="0"
+              <img class="zoomable" src="img/screenshots/visualalert_finished_1280.webp" data-full="img/screenshots/visualalert_finished.webp" alt="Visual alert" data-i18n-alt="shot_alert_caption" width="1280" height="720" loading="lazy" tabindex="0"
                 role="button" data-lightbox-caption="shot_alert_caption">
               <span class="zoom-hint" aria-hidden="true">
                 <svg viewBox="0 0 16 16" width="14" height="14"><path fill="currentColor"
@@ -386,23 +430,26 @@
         <div class="download-copy">
           <p class="eyebrow" data-i18n="download_eyebrow">Get it</p>
           <h2 data-i18n="download_title">Download TTNOverlay</h2>
-          <p data-i18n="download_body">A portable .exe. That's it.</p>
+          <p data-i18n="download_body">A small installer that updates itself. No admin rights needed.</p>
           <div class="hero-ctas">
-            <a class="btn btn-accent" href="#" data-repo-link="release" data-i18n="download_cta_release">Download latest
+            <a class="btn btn-accent" href="https://github.com/1devLion/TTNOverlay/releases/latest/download/TTNOverlay-win-Setup.exe" data-repo-link="installer" data-i18n="download_cta_release">Download latest
               release</a>
-            <a class="btn btn-ghost" href="#" data-repo-link="source" target="_blank" rel="noopener"
+            <a class="btn btn-ghost" href="https://github.com/1devLion/TTNOverlay" data-repo-link="source" target="_blank" rel="noopener"
               data-i18n="download_cta_source">Browse the source</a>
           </div>
+          <p class="download-note" data-i18n="download_note">Windows 10 or later, 64-bit. Download only from the official GitHub release. If Windows SmartScreen warns about an unrecognized app, you can choose “More info” → “Run anyway”; the full source code is open for review.</p>
+          <p class="download-note download-portable"><a href="https://github.com/1devLion/TTNOverlay/releases/latest/download/TTNOverlay-win-Portable.zip" data-repo-link="portable" data-i18n="download_portable">Prefer no installer? Get the portable ZIP.</a></p>
+          <p class="download-note download-hash" id="installer-hash" hidden><span data-i18n="download_sha_label">Installer SHA-256 (latest release):</span> <code id="installer-sha"></code></p>
         </div>
 
         <div class="build-card">
           <h3 data-i18n="download_build_title">Build it yourself</h3>
-          <p data-i18n="download_build_body">Needs the .NET 10 SDK and Visual Studio 2022+ (or just the dotnet CLI).</p>
+          <p data-i18n="download_build_body">Needs the .NET 10 SDK.</p>
 
           <p class="build-label" data-i18n="download_build_run">Run it:</p>
           <div class="code-block-wrap">
-            <pre class="code-block"><code>dotnet run</code></pre>
-            <button class="copy-btn" type="button" data-copy-btn aria-label="Copy">
+            <pre class="code-block" tabindex="0"><code>dotnet run</code></pre>
+            <button class="copy-btn" type="button" data-copy-btn>
               <svg class="copy-btn-icon icon-copy" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
                 <path fill="currentColor"
                   d="M4 1.5A1.5 1.5 0 0 1 5.5 0h6A1.5 1.5 0 0 1 13 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 4 10.5v-9Zm1.5-.5a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-6ZM2 4a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5V13H2.5a1.5 1.5 0 0 1-1.5-1.5v-8H2Z" />
@@ -415,13 +462,10 @@
             </button>
           </div>
 
-          <p class="build-label" data-i18n="download_build_publish">Publish a portable .exe:</p>
+          <p class="build-label" data-i18n="download_build_publish">Publish the app:</p>
           <div class="code-block-wrap">
-            <pre class="code-block"><code data-copy-text="dotnet publish -c Release -r win-x64 --self-contained true -p:PublishSingleFile=true -p:IncludeNativeLibrariesForSelfExtract=true">dotnet publish -c Release -r win-x64 \
-  --self-contained true \
-  -p:PublishSingleFile=true \
-  -p:IncludeNativeLibrariesForSelfExtract=true</code></pre>
-            <button class="copy-btn" type="button" data-copy-btn aria-label="Copy">
+            <pre class="code-block" tabindex="0"><code>dotnet publish TTNOverlay.csproj -c Release -o publish -r win-x64 --self-contained true</code></pre>
+            <button class="copy-btn" type="button" data-copy-btn>
               <svg class="copy-btn-icon icon-copy" viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
                 <path fill="currentColor"
                   d="M4 1.5A1.5 1.5 0 0 1 5.5 0h6A1.5 1.5 0 0 1 13 1.5v9a1.5 1.5 0 0 1-1.5 1.5h-6A1.5 1.5 0 0 1 4 10.5v-9Zm1.5-.5a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5v-9a.5.5 0 0 0-.5-.5h-6ZM2 4a.5.5 0 0 0-.5.5v9a.5.5 0 0 0 .5.5h6a.5.5 0 0 0 .5-.5V13H2.5a1.5 1.5 0 0 1-1.5-1.5v-8H2Z" />
@@ -442,18 +486,18 @@
       <div class="wrap">
         <p class="eyebrow center" data-i18n="feedback_eyebrow">Found a bug?</p>
         <h2 class="center" data-i18n="feedback_title">Send feedback</h2>
-        <p class="section-subtitle center" data-i18n="feedback_subtitle">Tell us what happened &mdash; it only
-          takes a minute.</p>
+        <p class="section-subtitle center" data-i18n="feedback_subtitle">Fill this in and it opens a pre-filled GitHub issue for you. You'll need a GitHub account to submit it.</p>
 
         <form class="feedback-form" id="feedback-form" novalidate>
           <label for="feedback-title" data-i18n="feedback_label_title">Title</label>
-          <input type="text" id="feedback-title" name="title" required maxlength="120"
+          <input type="text" id="feedback-title" name="title" required aria-required="true" aria-describedby="feedback-error" maxlength="120"
             data-i18n-placeholder="feedback_placeholder_title" placeholder="Short summary of the problem">
 
           <label for="feedback-description" data-i18n="feedback_label_description">Description</label>
-          <textarea id="feedback-description" name="description" rows="6" required
+          <textarea id="feedback-description" name="description" rows="6" required aria-required="true" aria-describedby="feedback-error" maxlength="2000"
             data-i18n-placeholder="feedback_placeholder_description"
             placeholder="What happened, what you expected, and steps to reproduce if you have them"></textarea>
+          <p class="field-error" id="feedback-error" role="alert" hidden></p>
 
           <button class="btn btn-accent" type="submit" data-i18n="feedback_submit">Send report</button>
         </form>
@@ -462,8 +506,9 @@
 
   </main>
 
-  <div class="lightbox-overlay" id="lightbox-overlay" role="dialog" aria-modal="true" aria-hidden="true">
-    <button class="lightbox-close" type="button" id="lightbox-close" aria-label="Close">&times;</button>
+  <div class="lightbox-overlay" id="lightbox-overlay" role="dialog" aria-modal="true" aria-labelledby="lightbox-caption" aria-hidden="true">
+    <button class="lightbox-close" type="button" id="lightbox-close" aria-label="Close"
+      data-i18n-aria-label="lightbox_close">&times;</button>
     <figure class="lightbox-figure">
       <img id="lightbox-image" src="" alt="">
       <figcaption class="lightbox-caption" id="lightbox-caption"></figcaption>
@@ -478,12 +523,13 @@
             data-theme-src-light="img/logo_blue_nobg.webp" src="img/logo_nobg.webp" alt="" width="28" height="28">
           <span class="brand-name">TTNOverlay</span>
         </a>
-        <p data-i18n="footer_tagline">A Twitch overlay for Windows.</p>
+        <p data-i18n="footer_tagline">A Twitch &amp; Kick overlay for Windows.</p>
       </div>
 
       <div class="footer-links">
-        <a href="#" data-repo-link="source" target="_blank" rel="noopener">GitHub</a>
-        <a href="#" data-repo-link="releases" target="_blank" rel="noopener" data-i18n="nav_download">Download</a>
+        <a href="https://github.com/1devLion/TTNOverlay" data-repo-link="source" target="_blank" rel="noopener">GitHub</a>
+        <a href="https://github.com/1devLion/TTNOverlay/releases" data-repo-link="releases" target="_blank" rel="noopener" data-i18n="nav_download">Download</a>
+        <a href="privacy.html" data-i18n="footer_privacy">Privacy</a>
         <a href="https://ko-fi.com/1devlion/donate" target="_blank" rel="noopener" data-i18n="footer_support">Support
           the project</a>
       </div>
@@ -491,9 +537,10 @@
       <p class="footer-license">
         <span data-year>2026</span><span data-i18n="footer_license"> TTNOverlay is an open source project,
           licensed under the MIT License.</span>
-        <a href="#" data-repo-link="license" target="_blank" rel="noopener" data-i18n="footer_license_link">View
+        <a href="https://github.com/1devLion/TTNOverlay/blob/main/LICENSE" data-repo-link="license" target="_blank" rel="noopener" data-i18n="footer_license_link">View
           LICENSE</a>
       </p>
+      <p class="footer-disclaimer" data-i18n="footer_disclaimer">TTNOverlay is an independent project and is not affiliated with, endorsed by, or sponsored by Twitch, Kick, Streamlabs, BTTV, FFZ or 7TV. All trademarks belong to their respective owners.</p>
       <p class="footer-credits">
         <span data-i18n="footer_credits">Development, design, and creation by</span>
         <a href="https://github.com/1devLion" target="_blank" rel="noopener">1devLion</a>.

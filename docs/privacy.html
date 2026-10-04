@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self'; style-src 'self'; img-src 'self' data:; font-src 'self'; base-uri 'none'; form-action 'none'">
+  <meta name="referrer" content="strict-origin-when-cross-origin">
+  <title>Privacy Policy | TTNOverlay</title>
+  <meta name="description" content="Privacy policy for TTNOverlay: the app runs locally, sends no personal data to any server of ours, and connects only to the services you use.">
+  <link rel="canonical" href="https://1devlion.github.io/TTNOverlay/privacy.html">
+  <link rel="icon" type="image/webp" href="img/logo_nobg.webp">
+  <script src="js/theme-init.js"></script>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="site-header">
+    <div class="wrap header-row">
+      <a class="brand" href="index.html">
+        <img class="brand-logo" src="img/logo_nobg.webp" alt="" width="32" height="32">
+        <span class="brand-name">TTNOverlay</span>
+      </a>
+      <a class="btn btn-ghost btn-small" href="index.html">Back to the site</a>
+    </div>
+  </header>
+
+  <main id="main" class="wrap legal">
+    <h1>TTNOverlay Privacy Policy</h1>
+    <p><strong>Last updated:</strong> October 3, 2026</p>
+
+    <h2>1. Information we collect and how it is used</h2>
+    <p>TTNOverlay is a desktop application that runs locally on your computer. <strong>We do not collect, store, or transmit any of your personal data to our own servers.</strong></p>
+    <p>To work, the application connects directly to third-party services:</p>
+    <ul>
+      <li><strong>Authentication (Twitch, Kick, Streamlabs):</strong> when you sign in, the application receives an access token from the service. It is used only to authenticate your requests (for example, to show viewer counts or moderate chat) and is stored locally on your computer. We do not have access to it.</li>
+      <li><strong>Chat and event data:</strong> the application receives chat and event data (such as subscriptions and donations) directly from the Twitch, Kick, and Streamlabs APIs. It is processed on your computer to draw the overlay and is not sent anywhere else.</li>
+      <li><strong>Emotes and badges:</strong> images may be requested from the platforms' own servers and from third-party emote providers (such as BTTV, FFZ, or 7TV, where used).</li>
+      <li><strong>Updates:</strong> the installer version checks GitHub for new releases.</li>
+    </ul>
+    <p>Each of these services can see your IP address when your computer connects to it, as with any internet connection, and handles that data under its own privacy policy.</p>
+
+    <h2>2. This website</h2>
+    <p>This website is hosted on GitHub Pages. It does not use cookies, analytics, or advertising. It stores your language and theme choice, and a short-lived copy of the latest release number, in your browser's local storage on your device only. GitHub, as the host, may log visitor IP addresses under <a href="https://docs.github.com/en/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener">its own privacy statement</a>.</p>
+    <p>The feedback form does not send anything to us: it opens a pre-filled GitHub issue in a new tab. Anything you submit there is public on GitHub.</p>
+
+    <h2>3. Data sharing</h2>
+    <p>We do not share, sell, or rent your data to third parties. Your Twitch, Kick, and Streamlabs account data is managed directly by those platforms and governed by their own privacy policies.</p>
+
+    <h2>4. Security</h2>
+    <p>The application uses encrypted connections (HTTPS/WSS) to communicate with third-party services.</p>
+
+    <h2>5. Changes to this policy</h2>
+    <p>We may update this policy from time to time. The new version will be posted on this page with a new date, and earlier versions remain available in the project's <a href="https://github.com/1devLion/TTNOverlay/commits/main/docs/privacy.html" rel="noopener">public history</a>.</p>
+
+    <h2>6. Contact</h2>
+    <p>If you have any questions, open an issue in the <a href="https://github.com/1devLion/TTNOverlay/issues" rel="noopener">project repository</a>.</p>
+  </main>
+
+  <footer class="site-footer">
+    <div class="wrap">
+      <p class="footer-license">TTNOverlay is an open source project, licensed under the MIT License.</p>
+    </div>
+  </footer>
+</body>
+</html>

@@ -12,6 +12,9 @@
     releases: "https://github.com/" + GITHUB_REPO + "/releases",
     release: "https://github.com/" + GITHUB_REPO + "/releases/latest",
     license: "https://github.com/" + GITHUB_REPO + "/blob/main/LICENSE",
+    // Direct link to the installer asset of the latest release (the asset name must stay stable).
+    installer: "https://github.com/" + GITHUB_REPO + "/releases/latest/download/TTNOverlay-win-Setup.exe",
+    portable: "https://github.com/" + GITHUB_REPO + "/releases/latest/download/TTNOverlay-win-Portable.zip",
   };
 
   document.querySelectorAll("[data-repo-link]").forEach(function (el) {
@@ -27,6 +30,12 @@
     var saved = null;
     try { saved = localStorage.getItem("ttno-lang"); } catch (e) {}
     if (saved && SUPPORTED.indexOf(saved) !== -1) return saved;
+    // First visit: use the browser's preferred languages ("es-AR" -> "es").
+    var prefs = (navigator.languages && navigator.languages.length) ? navigator.languages : [navigator.language || ""];
+    for (var i = 0; i < prefs.length; i++) {
+      var base = String(prefs[i] || "").toLowerCase().split("-")[0];
+      if (SUPPORTED.indexOf(base) !== -1) return base;
+    }
     return DEFAULT_LANG;
   }
 
@@ -48,6 +57,18 @@
       var value = dict[key] || fallback[key];
       if (value == null) return;
       el.setAttribute("placeholder", value);
+    });
+
+    document.querySelectorAll("[data-i18n-alt]").forEach(function (el) {
+      var key = el.getAttribute("data-i18n-alt");
+      var value = dict[key] || fallback[key];
+      if (value != null) el.setAttribute("alt", value);
+    });
+
+    document.querySelectorAll("[data-i18n-aria-label]").forEach(function (el) {
+      var key = el.getAttribute("data-i18n-aria-label");
+      var value = dict[key] || fallback[key];
+      if (value != null) el.setAttribute("aria-label", value);
     });
 
     document.querySelectorAll(".lang-switch select").forEach(function (sel) {
@@ -99,8 +120,6 @@
 
   function applyTheme(theme) {
     document.documentElement.classList.toggle("light", theme === "light");
-    var btn = document.getElementById("theme-toggle");
-    if (btn) btn.setAttribute("aria-pressed", theme === "light" ? "true" : "false");
     try { localStorage.setItem("ttno-theme", theme); } catch (e) {}
 
     document.querySelectorAll("[data-theme-src-dark]").forEach(function (img) {
@@ -213,7 +232,7 @@
     if (!lightbox || !lightboxImage) return;
     var captionKey = img.getAttribute("data-lightbox-caption");
     var dict = currentDict();
-    lightboxImage.src = img.currentSrc || img.src;
+    lightboxImage.src = img.getAttribute("data-full") || img.currentSrc || img.src;
     lightboxImage.alt = captionKey ? (dict[captionKey] || "") : "";
     lightboxCaption.textContent = captionKey ? (dict[captionKey] || "") : "";
     lightboxLastFocus = document.activeElement;
@@ -249,7 +268,13 @@
     });
   }
   document.addEventListener("keydown", function (e) {
-    if (e.key === "Escape" && lightbox && lightbox.classList.contains("is-open")) closeLightbox();
+    if (!lightbox || !lightbox.classList.contains("is-open")) return;
+    if (e.key === "Escape") closeLightbox();
+    // The close button is the only focusable control in the dialog: keep focus inside it.
+    if (e.key === "Tab") {
+      e.preventDefault();
+      if (lightboxClose) lightboxClose.focus();
+    }
   });
 
   /* ---------------- feedback -> GitHub issue ---------------- */
@@ -263,18 +288,42 @@
       var title = (titleField.value || "").trim();
       var description = (descField.value || "").trim();
 
+      var errorEl = document.getElementById("feedback-error");
+      titleField.removeAttribute("aria-invalid");
+      descField.removeAttribute("aria-invalid");
+      if (errorEl) { errorEl.hidden = true; errorEl.textContent = ""; }
+
       if (!title || !description) {
         var msg = dict.feedback_error_required || window.I18N[DEFAULT_LANG].feedback_error_required;
+        if (!title) titleField.setAttribute("aria-invalid", "true");
+        if (!description) descField.setAttribute("aria-invalid", "true");
+        if (errorEl) { errorEl.textContent = msg; errorEl.hidden = false; }
         (title ? descField : titleField).focus();
-        alert(msg);
         return;
       }
 
-      var url = "https://github.com/" + GITHUB_REPO + "/issues/new"
-        + "?title=" + encodeURIComponent(title)
-        + "&body=" + encodeURIComponent(description);
+      // GitHub rejects very long URLs (~8 KB), and non-Latin text grows ~9x when encoded:
+      // trim the body so the final URL stays well under the limit.
+      var base = "https://github.com/" + GITHUB_REPO + "/issues/new"
+        + "?title=" + encodeURIComponent(title) + "&body=";
+      var body = description;
+      while (body.length && base.length + encodeURIComponent(body).length > 6500) {
+        body = body.slice(0, Math.max(0, body.length - 100));
+        var last = body.charCodeAt(body.length - 1);
+        if (last >= 0xD800 && last <= 0xDBFF) body = body.slice(0, -1); // never cut a surrogate pair
+      }
 
-      window.open(url, "_blank", "noopener");
+      window.open(base + encodeURIComponent(body), "_blank", "noopener");
+    });
+
+    ["feedback-title", "feedback-description"].forEach(function (id) {
+      var field = document.getElementById(id);
+      if (!field) return;
+      field.addEventListener("input", function () {
+        field.removeAttribute("aria-invalid");
+        var errorEl = document.getElementById("feedback-error");
+        if (errorEl) { errorEl.hidden = true; errorEl.textContent = ""; }
+      });
     });
   }
 
@@ -291,9 +340,19 @@
     var CACHE_KEY = "ttno-latest-release";
     var CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 
+    function showHash(sha) {
+      var box = document.getElementById("installer-hash");
+      var code = document.getElementById("installer-sha");
+      if (!box || !code || !/^[0-9a-f]{64}$/.test(sha || "")) return;
+      code.textContent = sha;
+      box.hidden = false;
+    }
+
     function render(data) {
+      showHash(data.sha);
       tagEl.textContent = data.tag;
-      tagEl.setAttribute("href", data.url);
+      // Only ever point at github.com (the value may come from localStorage).
+      tagEl.setAttribute("href", /^https:\/\/github\.com\//.test(data.url) ? data.url : REPO_LINKS.release);
       wrap.hidden = false;
     }
 
@@ -302,7 +361,7 @@
         var raw = localStorage.getItem(CACHE_KEY);
         if (!raw) return null;
         var parsed = JSON.parse(raw);
-        if (!parsed || !parsed.data || !parsed.fetchedAt) return null;
+        if (!parsed || !parsed.data || !parsed.fetchedAt || !("sha" in parsed.data)) return null;
         if (Date.now() - parsed.fetchedAt > CACHE_TTL_MS) return null;
         return parsed.data;
       } catch (e) {
@@ -327,9 +386,13 @@
     })
       .then(function (res) { return res.ok ? res.json() : Promise.reject(res.status); })
       .then(function (json) {
+        // GitHub exposes each asset's SHA-256 as "digest": "sha256:<hex>".
+        var asset = (json.assets || []).filter(function (a) { return a.name === "TTNOverlay-win-Setup.exe"; })[0];
+        var digest = asset && typeof asset.digest === "string" ? asset.digest : "";
         var data = {
           tag: json.tag_name || json.name || "",
-          url: json.html_url || REPO_LINKS.release
+          url: json.html_url || REPO_LINKS.release,
+          sha: /^sha256:[0-9a-f]{64}$/.test(digest) ? digest.slice(7) : ""
         };
         if (!data.tag) return;
         writeCache(data);
