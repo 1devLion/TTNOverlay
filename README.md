@@ -4,6 +4,8 @@
   # TTNOverlay
 
   A multi-function Twitch & Kick overlay for Windows: live chat, event alerts, viewer count, and in-app moderation. Transparent, click-through, fully customizable!
+  
+  Live chat, event alerts, viewer count, and in-app moderation. Drawn as a transparent, click-through window right on top of whatever you're playing. Chat works with no login at all. Sign in only for viewer count, badges, and moderation.
 
   <a href="https://github.com/1devLion/TTNOverlay/releases/latest">
     <img alt="GitHub release (latest by date)" src="https://img.shields.io/github/v/release/1devLion/TTNOverlay">
@@ -15,12 +17,14 @@
     <img alt="GitHub license" src="https://img.shields.io/github/license/1devLion/TTNOverlay">
   </a>
   <img alt="Languages" src="https://img.shields.io/badge/Languages-8-blue">
+  <br/><br/>
+
+  <b>If you want support the project:</b>
   <br/>
   <a href="https://ko-fi.com/1devLion">
     <img src="https://img.shields.io/badge/Ko--fi-FF5E5B?style=for-the-badge&logo=ko-fi&logoColor=white" alt="Ko-Fi" width="92" />
   </a>
 
-<br/><br/>
   <b>Supported Languages</b>
   <br/>
   <img src="https://flagcdn.com/w40/us.png" width="26" alt="English" title="English"/>
@@ -33,8 +37,6 @@
   <img src="https://flagcdn.com/w40/ru.png" width="26" alt="Русский" title="Русский"/>
 
   ---
-
-  Live chat, event alerts, viewer count, and in-app moderation. Drawn as a transparent, click-through window right on top of whatever you're playing. Chat works with no login at all. Sign in only for viewer count, badges, and moderation.
 
 
 </div>
@@ -97,7 +99,3 @@ vpk pack -u TTNOverlay -v <version> -p publish -e TTNOverlay.exe --icon Resource
 - Twitch **Helix API** + user OAuth for viewer count, badges, and moderation
 - **Streamlabs Socket API** (optional) for donations, follows, hosts, and merch
 - Cloudflare Worker as OAuth token broker (keeps the Twitch client secret off the client)
-
-## Code Signing Policy
-
-This project is applying to the SignPath Foundation's free code signing program. Until enrollment in the program is complete, Windows installers are released without a digital signature. Once accepted, only artifacts that comply with this policy will be signed.
