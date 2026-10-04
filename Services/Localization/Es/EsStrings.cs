@@ -27,6 +27,7 @@ internal static partial class EsStrings
         ChatConnectionEntries,
         ModerationPanelEntries,
         ModerationMessagesEntries,
+        AutoModMessagesEntries,
         TrayEntries,
         SettingsGeneralEntries,
         SettingsHotkeysEntries,

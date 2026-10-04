@@ -26,6 +26,12 @@ internal sealed partial class ChatRenderWindow
             return;
         }
 
+        if (_moderationTab == ModerationTab.AutoMod)
+        {
+            HandleAutoModTabClick(clientX, clientY);
+            return;
+        }
+
         if (_moderationLoginActionRect is { } actionRect && Contains(actionRect, clientX, clientY))
         {
             if (_moderationLoginActionIsLogin)

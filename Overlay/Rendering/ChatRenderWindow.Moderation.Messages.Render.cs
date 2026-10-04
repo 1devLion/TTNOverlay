@@ -28,26 +28,35 @@ internal sealed partial class ChatRenderWindow
     // Reused every frame instead of allocating a list per render.
     private float[] _moderationRowHeights = new float[256];
 
-    /// <summary>Draws the fixed Chatters/Messages tab strip and returns the Y just below it.</summary>
-    private float DrawModerationTabStrip(ID2D1DCRenderTarget target, float top)
+    /// <summary>Draws the fixed tab strip (Chatters / Messages / AutoMod) and returns the Y just below it. Tabs that don't fit the width continue on a second row.</summary>
+    private float DrawModerationTabStrip(ID2D1DCRenderTarget target, float top, float maxWidth)
     {
         _moderationTabRects.Clear();
 
         float x = Padding;
+        float rowTop = top;
         float bottom = top;
 
         foreach (var (tab, labelKey) in ModerationTabs)
         {
             using var layout = DWriteFactory.CreateTextLayout(
-                LocalizationService.T(labelKey),
+                ModerationTabLabel(tab, labelKey),
                 _moderationHeaderFormat!,
                 float.MaxValue,
                 1000f
             );
+            float pillWidth = layout.Metrics.WidthIncludingTrailingWhitespace + ModerationPillPaddingX * 2f;
+
+            if (x > Padding && x + pillWidth > Padding + maxWidth)
+            {
+                x = Padding;
+                rowTop = bottom + 6f;
+            }
+
             var rect = new Rect(
                 x,
-                top,
-                layout.Metrics.WidthIncludingTrailingWhitespace + ModerationPillPaddingX * 2f,
+                rowTop,
+                pillWidth,
                 layout.Metrics.Height + ModerationPillPaddingY * 2f
             );
 

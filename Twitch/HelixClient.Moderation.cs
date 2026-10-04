@@ -112,6 +112,72 @@ public partial class HelixClient
         }
     }
 
+    public async Task<AutoModDecisionResult> ManageHeldAutoModMessageAsync(
+        string moderatorId,
+        string userAccessToken,
+        string messageId,
+        bool allow
+    )
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(
+                HttpMethod.Post,
+                "https://api.twitch.tv/helix/moderation/automod/message"
+            );
+            request.Headers.Add("Client-Id", _clientId);
+            request.Headers.Add("Authorization", $"Bearer {userAccessToken}");
+            request.Content = JsonContent.Create(
+                new ManageHeldAutoModRequest
+                {
+                    // Here "user_id" is the moderator doing the review, not the author of the message.
+                    UserId = moderatorId,
+                    MessageId = messageId,
+                    Action = allow ? "ALLOW" : "DENY",
+                },
+                HelixJsonContext.Default.ManageHeldAutoModRequest
+            );
+
+            using var response = await Http.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+                return AutoModDecisionResult.Ok;
+
+            var body = await response.Content.ReadAsStringAsync();
+            DebugLog.Write(
+                $"Helix: {(allow ? "allowing" : "denying")} held AutoMod message {messageId} failed, status {response.StatusCode}: {body}"
+            );
+
+            return MapAutoModDecisionStatus(response.StatusCode);
+        }
+        catch (Exception ex)
+        {
+            DebugLog.WriteException("HelixClient.ManageHeldAutoModMessageAsync", ex);
+            return AutoModDecisionResult.Failed;
+        }
+    }
+
+    /// <summary>401 means the token lacks moderator:manage:automod; 400/404 mean the message isn't in the queue anymore.</summary>
+    internal static AutoModDecisionResult MapAutoModDecisionStatus(System.Net.HttpStatusCode status) =>
+        status switch
+        {
+            System.Net.HttpStatusCode.Unauthorized => AutoModDecisionResult.MissingPermission,
+            System.Net.HttpStatusCode.BadRequest or System.Net.HttpStatusCode.NotFound =>
+                AutoModDecisionResult.AlreadyResolved,
+            _ => AutoModDecisionResult.Failed,
+        };
+
+    internal class ManageHeldAutoModRequest
+    {
+        [JsonPropertyName("user_id")]
+        public string UserId { get; set; } = "";
+
+        [JsonPropertyName("msg_id")]
+        public string MessageId { get; set; } = "";
+
+        [JsonPropertyName("action")]
+        public string Action { get; set; } = "";
+    }
+
     public async Task<bool> WarnUserAsync(
         string broadcasterId,
         string moderatorId,

@@ -16,12 +16,14 @@ internal sealed partial class ChatRenderWindow
     {
         Chatters,
         Messages,
+        AutoMod,
     }
 
     private static readonly (ModerationTab Tab, string LabelKey)[] ModerationTabs =
     {
         (ModerationTab.Chatters, "Moderation_TabChatters"),
         (ModerationTab.Messages, "Moderation_TabMessages"),
+        (ModerationTab.AutoMod, "Moderation_TabAutoMod"),
     };
 
     private static readonly int[] ModerationMessageWindowChoices = { 1, 5, 10, 30, 60 };
@@ -130,6 +132,7 @@ internal sealed partial class ChatRenderWindow
         _moderationLog.Clear();
         _moderationMessagesLastNewest = null;
         _moderationMessagesScroll = default;
+        _autoModQueue.Clear();
     }
 
     // ------------------------------------------------------------------ clicks
@@ -140,6 +143,11 @@ internal sealed partial class ChatRenderWindow
             return;
 
         CloseModerationDropdown();
+
+        // The Chatters and AutoMod tabs share one top-anchored scroll state, so a stale offset must not carry over.
+        if (tab == ModerationTab.AutoMod || _moderationTab == ModerationTab.AutoMod)
+            _moderationScroll = default;
+
         _moderationTab = tab;
         _hoveredChatSettingButton = null;
         _moderationLoginButtonHovered = false;

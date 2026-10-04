@@ -45,6 +45,9 @@ public interface IModerationService
     /// <summary>Removes every message from the chat room.</summary>
     Task<ModerationDeleteResult> ClearChatAsync(string channelLogin);
 
+    /// <summary>Allows (publishes) or denies a message that AutoMod is holding for review.</summary>
+    Task<AutoModDecisionResult> ResolveHeldMessageAsync(string messageId, bool allow);
+
     Task<HelixClient.ChatSettings?> GetChatSettingsAsync(string channelLogin);
 
     Task<bool> UpdateChatSettingsAsync(string channelLogin, HelixClient.ChatSettings settings);

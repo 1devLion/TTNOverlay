@@ -26,6 +26,7 @@ internal static partial class PtStrings
         ChatConnectionEntries,
         ModerationPanelEntries,
         ModerationMessagesEntries,
+        AutoModMessagesEntries,
         TrayEntries,
         SettingsGeneralEntries,
         SettingsHotkeysEntries,

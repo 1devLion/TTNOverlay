@@ -22,6 +22,7 @@ internal static partial class DeStrings
         ChatConnectionEntries,
         ModerationPanelEntries,
         ModerationMessagesEntries,
+        AutoModMessagesEntries,
         TrayEntries,
         SettingsGeneralEntries,
         SettingsHotkeysEntries,

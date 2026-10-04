@@ -21,6 +21,7 @@ internal static partial class FrStrings
         ChatConnectionEntries,
         ModerationPanelEntries,
         ModerationMessagesEntries,
+        AutoModMessagesEntries,
         TrayEntries,
         SettingsGeneralEntries,
         SettingsHotkeysEntries,

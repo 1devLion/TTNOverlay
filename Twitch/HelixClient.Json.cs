@@ -16,6 +16,7 @@ public partial class HelixClient
     [JsonSerializable(typeof(BannedUsersResponse))]
     [JsonSerializable(typeof(WarnUserRequest))]
     [JsonSerializable(typeof(BanUserRequest))]
+    [JsonSerializable(typeof(ManageHeldAutoModRequest))]
     internal partial class HelixJsonContext : JsonSerializerContext { }
 }
 

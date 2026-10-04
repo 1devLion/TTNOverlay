@@ -26,6 +26,7 @@ internal static partial class EnStrings
         ChatConnectionEntries,
         ModerationPanelEntries,
         ModerationMessagesEntries,
+        AutoModMessagesEntries,
         TrayEntries,
         SettingsGeneralEntries,
         SettingsHotkeysEntries,

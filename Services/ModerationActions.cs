@@ -21,6 +21,21 @@ public enum ModerationDeleteResult
     Failed,
 }
 
+/// <summary>Outcome of allowing/denying a message held by AutoMod.</summary>
+public enum AutoModDecisionResult
+{
+    Ok,
+
+    /// <summary>401: the token lacks moderator:manage:automod (logged in before that scope was added) or is invalid.</summary>
+    MissingPermission,
+
+    /// <summary>Twitch no longer has that message in the queue: another moderator handled it, or it expired.</summary>
+    AlreadyResolved,
+
+    /// <summary>Network error, rate limit, 403 (not a moderator of that channel), or anything else unexpected.</summary>
+    Failed,
+}
+
 internal enum ModerationSanction
 {
     None,

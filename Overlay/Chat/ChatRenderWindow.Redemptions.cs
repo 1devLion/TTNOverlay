@@ -26,6 +26,9 @@ internal sealed partial class ChatRenderWindow
     {
         DisconnectEventSub();
 
+        // AutoMod review works for any moderator, so it doesn't depend on the broadcaster-only checks below.
+        ConnectAutoModIfEligible();
+
         if (!_settings.EnableTwitchApi || string.IsNullOrWhiteSpace(_settings.ModeratorRefreshToken))
             return;
 
@@ -60,6 +63,8 @@ internal sealed partial class ChatRenderWindow
 
     private void DisconnectEventSub()
     {
+        DisconnectAutoMod();
+
         var client = _eventSub;
         if (client is null)
             return;

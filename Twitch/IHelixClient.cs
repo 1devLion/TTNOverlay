@@ -28,6 +28,14 @@ public interface IHelixClient
         string Reason
     )>?> GetBannedUsersAsync(string broadcasterId, string userAccessToken);
 
+    /// <summary>Allows or denies a message AutoMod is holding. <paramref name="moderatorId"/> must be the token's own user.</summary>
+    Task<AutoModDecisionResult> ManageHeldAutoModMessageAsync(
+        string moderatorId,
+        string userAccessToken,
+        string messageId,
+        bool allow
+    );
+
     Task<bool> WarnUserAsync(
         string broadcasterId,
         string moderatorId,

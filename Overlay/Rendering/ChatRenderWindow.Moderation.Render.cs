@@ -42,16 +42,23 @@ internal sealed partial class ChatRenderWindow
         // The Messages tab fills these again while drawing; clearing them here keeps hit areas from a tab that
         // is no longer on screen from being clickable.
         _moderationMessageActionRects.Clear();
+        _moderationAutoModActionRects.Clear();
         _moderationWindowPillRect = null;
         _moderationClearChatPillRect = null;
 
-        float stripBottom = DrawModerationTabStrip(target, top);
+        float stripBottom = DrawModerationTabStrip(target, top, maxWidth);
         visibleHeight = Math.Max(0f, visibleHeight - (stripBottom - top));
         top = stripBottom;
 
         if (_moderationTab == ModerationTab.Messages)
         {
             DrawModerationMessagesTab(target, width, top, visibleHeight, maxWidth);
+            return;
+        }
+
+        if (_moderationTab == ModerationTab.AutoMod)
+        {
+            DrawModerationAutoModTab(target, width, top, visibleHeight, maxWidth);
             return;
         }
 

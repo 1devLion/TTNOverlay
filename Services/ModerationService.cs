@@ -268,6 +268,22 @@ public class ModerationService : IModerationService
         return resolved;
     }
 
+    public async Task<AutoModDecisionResult> ResolveHeldMessageAsync(string messageId, bool allow)
+    {
+        var token = await GetAccessTokenAsync();
+        if (token is null)
+            return AutoModDecisionResult.MissingPermission;
+
+        return await _helix.ManageHeldAutoModMessageAsync(_settings.ModeratorUserId, token, messageId, allow);
+    }
+
+    /// <summary>Resolves a channel login to its Twitch user id (cached), or null when it can't be resolved.</summary>
+    public async Task<string?> GetChannelIdAsync(string channelLogin)
+    {
+        var token = await GetAccessTokenAsync();
+        return token is null ? null : await ResolveBroadcasterIdAsync(channelLogin, token);
+    }
+
     public async Task<HelixClient.ChatSettings?> GetChatSettingsAsync(string channelLogin)
     {
         var token = await GetAccessTokenAsync();
