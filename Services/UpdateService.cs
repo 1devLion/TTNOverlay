@@ -33,6 +33,14 @@ internal static class UpdateService
                 ? ""
                 : "\n\n" + newVersion.TargetFullRelease.NotesMarkdown;
 
+            // showConfirmDialog shows the dialog and returns immediately; the user's choice arrives later
+            // through the Action<bool> callback. A TaskCompletionSource bridges that back onto this Task, so the
+            // caller (which reveals the overlay once this Task completes) waits for an actual answer instead of
+            // just for the dialog to appear. On "update now" the TCS is only completed if applying the update
+            // fails (ApplyUpdateAsync's own catch handles that) -- on success the app restarts via
+            // ApplyUpdatesAndRestart and this process never gets to complete it, which is fine: there's no window
+            // left to reveal.
+            var decisionMade = new TaskCompletionSource();
             showConfirmDialog(
                 LocalizationService.T("Update_AvailableTitle"),
                 $"{LocalizationService.T("Update_AvailableMessage")} {newVersion.TargetFullRelease.Version}",
@@ -40,9 +48,14 @@ internal static class UpdateService
                 confirmed =>
                 {
                     if (!confirmed)
+                    {
+                        decisionMade.TrySetResult();
                         return;
-                    _ = ApplyUpdateAsync(mgr, newVersion, showProgressDialog);
+                    }
+                    _ = ApplyUpdateAsync(mgr, newVersion, showProgressDialog, onFailedWithoutRestarting: () => decisionMade.TrySetResult());
                 });
+
+            await decisionMade.Task;
         }
         catch (Exception ex)
         {
@@ -52,7 +65,12 @@ internal static class UpdateService
 
     private static readonly string PendingNotesPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "TTNOverlay", "pending_update_notes.txt");
 
-    private static async Task ApplyUpdateAsync(UpdateManager mgr, UpdateInfo newVersion, Func<string, UpdateProgressDialogWindow> showProgressDialog)
+    private static async Task ApplyUpdateAsync(
+        UpdateManager mgr,
+        UpdateInfo newVersion,
+        Func<string, UpdateProgressDialogWindow> showProgressDialog,
+        Action onFailedWithoutRestarting
+    )
     {
         UpdateProgressDialogWindow? progressDialog = null;
         try
@@ -64,12 +82,13 @@ internal static class UpdateService
             progressDialog?.Close();
             SavePendingReleaseNotes(newVersion.TargetFullRelease.Version.ToString(), newVersion.TargetFullRelease.NotesMarkdown ?? "");
             mgr.ApplyUpdatesAndRestart(newVersion);
-
+            // Unreachable on success: ApplyUpdatesAndRestart starts the new version and ends this process.
         }
         catch (Exception ex)
         {
             progressDialog?.Close();
             DebugLog.WriteException("UpdateService.ApplyUpdateAsync", ex);
+            onFailedWithoutRestarting();
         }
     }
 

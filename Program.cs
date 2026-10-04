@@ -73,11 +73,13 @@ internal static class Program
     }
 
     /// <summary>
-    /// Runs the startup update check and, whether or not an update prompt ends up being shown,
-    /// reveals the overlay window afterward via <see cref="OverlayWindowBase.ShowWindow"/> (which
-    /// itself hops to the UI thread, so this is safe to await from here). If an update is confirmed
-    /// and applied, the app restarts before this ever runs, so revealing the (about-to-be-replaced)
-    /// window is moot in that path.
+    /// Runs the startup update check and reveals the overlay window afterward via
+    /// <see cref="OverlayWindowBase.ShowWindow"/> (which itself hops to the UI thread, so this is safe to
+    /// await from here). "Afterward" here means once the user has actually answered the update prompt --
+    /// CheckForUpdateAndPromptAsync only completes once that answer comes in, not just once the dialog is
+    /// shown -- so the overlay never appears behind/alongside it. If the user confirms and the update applies
+    /// successfully, the app restarts before this ever runs, so revealing the (about-to-be-replaced) window is
+    /// moot in that path; if it applies but fails, the overlay is revealed same as a decline.
     /// </summary>
     private static async Task RunStartupUpdateCheckAsync(ChatRenderWindow chatRenderWindow)
     {
