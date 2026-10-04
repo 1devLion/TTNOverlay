@@ -11,6 +11,21 @@ internal sealed partial class ChatRenderWindow
 
     private void HandleModerationRowClick(int clientX, int clientY)
     {
+        foreach (var (bounds, tab) in _moderationTabRects)
+        {
+            if (Contains(bounds, clientX, clientY))
+            {
+                SwitchModerationTab(tab);
+                return;
+            }
+        }
+
+        if (_moderationTab == ModerationTab.Messages)
+        {
+            HandleMessagesTabClick(clientX, clientY);
+            return;
+        }
+
         if (_moderationLoginActionRect is { } actionRect && Contains(actionRect, clientX, clientY))
         {
             if (_moderationLoginActionIsLogin)
@@ -238,6 +253,9 @@ internal sealed partial class ChatRenderWindow
 
             PostToUiThread(() =>
             {
+                if (ok && _moderationLog.ClearUserStateByLogin(loginInner) > 0 && ModerationMessagesVisible)
+                    RequestRender();
+
                 _moderationStatusText = string.Format(
                     ok
                         ? (

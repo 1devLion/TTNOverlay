@@ -48,7 +48,12 @@ internal sealed partial class ChatRenderWindow
         (MaxTimeoutSeconds, "MainWindow_14Days"),
     };
 
-    private void OpenModerationDropdown(float anchorX, float anchorY, List<ModerationDropdownItem> items)
+    private void OpenModerationDropdown(
+        float anchorX,
+        float anchorY,
+        List<ModerationDropdownItem> items,
+        float? widthOverride = null
+    )
     {
         if (items.Count == 0)
             return;
@@ -60,7 +65,7 @@ internal sealed partial class ChatRenderWindow
         _dropdownItems.AddRange(items);
         _dropdownHoveredIndex = -1;
 
-        float width = DropdownWidth;
+        float width = widthOverride ?? DropdownWidth;
         float height = items.Count * DropdownItemHeight;
 
         Win32.GetClientRect(Hwnd, out var client);
@@ -137,7 +142,7 @@ internal sealed partial class ChatRenderWindow
 
     private void HandleModerationRowMouseMove(int clientX, int clientY)
     {
-        if (!_showingModeration)
+        if (!_showingModeration || _moderationTab != ModerationTab.Chatters)
             return;
 
         bool newLoginHovered = _moderationLoginActionRect is { } loginRect && Contains(loginRect, clientX, clientY);

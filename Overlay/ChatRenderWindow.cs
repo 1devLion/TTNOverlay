@@ -108,6 +108,7 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
     protected override void OnCreated()
     {
         DebugLog.Write("ChatRenderWindow: OnCreated");
+        ModerationService.SessionChanged += OnModeratorSessionChanged;
         Win32.RegisterHotKey(
             Hwnd,
             ToggleClickThroughHotkeyId,
@@ -126,6 +127,7 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
 
     private void OnLanguageChanged() => PostToUiThread(() =>
     {
+        _moderationLayoutVersion++;
         RebuildConnectionStatusText();
         RequestRender();
     });
@@ -149,7 +151,9 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
 
         float deltaPx = (delta / 120f) * ScrollStepPx;
 
-        if (_showingModeration)
+        if (_showingModeration && _moderationTab == ModerationTab.Messages)
+            _moderationMessagesScroll.ApplyWheel(deltaPx);
+        else if (_showingModeration)
             _moderationScroll.ApplyWheel(deltaPx, invert: true);
         else if (_showingEvents)
             _eventsScroll.ApplyWheel(deltaPx);
@@ -212,6 +216,7 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
 
     private void InvalidateSettingsDependentResources()
     {
+        _moderationLayoutVersion++;
         _titleBarBrush?.Dispose();
         _titleBarBrush = null;
         _moderationBackgroundBrush?.Dispose();
@@ -279,6 +284,7 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
 
     protected override void OnDestroyed()
     {
+        ModerationService.SessionChanged -= OnModeratorSessionChanged;
         LocalizationService.Instance.LanguageChanged -= OnLanguageChanged;
         DisconnectFeed();
         DisconnectTrayAndHotkeys();

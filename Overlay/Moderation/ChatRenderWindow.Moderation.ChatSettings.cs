@@ -120,6 +120,53 @@ internal sealed partial class ChatRenderWindow
         OpenModerationDropdown(anchor.Left, anchor.Bottom, items);
     }
 
+    /// <summary>
+    /// ROOMSTATE: someone (another moderator, the streamer, Twitch's own UI) changed a chat mode, or the full state
+    /// arrived after joining. Keeps the checkboxes in step with Twitch while the panel is open; ignored when the
+    /// settings haven't been loaded yet (the Helix request that loads them is the source of truth then).
+    /// </summary>
+    private void OnIrcRoomState(IrcRoomStateUpdate update) =>
+        PostToUiThread(() =>
+        {
+            if (_moderationChatSettings is not { } current)
+                return;
+
+            var next = CloneChatSettings(current);
+            if (update.EmoteOnly is { } emoteOnly)
+                next.EmoteMode = emoteOnly;
+            if (update.SubsOnly is { } subsOnly)
+                next.SubscriberMode = subsOnly;
+            if (update.UniqueChat is { } uniqueChat)
+                next.UniqueChatMode = uniqueChat;
+            if (update.SlowSeconds is { } slow)
+            {
+                next.SlowMode = slow > 0;
+                next.SlowModeWaitSeconds = slow > 0 ? slow : null;
+            }
+            if (update.FollowersOnlyMinutes is { } followers)
+            {
+                // -1 means off; 0 means on with no minimum follow time (same shape Helix reports).
+                next.FollowerMode = followers >= 0;
+                next.FollowerModeDurationMinutes = followers >= 0 ? followers : null;
+            }
+
+            if (ChatSettingsEqual(current, next))
+                return;
+
+            _moderationChatSettings = next;
+            if (_showingModeration)
+                RequestRender();
+        });
+
+    private static bool ChatSettingsEqual(HelixClient.ChatSettings a, HelixClient.ChatSettings b) =>
+        a.EmoteMode == b.EmoteMode
+        && a.SubscriberMode == b.SubscriberMode
+        && a.UniqueChatMode == b.UniqueChatMode
+        && a.SlowMode == b.SlowMode
+        && a.SlowModeWaitSeconds == b.SlowModeWaitSeconds
+        && a.FollowerMode == b.FollowerMode
+        && a.FollowerModeDurationMinutes == b.FollowerModeDurationMinutes;
+
     private async Task SaveChatSettingsAsync(HelixClient.ChatSettings updated)
     {
         if (_moderation is null)

@@ -20,6 +20,10 @@ public class TwitchIrcClient : ITwitchIrcClient
     public event Action<string>? Connected;
     public event Action<string>? Disconnected;
     public event Action<Exception>? Error;
+    public event Action<string>? MessageDeleted;
+    public event Action<string, int?>? UserPurged;
+    public event Action? ChatCleared;
+    public event Action<IrcRoomStateUpdate>? RoomStateChanged;
 
     public async Task ConnectAsync(string channel)
     {
@@ -107,6 +111,15 @@ public class TwitchIrcClient : ITwitchIrcClient
             case "USERNOTICE":
                 HandleUserNotice(parsed);
                 break;
+            case "CLEARMSG":
+                HandleClearMsg(parsed);
+                break;
+            case "CLEARCHAT":
+                HandleClearChat(parsed);
+                break;
+            case "ROOMSTATE":
+                HandleRoomState(parsed);
+                break;
             case "NOTICE":
                 if (parsed.Trailing is not null)
                 {
@@ -142,6 +155,8 @@ public class TwitchIrcClient : ITwitchIrcClient
                 : parsed.Tags["color"],
             Text = text,
             IsAction = isAction,
+            MessageId = parsed.Tags.GetValueOrDefault("id"),
+            UserId = parsed.Tags.GetValueOrDefault("user-id"),
             Badges = ParseBadges(parsed.Tags.GetValueOrDefault("badges", "")),
             Emotes = ParseEmotes(parsed.Tags.GetValueOrDefault("emotes", "")),
         };
@@ -169,6 +184,57 @@ public class TwitchIrcClient : ITwitchIrcClient
 
         MessageReceived?.Invoke(msg);
     }
+
+    private void HandleClearMsg(ParsedIrcLine parsed)
+    {
+        var targetMessageId = parsed.Tags.GetValueOrDefault("target-msg-id");
+        if (!string.IsNullOrEmpty(targetMessageId))
+            MessageDeleted?.Invoke(targetMessageId);
+    }
+
+    private void HandleClearChat(ParsedIrcLine parsed)
+    {
+        // CLEARCHAT without a target user means the whole chat was cleared. With one, it is a purge of that user's
+        // messages: ban-duration (seconds) is present for a timeout and absent for a permanent ban.
+        var targetUserId = parsed.Tags.GetValueOrDefault("target-user-id");
+        if (string.IsNullOrEmpty(targetUserId))
+        {
+            ChatCleared?.Invoke();
+            return;
+        }
+
+        int? durationSeconds =
+            int.TryParse(parsed.Tags.GetValueOrDefault("ban-duration"), out var seconds) && seconds > 0
+                ? seconds
+                : null;
+        UserPurged?.Invoke(targetUserId, durationSeconds);
+    }
+
+    private void HandleRoomState(ParsedIrcLine parsed)
+    {
+        // Right after JOIN Twitch sends every tag; later it only sends the ones that changed.
+        var update = new IrcRoomStateUpdate(
+            EmoteOnly: ParseRoomFlag(parsed.Tags, "emote-only"),
+            FollowersOnlyMinutes: ParseRoomNumber(parsed.Tags, "followers-only"),
+            UniqueChat: ParseRoomFlag(parsed.Tags, "r9k"),
+            SlowSeconds: ParseRoomNumber(parsed.Tags, "slow"),
+            SubsOnly: ParseRoomFlag(parsed.Tags, "subs-only")
+        );
+
+        if (update.HasAny)
+            RoomStateChanged?.Invoke(update);
+    }
+
+    private static bool? ParseRoomFlag(Dictionary<string, string> tags, string key) =>
+        tags.GetValueOrDefault(key) switch
+        {
+            "1" => true,
+            "0" => false,
+            _ => null,
+        };
+
+    private static int? ParseRoomNumber(Dictionary<string, string> tags, string key) =>
+        int.TryParse(tags.GetValueOrDefault(key), out var value) ? value : null;
 
     private void HandleUserNotice(ParsedIrcLine parsed)
     {

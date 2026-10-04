@@ -72,6 +72,9 @@ public class AppSettings
     public bool EnableEventsPanel { get; set; } = true;
     public bool EnableModerationPanel { get; set; } = true;
 
+    /// <summary>How far back (minutes) the moderation panel's Messages tab shows chat. Chosen from the tab itself.</summary>
+    public int ModerationMessagesWindowMinutes { get; set; } = 10;
+
     public bool EnableIrcEventGif { get; set; } = true;
 
     public bool HighQualityMedia { get; set; } = false;

@@ -19,7 +19,7 @@ public static partial class TwitchAuthService
     private const string Scopes =
         "moderator:read:chatters moderator:manage:banned_users moderator:read:banned_users "
         + "moderator:manage:warnings moderator:read:chat_settings moderator:manage:chat_settings "
-        + "channel:read:redemptions";
+        + "channel:read:redemptions moderator:manage:chat_messages";
     private static readonly HttpClient Http = SharedHttpClient.Instance;
 
     public class AuthResult
@@ -54,6 +54,7 @@ public static partial class TwitchAuthService
             + $"&redirect_uri={Uri.EscapeDataString(RedirectUri)}"
             + "&response_type=code"
             + $"&scope={Uri.EscapeDataString(Scopes)}"
+            + "&force_verify=true"
             + $"&state={state}";
 
         try

@@ -159,6 +159,10 @@ internal sealed partial class ChatRenderWindow
         _irc.Connected += OnIrcConnected;
         _irc.Disconnected += OnIrcDisconnected;
         _irc.Error += OnIrcError;
+        _irc.MessageDeleted += OnIrcMessageDeleted;
+        _irc.UserPurged += OnIrcUserPurged;
+        _irc.ChatCleared += OnIrcChatCleared;
+        _irc.RoomStateChanged += OnIrcRoomState;
 
         _ = LoadBadgeMapAsync(channel);
         _ = LoadThirdPartyEmotesAsync(channel);
@@ -402,6 +406,7 @@ internal sealed partial class ChatRenderWindow
             }
 
             TryShowIrcRedemptionFallback(msg);
+            LogMessageForModeration(msg);
             AugmentWithThirdPartyEmotes(msg);
             AddMessage(msg);
             if (!msg.IsSystem)
@@ -418,6 +423,10 @@ internal sealed partial class ChatRenderWindow
             _irc.Connected -= OnIrcConnected;
             _irc.Disconnected -= OnIrcDisconnected;
             _irc.Error -= OnIrcError;
+            _irc.MessageDeleted -= OnIrcMessageDeleted;
+            _irc.UserPurged -= OnIrcUserPurged;
+            _irc.ChatCleared -= OnIrcChatCleared;
+            _irc.RoomStateChanged -= OnIrcRoomState;
             _ = _irc.DisposeAsync().AsTask();
             _twitchActive = false;
         }
@@ -447,6 +456,7 @@ internal sealed partial class ChatRenderWindow
         foreach (var msg in _messages)
             RemoveMessageCaches(msg);
         _messages.Clear();
+        ClearModerationLog();
 
         _badgeUrls = null;
         _thirdPartyEmotes = null;
@@ -470,6 +480,10 @@ internal sealed partial class ChatRenderWindow
             _irc.Connected -= OnIrcConnected;
             _irc.Disconnected -= OnIrcDisconnected;
             _irc.Error -= OnIrcError;
+            _irc.MessageDeleted -= OnIrcMessageDeleted;
+            _irc.UserPurged -= OnIrcUserPurged;
+            _irc.ChatCleared -= OnIrcChatCleared;
+            _irc.RoomStateChanged -= OnIrcRoomState;
             await _irc.DisposeAsync();
             _twitchActive = false;
         }

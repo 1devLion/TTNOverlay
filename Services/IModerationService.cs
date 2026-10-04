@@ -39,6 +39,12 @@ public interface IModerationService
 
     Task<bool> UnbanByLoginAsync(string channelLogin, string targetLogin);
 
+    /// <summary>Deletes a single chat message (Twitch only allows messages from the last 6 hours, not the broadcaster's or other moderators').</summary>
+    Task<ModerationDeleteResult> DeleteMessageAsync(string channelLogin, string messageId);
+
+    /// <summary>Removes every message from the chat room.</summary>
+    Task<ModerationDeleteResult> ClearChatAsync(string channelLogin);
+
     Task<HelixClient.ChatSettings?> GetChatSettingsAsync(string channelLogin);
 
     Task<bool> UpdateChatSettingsAsync(string channelLogin, HelixClient.ChatSettings settings);

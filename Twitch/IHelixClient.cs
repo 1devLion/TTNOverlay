@@ -1,3 +1,5 @@
+using TTNOverlay.Services;
+
 namespace TTNOverlay.Twitch;
 
 /// <summary>
@@ -48,6 +50,14 @@ public interface IHelixClient
         string moderatorId,
         string userAccessToken,
         string targetUserId
+    );
+
+    /// <summary>Deletes one chat message, or every message in the chat when <paramref name="messageId"/> is null.</summary>
+    Task<ModerationDeleteResult> DeleteChatMessagesAsync(
+        string broadcasterId,
+        string moderatorId,
+        string userAccessToken,
+        string? messageId = null
     );
 
     Task<HelixClient.ChatSettings?> GetChatSettingsAsync(

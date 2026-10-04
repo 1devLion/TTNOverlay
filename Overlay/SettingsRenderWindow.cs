@@ -124,6 +124,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
 
     protected override void OnCreated()
     {
+        ModerationService.SessionChanged += OnModeratorSessionChanged;
         _themeDropdown.Width = 160f;
         _languageDropdown.Width = 160f;
         // 160f (shared with Theme/Language) was too narrow once "Multichat (Twitch + Kick)" existed
@@ -896,8 +897,24 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
     private static bool Contains(Rect rect, float x, float y) =>
         x >= rect.Left && x <= rect.Right && y >= rect.Top && y <= rect.Bottom;
 
+    private void OnModeratorSessionChanged(ModerationService source, string refreshToken, string login, string userId)
+    {
+        if (ReferenceEquals(source, _moderation))
+            return;
+
+        PostToUiThread(() =>
+        {
+            Settings.ModeratorRefreshToken = refreshToken;
+            Settings.ModeratorLogin = login;
+            Settings.ModeratorUserId = userId;
+            (_moderation as ModerationService)?.DropCachedToken();
+            RequestRender();
+        });
+    }
+
     protected override void OnDestroyed()
     {
+        ModerationService.SessionChanged -= OnModeratorSessionChanged;
 
         _twitchLoginCts?.Cancel();
         _twitchLoginCts?.Dispose();

@@ -13,6 +13,11 @@ public class ModerationService : IModerationService
     private string? _accessToken;
     private DateTime _accessTokenExpiresAtUtc = DateTime.MinValue;
 
+    // login -> user id. A channel's id never changes, so resolve it once instead of paying an extra GET /users
+    // round trip in front of every moderation action.
+    private readonly System.Collections.Concurrent.ConcurrentDictionary<string, string> _broadcasterIds =
+        new(StringComparer.OrdinalIgnoreCase);
+
     public ModerationService(AppSettings settings)
         : this(settings, new HelixClient(TwitchAuthService.ClientId)) { }
 
@@ -20,6 +25,21 @@ public class ModerationService : IModerationService
     {
         _settings = settings;
         _helix = helix;
+    }
+
+    /// <summary>
+    /// Raised after a login or logout (arguments: the service that did it, then the new refresh token, login and user
+    /// id; empty after a logout). Each window works on its own copy of the settings and keeps its own cached access
+    /// token, so the others use this to copy the session and drop the token they had cached.
+    /// </summary>
+    public static event Action<ModerationService, string, string, string>? SessionChanged;
+
+    /// <summary>Forgets the cached access token so the next call refreshes it from the stored refresh token.</summary>
+    public void DropCachedToken()
+    {
+        _accessToken = null;
+        _accessTokenExpiresAtUtc = DateTime.MinValue;
+        _broadcasterIds.Clear();
     }
 
     public bool IsLoggedIn => !string.IsNullOrWhiteSpace(_settings.ModeratorRefreshToken);
@@ -43,6 +63,7 @@ public class ModerationService : IModerationService
         SettingsService.Save(_settings);
 
         DebugLog.Write($"ModerationService: login OK as '{result.Login}'");
+        RaiseSessionChanged();
         return true;
     }
 
@@ -50,10 +71,29 @@ public class ModerationService : IModerationService
     {
         _accessToken = null;
         _accessTokenExpiresAtUtc = DateTime.MinValue;
+        _broadcasterIds.Clear();
         _settings.ModeratorRefreshToken = "";
         _settings.ModeratorLogin = "";
         _settings.ModeratorUserId = "";
         SettingsService.Save(_settings);
+        RaiseSessionChanged();
+    }
+
+    private void RaiseSessionChanged()
+    {
+        try
+        {
+            SessionChanged?.Invoke(
+                this,
+                _settings.ModeratorRefreshToken,
+                _settings.ModeratorLogin,
+                _settings.ModeratorUserId
+            );
+        }
+        catch (Exception ex)
+        {
+            DebugLog.WriteException("ModerationService.RaiseSessionChanged", ex);
+        }
     }
 
     internal void SeedAccessTokenForTests(string accessToken, DateTime? expiresAtUtc = null)
@@ -97,7 +137,7 @@ public class ModerationService : IModerationService
         if (token is null)
             return null;
 
-        var broadcasterId = await _helix.GetUserIdByLoginAsync(channelLogin, token);
+        var broadcasterId = await ResolveBroadcasterIdAsync(channelLogin, token);
         if (broadcasterId is null)
             return null;
 
@@ -115,7 +155,7 @@ public class ModerationService : IModerationService
         if (token is null)
             return null;
 
-        var broadcasterId = await _helix.GetUserIdByLoginAsync(channelLogin, token);
+        var broadcasterId = await ResolveBroadcasterIdAsync(channelLogin, token);
         if (broadcasterId is null)
             return null;
 
@@ -128,7 +168,7 @@ public class ModerationService : IModerationService
         if (token is null)
             return false;
 
-        var broadcasterId = await _helix.GetUserIdByLoginAsync(channelLogin, token);
+        var broadcasterId = await ResolveBroadcasterIdAsync(channelLogin, token);
         if (broadcasterId is null)
             return false;
 
@@ -162,7 +202,7 @@ public class ModerationService : IModerationService
         if (token is null)
             return false;
 
-        var broadcasterId = await _helix.GetUserIdByLoginAsync(channelLogin, token);
+        var broadcasterId = await ResolveBroadcasterIdAsync(channelLogin, token);
         if (broadcasterId is null)
             return false;
 
@@ -182,7 +222,7 @@ public class ModerationService : IModerationService
         if (token is null)
             return false;
 
-        var broadcasterId = await _helix.GetUserIdByLoginAsync(channelLogin, token);
+        var broadcasterId = await ResolveBroadcasterIdAsync(channelLogin, token);
         if (broadcasterId is null)
             return false;
 
@@ -198,13 +238,43 @@ public class ModerationService : IModerationService
         );
     }
 
+    public async Task<ModerationDeleteResult> DeleteMessageAsync(string channelLogin, string messageId) =>
+        await DeleteChatMessagesCoreAsync(channelLogin, messageId);
+
+    public async Task<ModerationDeleteResult> ClearChatAsync(string channelLogin) =>
+        await DeleteChatMessagesCoreAsync(channelLogin, null);
+
+    private async Task<ModerationDeleteResult> DeleteChatMessagesCoreAsync(string channelLogin, string? messageId)
+    {
+        var token = await GetAccessTokenAsync();
+        if (token is null)
+            return ModerationDeleteResult.MissingPermission;
+
+        var broadcasterId = await ResolveBroadcasterIdAsync(channelLogin, token);
+        if (broadcasterId is null)
+            return ModerationDeleteResult.Failed;
+
+        return await _helix.DeleteChatMessagesAsync(broadcasterId, _settings.ModeratorUserId, token, messageId);
+    }
+
+    private async Task<string?> ResolveBroadcasterIdAsync(string channelLogin, string token)
+    {
+        if (_broadcasterIds.TryGetValue(channelLogin, out var cached))
+            return cached;
+
+        var resolved = await _helix.GetUserIdByLoginAsync(channelLogin, token);
+        if (resolved is not null)
+            _broadcasterIds[channelLogin] = resolved;
+        return resolved;
+    }
+
     public async Task<HelixClient.ChatSettings?> GetChatSettingsAsync(string channelLogin)
     {
         var token = await GetAccessTokenAsync();
         if (token is null)
             return null;
 
-        var broadcasterId = await _helix.GetUserIdByLoginAsync(channelLogin, token);
+        var broadcasterId = await ResolveBroadcasterIdAsync(channelLogin, token);
         if (broadcasterId is null)
             return null;
 
@@ -220,7 +290,7 @@ public class ModerationService : IModerationService
         if (token is null)
             return false;
 
-        var broadcasterId = await _helix.GetUserIdByLoginAsync(channelLogin, token);
+        var broadcasterId = await ResolveBroadcasterIdAsync(channelLogin, token);
         if (broadcasterId is null)
             return false;
 

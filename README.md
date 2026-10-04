@@ -57,6 +57,8 @@
 - **Chat**: Twitch emotes, badges, and third-party emotes from BTTV, FFZ, and 7TV
 - **Event alerts**: subs, resubs, raids, and announcements straight from IRC. Donations, follows, hosts, and merch from Streamlabs if you connect it. Events reported by both sources get merged, not shown twice
 - **In-app moderation**: timeout, ban, warn, and unban without ever tabbing out of your game (needs a moderator or broadcaster login)
+- **Message moderation**: a Messages tab lists recent chat for the last 1 to 60 minutes. Delete a message, mute/ban/warn its author, do both at once, or delete all of a user's messages. Rows update live when something is deleted or sanctioned from anywhere
+- **Chat modes**: slow, subscribers-only, emote-only, followers-only and unique chat can be toggled from the panel and stay in sync with Twitch
 - **Viewer count & badges**: shown once you sign in, now combining Twitch and Kick viewer counts (YouTube support coming)
 - **Connection status at a glance**: a small colored dot in the title bar shows whether chat is connected, connecting, or disconnected
 - **Sound & flash alerts**: every event type gets its own color and can trigger a sound or a screen flash

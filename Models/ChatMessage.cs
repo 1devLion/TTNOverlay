@@ -103,4 +103,10 @@ public class ChatMessage
     /// rewards that show up in IRC (highlighted-message, skip-subs-mode-message). Null otherwise.
     /// </summary>
     public string? AutoRewardType { get; set; }
+
+    /// <summary>Twitch IRC only: the PRIVMSG "id" tag (the message's UUID), needed to delete it through the moderation API.</summary>
+    public string? MessageId { get; set; }
+
+    /// <summary>Twitch IRC only: the "user-id" tag of the sender, needed to warn/mute/ban them through the moderation API.</summary>
+    public string? UserId { get; set; }
 }

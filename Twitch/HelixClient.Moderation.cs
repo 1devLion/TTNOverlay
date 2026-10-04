@@ -237,6 +237,61 @@ public partial class HelixClient
         }
     }
 
+    public async Task<ModerationDeleteResult> DeleteChatMessagesAsync(
+        string broadcasterId,
+        string moderatorId,
+        string userAccessToken,
+        string? messageId = null
+    )
+    {
+        try
+        {
+            // Without message_id, Twitch removes every message in the chat room.
+            var url =
+                $"https://api.twitch.tv/helix/moderation/chat?broadcaster_id={Uri.EscapeDataString(broadcasterId)}"
+                + $"&moderator_id={Uri.EscapeDataString(moderatorId)}"
+                + (messageId is null ? "" : $"&message_id={Uri.EscapeDataString(messageId)}");
+
+            using var request = new HttpRequestMessage(HttpMethod.Delete, url);
+            request.Headers.Add("Client-Id", _clientId);
+            request.Headers.Add("Authorization", $"Bearer {userAccessToken}");
+
+            using var response = await Http.SendAsync(request);
+            if (response.IsSuccessStatusCode)
+                return ModerationDeleteResult.Ok;
+
+            var body = await response.Content.ReadAsStringAsync();
+            DebugLog.Write(
+                $"Helix: deleting chat message(s) failed (message_id={messageId ?? "<all>"}), status {response.StatusCode}: {body}"
+            );
+
+            return MapDeleteStatus(response.StatusCode, body);
+        }
+        catch (Exception ex)
+        {
+            DebugLog.WriteException("HelixClient.DeleteChatMessagesAsync", ex);
+            return ModerationDeleteResult.Failed;
+        }
+    }
+
+    /// <summary>
+    /// Maps a Delete Chat Messages failure to something the UI can act on. 401 normally means the token lacks the
+    /// moderator:manage:chat_messages scope, but Twitch also answers 401 "incorrect user authorization" when the
+    /// target message belongs to someone of equal or higher rank (broadcaster, another moderator), which is a
+    /// per-message refusal, not a login problem. 403 means the account isn't a moderator of that channel.
+    /// </summary>
+    internal static ModerationDeleteResult MapDeleteStatus(System.Net.HttpStatusCode status, string body) =>
+        status switch
+        {
+            System.Net.HttpStatusCode.Unauthorized
+                when body.Contains("incorrect user authorization", StringComparison.OrdinalIgnoreCase) =>
+                ModerationDeleteResult.Rejected,
+            System.Net.HttpStatusCode.Unauthorized => ModerationDeleteResult.MissingPermission,
+            System.Net.HttpStatusCode.BadRequest or System.Net.HttpStatusCode.NotFound =>
+                ModerationDeleteResult.Rejected,
+            _ => ModerationDeleteResult.Failed,
+        };
+
     internal class WarnUserRequest
     {
         [JsonPropertyName("data")]

@@ -65,10 +65,45 @@ internal sealed partial class ChatRenderWindow
         await RefreshModerationStateAsync();
     }
 
+    /// <summary>
+    /// The Twitch API tab of the settings window logged in or out. That window edits a copy of the settings, so copy
+    /// the session over here (the copy replaces <c>_settings</c> when the window closes) and refresh the panel.
+    /// </summary>
+    private void OnModeratorSessionChanged(ModerationService source, string refreshToken, string login, string userId)
+    {
+        if (ReferenceEquals(source, _moderation))
+            return;
+
+        PostToUiThread(() =>
+        {
+            _settings.ModeratorRefreshToken = refreshToken;
+            _settings.ModeratorLogin = login;
+            _settings.ModeratorUserId = userId;
+            _moderation?.DropCachedToken();
+
+            if (string.IsNullOrWhiteSpace(refreshToken))
+            {
+                DisconnectEventSub();
+                ClearModerationLog();
+                _moderationChatters = new();
+                _moderationBanned = null;
+            }
+            else
+            {
+                ConnectEventSubIfEligible();
+            }
+
+            if (_showingModeration)
+                _ = RefreshModerationStateAsync();
+            RequestRender();
+        });
+    }
+
     private void LogoutFromTwitch()
     {
         _moderation?.Logout();
         DisconnectEventSub();
+        ClearModerationLog();
         _moderationChatters = new();
         _moderationBanned = null;
 
@@ -119,6 +154,18 @@ internal sealed partial class ChatRenderWindow
         PostToUiThread(() =>
         {
             _moderationBanned = banned;
+
+            // Rows tagged [muted]/[banned] for someone who is no longer on Twitch's list (unbanned from Twitch itself,
+            // or a timeout that ran out) lose their tag.
+            if (banned is not null)
+            {
+                var restricted = new HashSet<string>(banned.Count, StringComparer.Ordinal);
+                foreach (var b in banned)
+                    restricted.Add(b.Id);
+                if (_moderationLog.ReconcileUserStates(restricted) > 0 && ModerationMessagesVisible)
+                    RequestRender();
+            }
+
             RequestRender();
         });
     }
