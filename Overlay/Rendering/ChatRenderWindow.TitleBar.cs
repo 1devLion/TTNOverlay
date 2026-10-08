@@ -1,4 +1,5 @@
 using System.Numerics;
+using TTNOverlay.Models;
 using TTNOverlay.Native;
 using TTNOverlay.Services;
 using Vortice.Direct2D1;
@@ -72,11 +73,13 @@ internal sealed partial class ChatRenderWindow
     }
 
     private const float ConnectionDotRadius = 4f;
-    private const float ConnectionDotGap = 6f; // between a dot and its letter
+    private const float ConnectionDotGap = 6f; // between a platform icon and its dot
+    private const float ConnectionIconSize = 15f;
     private const float ConnectionDotGroupGap = 14f; // between the Twitch group and the Kick group
 
     /// <summary>
-    /// Draws "T ●  K ●" in the title bar: one letter + colored dot per active source.
+    /// Draws the Twitch and Kick logos, each followed by a colored status dot, one pair per active source.
+    /// Twitch's glyph follows the theme (light on dark, dark on light); Kick always uses its colored logo.
     /// </summary>
     private void DrawConnectionDots(ID2D1DCRenderTarget target, float x, float maxWidth)
     {
@@ -88,30 +91,58 @@ internal sealed partial class ChatRenderWindow
         float rightEdge = x + maxWidth;
         float centerY = TitleBarHeight / 2f;
 
-        cursor = DrawOneConnectionDot(target, "T", _twitchStatusKey, cursor, rightEdge, centerY);
+        cursor = DrawOneConnectionDot(target, Platform.Twitch, _twitchStatusKey, cursor, rightEdge, centerY);
         cursor += ConnectionDotGroupGap;
-        DrawOneConnectionDot(target, "K", _kickStatusKey, cursor, rightEdge, centerY);
+        DrawOneConnectionDot(target, Platform.Kick, _kickStatusKey, cursor, rightEdge, centerY);
+    }
+
+    /// <summary>Theme-aware platform logo for the title bar, or null if no icon could be loaded.</summary>
+    private ID2D1Bitmap? GetConnectionPlatformIcon(ID2D1DCRenderTarget target, Platform platform)
+    {
+        bool dark = ThemeService.IsDark;
+        if (platform == Platform.Twitch)
+            return GetOrCreateTwitchButtonIconBitmap(
+                target,
+                dark ? TwitchIconLoader.Variant.White : TwitchIconLoader.Variant.Dark
+            );
+
+        // Kick usa siempre su logo a color (kick.webp): se ve bien en ambos temas, no necesita variante.
+        return GetOrCreateLocalBadgeBitmap(target, "platform/kick", "platform/kick");
     }
 
     private float DrawOneConnectionDot(
         ID2D1DCRenderTarget target,
-        string letter,
+        Platform platform,
         string? statusKey,
         float x,
         float rightEdge,
         float centerY
     )
     {
-        using var letterLayout = DWriteFactory.CreateTextLayout(
-            letter,
-            _titleBarLabelFormat!,
-            rightEdge - x,
-            TitleBarHeight
-        );
-        float letterWidth = (float)letterLayout.Metrics.WidthIncludingTrailingWhitespace;
-        target.DrawTextLayout(new Vector2(x, 0f), letterLayout, _titleBarForegroundBrush);
+        float iconWidth;
+        var icon = GetConnectionPlatformIcon(target, platform);
+        if (icon is not null)
+        {
+            float size = MathF.Min(ConnectionIconSize, TitleBarHeight - 6f);
+            if (x + size <= rightEdge)
+                DrawBitmapAt(target, icon, x, centerY - size / 2f, size);
+            iconWidth = size;
+        }
+        else
+        {
+            // Fallback si el ícono no está disponible: la letra de siempre.
+            string letter = platform == Platform.Twitch ? "T" : "K";
+            using var letterLayout = DWriteFactory.CreateTextLayout(
+                letter,
+                _titleBarLabelFormat!,
+                rightEdge - x,
+                TitleBarHeight
+            );
+            iconWidth = (float)letterLayout.Metrics.WidthIncludingTrailingWhitespace;
+            target.DrawTextLayout(new Vector2(x, 0f), letterLayout, _titleBarForegroundBrush);
+        }
 
-        float dotCenterX = x + letterWidth + ConnectionDotGap + ConnectionDotRadius;
+        float dotCenterX = x + iconWidth + ConnectionDotGap + ConnectionDotRadius;
         var brush = ConnectionDotBrushFor(statusKey);
         if (brush is not null && dotCenterX + ConnectionDotRadius <= rightEdge)
         {

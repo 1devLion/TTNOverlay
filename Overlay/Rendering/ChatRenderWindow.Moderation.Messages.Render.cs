@@ -127,17 +127,23 @@ internal sealed partial class ChatRenderWindow
         float maxWidth
     )
     {
-        float y = DrawModerationLine(
-            target,
-            _moderationStatusText,
-            _moderationBodyFormat!,
-            _moderationTextBrush!,
-            maxWidth,
-            top,
-            draw: true
-        );
+        bool needsLogin = _moderation is not { HasCredentials: true, IsLoggedIn: true };
 
-        if (_moderation is not { HasCredentials: true, IsLoggedIn: true })
+        // Sin sesión, el estado general ("Iniciá sesión con la cuenta de moderador para gestionar el chat") dice
+        // lo mismo que el aviso específico de esta pestaña: se muestra solo este último.
+        float y = needsLogin && IsModerationLoginPromptStatus()
+            ? top
+            : DrawModerationLine(
+                target,
+                _moderationStatusText,
+                _moderationBodyFormat!,
+                _moderationTextBrush!,
+                maxWidth,
+                top,
+                draw: true
+            );
+
+        if (needsLogin)
         {
             DrawModerationLine(
                 target,

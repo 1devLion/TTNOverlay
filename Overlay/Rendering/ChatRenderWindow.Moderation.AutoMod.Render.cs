@@ -15,6 +15,10 @@ internal sealed partial class ChatRenderWindow
 {
     private const float AutoModItemSpacing = 10f;
 
+    /// <summary>True when the general status line is just the "log in with the moderator account" prompt.</summary>
+    private bool IsModerationLoginPromptStatus() =>
+        string.Equals(_moderationStatusText, LocalizationService.T("Moderation_LoginPrompt"), StringComparison.Ordinal);
+
     /// <summary>Tab label; the AutoMod tab shows how many messages are waiting.</summary>
     private string ModerationTabLabel(ModerationTab tab, string labelKey) =>
         tab == ModerationTab.AutoMod && _autoModQueue.Count > 0
@@ -29,17 +33,21 @@ internal sealed partial class ChatRenderWindow
         float maxWidth
     )
     {
-        float y = DrawModerationLine(
-            target,
-            _moderationStatusText,
-            _moderationBodyFormat!,
-            _moderationTextBrush!,
-            maxWidth,
-            top,
-            draw: true
-        );
+        bool needsLogin = _moderation is not { HasCredentials: true, IsLoggedIn: true };
 
-        if (_moderation is not { HasCredentials: true, IsLoggedIn: true })
+        float y = needsLogin && IsModerationLoginPromptStatus()
+            ? top
+            : DrawModerationLine(
+                target,
+                _moderationStatusText,
+                _moderationBodyFormat!,
+                _moderationTextBrush!,
+                maxWidth,
+                top,
+                draw: true
+            );
+
+        if (needsLogin)
         {
             DrawModerationLine(
                 target,

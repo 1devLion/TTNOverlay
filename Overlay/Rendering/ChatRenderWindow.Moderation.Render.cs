@@ -32,8 +32,12 @@ internal sealed partial class ChatRenderWindow
         );
 
         _moderationHeaderFormat.ParagraphAlignment = ParagraphAlignment.Near;
+        // CreateTitleBarFormat devuelve NoWrap (pensado para la barra de título); en el panel el texto tiene que
+        // reflowear al ancho disponible cada vez que se redimensiona la ventana.
+        _moderationHeaderFormat.WordWrapping = WordWrapping.Wrap;
         _moderationBodyFormat ??= CreateTitleBarFormat("Segoe UI", Vortice.DirectWrite.FontWeight.Normal, 14.5f, Vortice.DirectWrite.TextAlignment.Leading);
         _moderationBodyFormat.ParagraphAlignment = ParagraphAlignment.Near;
+        _moderationBodyFormat.WordWrapping = WordWrapping.Wrap;
 
         float maxWidth = width - Padding * 2;
         if (maxWidth <= 0)
