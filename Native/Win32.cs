@@ -124,6 +124,9 @@ internal static class Win32
 
     public const uint WM_UI_THREAD_CALLBACK = WM_APP + 2;
 
+    /// <summary>Posted by the render-loop timer (coalesced: at most one in flight). Kept apart from the UI-action queue.</summary>
+    public const uint WM_RENDER_TICK = WM_APP + 3;
+
     public const int HTCLIENT = 1;
     public const int HTCAPTION = 2;
     public const int HTBOTTOMRIGHT = 17;

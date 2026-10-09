@@ -30,6 +30,7 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
     private readonly string _confirmText;
     private readonly IntPtr _ownerHwnd;
     private bool _confirmed;
+    private readonly bool _destructive;
 
     private int _computedHeight;
     protected override int MinimumClientWidth => FixedWidth;
@@ -52,14 +53,16 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
     private ID2D1SolidColorBrush? _hoverShadowBrush;
 
     private ID2D1SolidColorBrush? _dangerBrush;
+    private ID2D1SolidColorBrush? _accentBrush;
     private ID2D1SolidColorBrush? _dangerTextBrush;
     private bool? _lastKnownIsDark;
     private IDWriteTextFormat? _titleFormat;
     private IDWriteTextFormat? _messageFormat;
     private IDWriteTextFormat? _buttonFormat;
 
-    public ConfirmDialogWindow(string title, string message, string? confirmText, IntPtr ownerHwnd) : base("TTNOverlayConfirmDialogWndClass")
+    public ConfirmDialogWindow(string title, string message, string? confirmText, IntPtr ownerHwnd, bool destructive = true) : base("TTNOverlayConfirmDialogWndClass")
     {
+        _destructive = destructive;
         _title = title;
         _message = message;
         _confirmText = confirmText ?? LocalizationService.T("Common_Confirm");
@@ -81,7 +84,8 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
         string title,
         string message,
         string? confirmText,
-        Action<bool> callback)
+        Action<bool> callback,
+        bool destructive = true)
     {
         DebugLog.Write($"ConfirmDialogWindow.Show: entrando, message.Length={message.Length}");
 
@@ -91,7 +95,7 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
         Win32.TryGetCenteredPosition(ownerHwnd, FixedWidth, 180, out int x, out int y);
         DebugLog.Write($"ConfirmDialogWindow.Show: centered on screen, x={x} y={y}");
 
-        var wnd = new ConfirmDialogWindow(title, message, confirmText, ownerHwnd);
+        var wnd = new ConfirmDialogWindow(title, message, confirmText, ownerHwnd, destructive);
         wnd.ResultReady += callback;
         wnd.Destroyed += () => postToOwnerUiThread(wnd.Dispose);
 
@@ -173,6 +177,7 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
         _hoverShadowBrush ??= target.CreateSolidColorBrush(new Color4(0f, 0f, 0f, 1f));
         _dangerBrush ??= target.CreateSolidColorBrush(new Color4(0xC0 / 255f, 0x39 / 255f, 0x2B / 255f, 1f));
         _dangerTextBrush ??= target.CreateSolidColorBrush(new Color4(1f, 1f, 1f, 1f));
+        _accentBrush ??= target.CreateSolidColorBrush(new Color4(0x91 / 255f, 0x46 / 255f, 0xFF / 255f, 1f));
         _titleFormat ??= DWriteFactory.CreateTextFormat("Segoe UI", FontWeight.Bold, Vortice.DirectWrite.FontStyle.Normal, 16f);
         if (_messageFormat is null)
         {
@@ -217,7 +222,7 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
             target.DrawTextLayout(new Vector2(_cancelButtonRect.Left, _cancelButtonRect.Top), cancelLabel, _textBrush!);
 
         DrawHoverShadow(target, _confirmButtonRect);
-        target.FillRectangle(_confirmButtonRect, _dangerBrush!);
+        target.FillRectangle(_confirmButtonRect, _destructive ? _dangerBrush! : _accentBrush!);
         using (var confirmLabel = DWriteFactory.CreateTextLayout(_confirmText, _buttonFormat!, ButtonWidth, ButtonHeight))
             target.DrawTextLayout(new Vector2(_confirmButtonRect.Left, _confirmButtonRect.Top), confirmLabel, _dangerTextBrush!);
     }
@@ -286,6 +291,7 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
         _hoverShadowBrush?.Dispose();
         _dangerBrush?.Dispose();
         _dangerTextBrush?.Dispose();
+        _accentBrush?.Dispose();
         _titleFormat?.Dispose();
         _messageFormat?.Dispose();
         _buttonFormat?.Dispose();

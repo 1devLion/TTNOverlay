@@ -79,6 +79,28 @@ public class ModerationService : IModerationService
         RaiseSessionChanged();
     }
 
+    public async Task<IReadOnlyList<string>> EnsureRequiredScopesAsync()
+    {
+        if (!IsLoggedIn)
+            return Array.Empty<string>();
+
+        var token = await GetAccessTokenAsync();
+        if (token is null)
+            return Array.Empty<string>();
+
+        var granted = await TwitchAuthService.GetGrantedScopesAsync(token);
+        if (granted is null)
+            return Array.Empty<string>();
+
+        var missing = TwitchAuthService.FindMissingScopes(granted);
+        if (missing.Count == 0)
+            return missing;
+
+        DebugLog.Write($"ModerationService: the session lacks scopes [{string.Join(' ', missing)}]; logging out to request a new login");
+        Logout();
+        return missing;
+    }
+
     private void RaiseSessionChanged()
     {
         try

@@ -16,10 +16,26 @@ public static partial class TwitchAuthService
     private const string RedirectUri = "http://localhost:3939/";
     public const string ClientId = "moip38rvs0bu0lw6sigyuz3we231k1";
     private const string WorkerBaseUrl = "https://ttnoverlay-auth.ttnoverlay.workers.dev";
-    private const string Scopes =
-        "moderator:read:chatters moderator:manage:banned_users moderator:read:banned_users "
-        + "moderator:manage:warnings moderator:read:chat_settings moderator:manage:chat_settings "
-        + "channel:read:redemptions moderator:manage:chat_messages moderator:manage:automod";
+
+    /// <summary>
+    /// Every scope the app needs. To ship a feature that needs a new permission, just add it here: on startup the app
+    /// checks the stored session against this list (see <see cref="GetGrantedScopesAsync"/>) and, if the session
+    /// lacks any of them, logs out and asks the user to log in again.
+    /// </summary>
+    public static readonly IReadOnlyList<string> RequiredScopes = new[]
+    {
+        "moderator:read:chatters",
+        "moderator:manage:banned_users",
+        "moderator:read:banned_users",
+        "moderator:manage:warnings",
+        "moderator:read:chat_settings",
+        "moderator:manage:chat_settings",
+        "channel:read:redemptions",
+        "moderator:manage:chat_messages",
+        "moderator:manage:automod",
+    };
+
+    private static readonly string Scopes = string.Join(' ', RequiredScopes);
     private static readonly HttpClient Http = SharedHttpClient.Instance;
 
     public class AuthResult
@@ -209,6 +225,41 @@ public static partial class TwitchAuthService
         }
     }
 
+    /// <summary>
+    /// Asks Twitch which scopes an access token actually carries (GET /oauth2/validate). Returns null when that can't
+    /// be determined (network error, token rejected), so callers don't log anyone out over a transient failure.
+    /// </summary>
+    public static async Task<IReadOnlyList<string>?> GetGrantedScopesAsync(string accessToken)
+    {
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Get, "https://id.twitch.tv/oauth2/validate");
+            request.Headers.Add("Authorization", $"OAuth {accessToken}");
+
+            var response = await Http.SendAsync(request);
+            if (!response.IsSuccessStatusCode)
+            {
+                DebugLog.Write($"TwitchAuthService.GetGrantedScopesAsync: validate failed, status {response.StatusCode}");
+                return null;
+            }
+
+            var payload = await response.Content.ReadFromJsonAsync(TwitchAuthJsonContext.Default.ValidateResponse);
+            return payload?.Scopes ?? new List<string>();
+        }
+        catch (Exception ex)
+        {
+            DebugLog.WriteException("TwitchAuthService.GetGrantedScopesAsync", ex);
+            return null;
+        }
+    }
+
+    /// <summary>The required scopes that are not in <paramref name="granted"/> (empty when the session is up to date).</summary>
+    public static IReadOnlyList<string> FindMissingScopes(IEnumerable<string> granted)
+    {
+        var set = new HashSet<string>(granted, StringComparer.OrdinalIgnoreCase);
+        return RequiredScopes.Where(s => !set.Contains(s)).ToList();
+    }
+
     private static async Task<(string? Login, string? UserId)> GetUserInfoAsync(string accessToken)
     {
         try
@@ -268,6 +319,12 @@ public static partial class TwitchAuthService
         public int ExpiresIn { get; set; }
     }
 
+    internal class ValidateResponse
+    {
+        [JsonPropertyName("scopes")]
+        public List<string>? Scopes { get; set; }
+    }
+
     internal class UsersResponse
     {
         [JsonPropertyName("data")]
@@ -297,6 +354,7 @@ public static partial class TwitchAuthService
 
     [JsonSerializable(typeof(TokenResponse))]
     [JsonSerializable(typeof(UsersResponse))]
+    [JsonSerializable(typeof(ValidateResponse))]
     [JsonSerializable(typeof(ExchangeCodeRequest))]
     [JsonSerializable(typeof(RefreshTokenRequest))]
     internal partial class TwitchAuthJsonContext : JsonSerializerContext { }

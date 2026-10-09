@@ -118,6 +118,7 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
         SetupAlerts();
         SetupViewerCountWidget();
         ConnectFeed();
+        _ = CheckModeratorScopesAsync();
         ConnectTrayAndHotkeys();
         EnsureExpirySweepTimerRunning();
         EnsureMediaStatsTimerRunning();
@@ -355,13 +356,18 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
         DisposeImageCaches();
     }
 
-    public void ShowConfirmDialog(string title, string message, string? confirmText, Action<bool> callback)
+    // Kept as a separate 4-argument overload (not an optional parameter) because Program.cs binds this method group
+    // to an Action<string, string, string?, Action<bool>>.
+    public void ShowConfirmDialog(string title, string message, string? confirmText, Action<bool> callback) =>
+        ShowConfirmDialog(title, message, confirmText, callback, destructive: true);
+
+    public void ShowConfirmDialog(string title, string message, string? confirmText, Action<bool> callback, bool destructive)
     {
         DebugLog.Write($"ShowConfirmDialog: called from thread {Environment.CurrentManagedThreadId} (UI thread={OverlayWindowBase.IsOnUiThread})");
         PostToUiThread(() =>
         {
             DebugLog.Write("ShowConfirmDialog: within PostToUiThread, by calling ConfirmDialogWindow.Show");
-            ConfirmDialogWindow.Show(Hwnd, PostToUiThread, title, message, confirmText, callback);
+            ConfirmDialogWindow.Show(Hwnd, PostToUiThread, title, message, confirmText, callback, destructive);
             DebugLog.Write("ShowConfirmDialog: ConfirmDialogWindow.Show return");
         });
     }

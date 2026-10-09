@@ -29,6 +29,24 @@ public abstract class OverlayWindowBase : IDisposable
 
     private const int MaxUiActionsPerDrain = 256;
 
+    // ---- UI-thread pacing ------------------------------------------------------------------------------------
+    // Windows gives a thread's *posted* messages (PostMessage) to GetMessage before its hardware input (mouse and
+    // keyboard). If the UI-action queue keeps re-posting itself while it has work (high-traffic chat does exactly
+    // that), the posted callback always wins and clicks sit unprocessed until Windows flags the app as "not
+    // responding". So: (1) one drain never holds the thread longer than UiDrainBudgetMs, (2) consecutive drains are
+    // at least MinUiDrainGapMs apart, which leaves the message loop free to hand out input, and (3) the render tick
+    // is its own coalesced message instead of one more entry behind thousands of chat actions in that queue.
+    private const int UiDrainBudgetMs = 6;
+    private const int MinUiDrainGapMs = 8;
+    private const int SlowUiDrainLogMs = 40;
+    private const int SlowRenderLogMs = 60;
+    private static readonly long UiDrainBudgetTicks = System.Diagnostics.Stopwatch.Frequency * UiDrainBudgetMs / 1000;
+
+    private long _lastUiDrainEndTimestamp;
+    private System.Threading.Timer? _uiDrainTimer;
+    private int _renderTickPosted;
+    private long _nextRenderAllowedTimestamp;
+
     private int _pendingUiActionCount;
 
     protected int PendingUiActionCount =>
@@ -128,6 +146,12 @@ public abstract class OverlayWindowBase : IDisposable
         _renderer.TargetRecreated += OnDeviceResourcesInvalidated;
         _renderer.Resize(width, height);
 
+        _uiDrainTimer = new System.Threading.Timer(
+            _ => PostUiDrainMessage(),
+            null,
+            System.Threading.Timeout.Infinite,
+            System.Threading.Timeout.Infinite
+        );
         StartRenderLoop();
         try
         {
@@ -382,29 +406,12 @@ public abstract class OverlayWindowBase : IDisposable
                 break;
 
             case Win32.WM_UI_THREAD_CALLBACK:
+                DrainUiQueue();
+                return IntPtr.Zero;
 
-                System.Threading.Interlocked.Exchange(ref _uiCallbackPosted, 0);
-
-                int drained = 0;
-                while (drained < MaxUiActionsPerDrain && _uiThreadQueue.TryDequeue(out var action))
-                {
-                    try
-                    {
-                        action();
-                    }
-                    catch (Exception ex)
-                    {
-                        DebugLog.Write($"WM_UI_THREAD_CALLBACK: exception in glued action. {ex}");
-                    }
-                    System.Threading.Interlocked.Decrement(ref _pendingUiActionCount);
-                    drained++;
-                }
-
-                if (
-                    !_uiThreadQueue.IsEmpty
-                    && System.Threading.Interlocked.CompareExchange(ref _uiCallbackPosted, 1, 0) == 0
-                )
-                    Win32.PostMessage(hWnd, Win32.WM_UI_THREAD_CALLBACK, IntPtr.Zero, IntPtr.Zero);
+            case Win32.WM_RENDER_TICK:
+                System.Threading.Interlocked.Exchange(ref _renderTickPosted, 0);
+                RenderIfDirty();
                 return IntPtr.Zero;
 
             case Win32.WM_CLOSE:
@@ -498,6 +505,12 @@ public abstract class OverlayWindowBase : IDisposable
             return;
         }
 
+        // Adaptive pacing: after a slow frame, stay off the UI thread for about as long as that frame took (capped),
+        // so a heavy chat degrades into fewer frames per second instead of a thread that never reads its input.
+        long renderStart = System.Diagnostics.Stopwatch.GetTimestamp();
+        if (renderStart < _nextRenderAllowedTimestamp)
+            return;
+
         if (_inLiveResize)
         {
             var now = DateTime.UtcNow;
@@ -508,6 +521,14 @@ public abstract class OverlayWindowBase : IDisposable
 
         _renderDirty = false;
         _renderer?.Render(OnRender);
+
+        long renderEnd = System.Diagnostics.Stopwatch.GetTimestamp();
+        long renderTicks = renderEnd - renderStart;
+        _nextRenderAllowedTimestamp = renderEnd + Math.Min(renderTicks, System.Diagnostics.Stopwatch.Frequency / 10);
+        if (DebugLog.Enabled && renderTicks * 1000 / System.Diagnostics.Stopwatch.Frequency >= SlowRenderLogMs)
+            DebugLog.Write(
+                $"RenderIfDirty ({_className}): slow frame, {renderTicks * 1000 / System.Diagnostics.Stopwatch.Frequency} ms"
+            );
 
         // Nothing re-marked dirty during this render (by OnRender itself, or by anything else
         // that ran on the UI thread before this callback), so there's nothing to wait for —
@@ -549,7 +570,7 @@ public abstract class OverlayWindowBase : IDisposable
         // ticking, and RenderIfDirty pauses it again once nothing is left to draw. This avoids
         // waking every overlay window up at RenderTargetFps forever, even while idle/hidden.
         _renderLoopTimer ??= new System.Threading.Timer(
-            _ => PostToUiThread(RenderIfDirty),
+            _ => PostRenderTick(),
             null,
             System.Threading.Timeout.Infinite,
             System.Threading.Timeout.Infinite
@@ -561,6 +582,10 @@ public abstract class OverlayWindowBase : IDisposable
         _renderLoopTimer?.Dispose();
         _renderLoopTimer = null;
         _renderLoopActive = false;
+
+        var drainTimer = _uiDrainTimer;
+        _uiDrainTimer = null;
+        drainTimer?.Dispose();
     }
 
     protected abstract void OnRender(ID2D1DCRenderTarget target);
@@ -584,8 +609,103 @@ public abstract class OverlayWindowBase : IDisposable
     {
         _uiThreadQueue.Enqueue(action);
         System.Threading.Interlocked.Increment(ref _pendingUiActionCount);
-        if (System.Threading.Interlocked.CompareExchange(ref _uiCallbackPosted, 1, 0) == 0)
-            Win32.PostMessage(Hwnd, Win32.WM_UI_THREAD_CALLBACK, IntPtr.Zero, IntPtr.Zero);
+        RequestUiDrain();
+    }
+
+    /// <summary>
+    /// Makes sure a drain of the UI-action queue is scheduled (at most one at a time). If the last drain ended less than
+    /// MinUiDrainGapMs ago the message is posted from a one-shot timer instead of right away, which is what keeps
+    /// input messages from being starved behind an endless chain of drains. Safe from any thread.
+    /// </summary>
+    private void RequestUiDrain()
+    {
+        if (System.Threading.Interlocked.CompareExchange(ref _uiCallbackPosted, 1, 0) != 0)
+            return;
+
+        long freq = System.Diagnostics.Stopwatch.Frequency;
+        long sinceLastDrainMs =
+            (System.Diagnostics.Stopwatch.GetTimestamp() - System.Threading.Volatile.Read(ref _lastUiDrainEndTimestamp))
+            * 1000
+            / freq;
+
+        var timer = _uiDrainTimer;
+        if (sinceLastDrainMs >= MinUiDrainGapMs || timer is null)
+        {
+            PostUiDrainMessage();
+            return;
+        }
+
+        try
+        {
+            timer.Change(MinUiDrainGapMs - sinceLastDrainMs, System.Threading.Timeout.Infinite);
+        }
+        catch (ObjectDisposedException)
+        {
+            // Window already torn down; nothing left to drain for.
+        }
+    }
+
+    private void PostUiDrainMessage()
+    {
+        var hwnd = Hwnd;
+        if (hwnd != IntPtr.Zero)
+            Win32.PostMessage(hwnd, Win32.WM_UI_THREAD_CALLBACK, IntPtr.Zero, IntPtr.Zero);
+    }
+
+    private void PostRenderTick()
+    {
+        if (System.Threading.Interlocked.CompareExchange(ref _renderTickPosted, 1, 0) != 0)
+            return;
+
+        var hwnd = Hwnd;
+        if (hwnd == IntPtr.Zero)
+        {
+            System.Threading.Interlocked.Exchange(ref _renderTickPosted, 0);
+            return;
+        }
+        Win32.PostMessage(hwnd, Win32.WM_RENDER_TICK, IntPtr.Zero, IntPtr.Zero);
+    }
+
+    /// <summary>
+    /// Runs queued UI actions for at most UiDrainBudgetMs (always at least one), then hands the thread back to the
+    /// message loop. Whatever is left is picked up by the next drain, scheduled through RequestUiDrain.
+    /// </summary>
+    private void DrainUiQueue()
+    {
+        long start = System.Diagnostics.Stopwatch.GetTimestamp();
+        long deadline = start + UiDrainBudgetTicks;
+        int drained = 0;
+
+        while (drained < MaxUiActionsPerDrain && _uiThreadQueue.TryDequeue(out var action))
+        {
+            try
+            {
+                action();
+            }
+            catch (Exception ex)
+            {
+                DebugLog.Write($"WM_UI_THREAD_CALLBACK: exception in glued action. {ex}");
+            }
+            System.Threading.Interlocked.Decrement(ref _pendingUiActionCount);
+            drained++;
+
+            if (System.Diagnostics.Stopwatch.GetTimestamp() >= deadline)
+                break;
+        }
+
+        long end = System.Diagnostics.Stopwatch.GetTimestamp();
+        System.Threading.Volatile.Write(ref _lastUiDrainEndTimestamp, end);
+
+        if (DebugLog.Enabled && (end - start) * 1000 / System.Diagnostics.Stopwatch.Frequency >= SlowUiDrainLogMs)
+            DebugLog.Write(
+                $"DrainUiQueue ({_className}): slow drain, {(end - start) * 1000 / System.Diagnostics.Stopwatch.Frequency} ms for {drained} action(s), {PendingUiActionCount} still pending"
+            );
+
+        // The flag stays set for the whole drain, so producers enqueueing meanwhile don't post anything. Clear it only
+        // now and then re-check the queue: an item enqueued in between is caught here, one enqueued after posts itself.
+        System.Threading.Interlocked.Exchange(ref _uiCallbackPosted, 0);
+        if (!_uiThreadQueue.IsEmpty)
+            RequestUiDrain();
     }
 
     internal void CaptureMouse() => Win32.SetCapture(Hwnd);

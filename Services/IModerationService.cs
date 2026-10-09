@@ -14,6 +14,13 @@ public interface IModerationService
     Task<bool> LoginAsync(CancellationToken cancellationToken = default);
     void Logout();
 
+    /// <summary>
+    /// Checks that the stored session carries every scope the app currently requires. If it doesn't, logs out and
+    /// returns the missing scopes (the caller should ask the user to log in again); empty means all good, or that it
+    /// couldn't be checked right now.
+    /// </summary>
+    Task<IReadOnlyList<string>> EnsureRequiredScopesAsync() => Task.FromResult<IReadOnlyList<string>>(Array.Empty<string>());
+
     /// <summary>Returns a valid user access token (refreshing it if needed), or null if not logged in.</summary>
     Task<string?> GetAccessTokenAsync();
 

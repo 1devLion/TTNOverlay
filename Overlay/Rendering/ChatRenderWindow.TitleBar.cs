@@ -74,7 +74,10 @@ internal sealed partial class ChatRenderWindow
 
     private const float ConnectionDotRadius = 4f;
     private const float ConnectionDotGap = 6f; // between a platform icon and its dot
-    private const float ConnectionIconSize = 15f;
+    // The two logos don't fill their canvases equally (Twitch's glyph goes edge to edge, kick.webp has transparent
+    // padding), so each gets its own box size to look the same height as the gear next to them. Tweak here.
+    private const float TwitchConnectionIconSize = 12f;
+    private const float KickConnectionIconSize = 16f;
     private const float ConnectionDotGroupGap = 14f; // between the Twitch group and the Kick group
 
     /// <summary>
@@ -123,7 +126,10 @@ internal sealed partial class ChatRenderWindow
         var icon = GetConnectionPlatformIcon(target, platform);
         if (icon is not null)
         {
-            float size = MathF.Min(ConnectionIconSize, TitleBarHeight - 6f);
+            float size = MathF.Min(
+                platform == Platform.Twitch ? TwitchConnectionIconSize : KickConnectionIconSize,
+                TitleBarHeight - 6f
+            );
             if (x + size <= rightEdge)
                 DrawBitmapAt(target, icon, x, centerY - size / 2f, size);
             iconWidth = size;
@@ -139,7 +145,7 @@ internal sealed partial class ChatRenderWindow
                 TitleBarHeight
             );
             iconWidth = (float)letterLayout.Metrics.WidthIncludingTrailingWhitespace;
-            target.DrawTextLayout(new Vector2(x, 0f), letterLayout, _titleBarForegroundBrush);
+            target.DrawTextLayout(new Vector2(x, 0f), letterLayout, _titleBarForegroundBrush!);
         }
 
         float dotCenterX = x + iconWidth + ConnectionDotGap + ConnectionDotRadius;

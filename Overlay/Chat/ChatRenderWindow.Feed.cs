@@ -348,8 +348,16 @@ internal sealed partial class ChatRenderWindow
 
     // ---------- Shared incoming-message handling (both sources funnel through here) -----------
 
-    private const int MaxPendingChatBacklog = 2000;
+    // Regular chat lines don't go through the general UI-action queue one by one. They wait in a small bounded
+    // queue and are consumed in time-boxed batches (DrainIncomingChat). Under load the oldest waiting lines are
+    // dropped, which is what the overlay would have done anyway: only the newest MaxMessages are ever on screen.
+    private const int MaxIncomingChatQueue = 400;
+    private const int ChatDrainBudgetMs = 4;
+    private static readonly long ChatDrainBudgetTicks = System.Diagnostics.Stopwatch.Frequency * ChatDrainBudgetMs / 1000;
 
+    private readonly System.Collections.Concurrent.ConcurrentQueue<ChatMessage> _incomingChat = new();
+    private int _incomingChatCount;
+    private int _chatDrainQueued;
     private int _droppedChatMessageCount;
 
     private void OnIrcMessageReceived(ChatMessage msg)
@@ -386,37 +394,101 @@ internal sealed partial class ChatRenderWindow
     {
         bool isEvent = msg.IsSystem && msg.EventType is not null;
 
-        if (!isEvent && PendingUiActionCount > MaxPendingChatBacklog)
+        // Events, system lines and persistent lines are rare and must never be dropped: they keep the plain path.
+        if (isEvent || msg.IsSystem || msg.IsPersistent)
         {
-            _droppedChatMessageCount++;
-            if (_droppedChatMessageCount % 500 == 1)
-                DebugLog.Write(
-                    $"OnChatMessageReceived: UI backlog > {MaxPendingChatBacklog}, "
-                        + $"discarding chat messages ({_droppedChatMessageCount} discarded so far)"
-                );
+            PostToUiThread(() =>
+            {
+                if (isEvent)
+                {
+                    ProcessIncomingEvent(msg, isFromStreamlabs: false);
+                    return;
+                }
+
+                ProcessIncomingChatMessage(msg);
+                RequestRender();
+            });
             return;
         }
 
-        PostToUiThread(() =>
+        if (System.Threading.Volatile.Read(ref _incomingChatCount) >= MaxIncomingChatQueue
+            && _incomingChat.TryDequeue(out _))
         {
-            if (isEvent)
-            {
-                ProcessIncomingEvent(msg, isFromStreamlabs: false);
-                return;
-            }
+            System.Threading.Interlocked.Decrement(ref _incomingChatCount);
+            int dropped = System.Threading.Interlocked.Increment(ref _droppedChatMessageCount);
+            if (dropped % 500 == 1)
+                DebugLog.Write(
+                    $"OnChatMessageReceived: more than {MaxIncomingChatQueue} chat lines waiting, "
+                        + $"dropping the oldest ({dropped} dropped so far)"
+                );
+        }
 
-            TryShowIrcRedemptionFallback(msg);
-            LogMessageForModeration(msg);
-            AugmentWithThirdPartyEmotes(msg);
-            AddMessage(msg);
-            if (!msg.IsSystem)
-                TriggerAlert("message");
+        _incomingChat.Enqueue(msg);
+        System.Threading.Interlocked.Increment(ref _incomingChatCount);
+        QueueChatDrain();
+    }
+
+    private void QueueChatDrain()
+    {
+        if (System.Threading.Interlocked.CompareExchange(ref _chatDrainQueued, 1, 0) == 0)
+            PostToUiThread(DrainIncomingChat);
+    }
+
+    /// <summary>Everything a regular chat line triggers once it reaches the UI thread.</summary>
+    private void ProcessIncomingChatMessage(ChatMessage msg)
+    {
+        TryShowIrcRedemptionFallback(msg);
+        LogMessageForModeration(msg);
+        AugmentWithThirdPartyEmotes(msg);
+        AddMessage(msg);
+        if (!msg.IsSystem)
+            TriggerAlert("message");
+    }
+
+    /// <summary>
+    /// UI thread. Consumes waiting chat lines for at most ChatDrainBudgetMs. When more lines are waiting than can still
+    /// be on screen, the older ones are skipped (their redemption and moderation bookkeeping still runs, but they are
+    /// not laid out or added to the list only to be trimmed right away).
+    /// </summary>
+    private void DrainIncomingChat()
+    {
+        long deadline = System.Diagnostics.Stopwatch.GetTimestamp() + ChatDrainBudgetTicks;
+        int visibleCapacity = Math.Max(1, _settings.MaxMessages);
+
+        int excess = System.Threading.Volatile.Read(ref _incomingChatCount) - visibleCapacity;
+        while (excess > 0 && _incomingChat.TryDequeue(out var skipped))
+        {
+            System.Threading.Interlocked.Decrement(ref _incomingChatCount);
+            TryShowIrcRedemptionFallback(skipped);
+            LogMessageForModeration(skipped);
+            excess--;
+        }
+
+        bool any = false;
+        while (_incomingChat.TryDequeue(out var msg))
+        {
+            System.Threading.Interlocked.Decrement(ref _incomingChatCount);
+            ProcessIncomingChatMessage(msg);
+            any = true;
+
+            if (System.Diagnostics.Stopwatch.GetTimestamp() >= deadline)
+                break;
+        }
+
+        if (any)
             RequestRender();
-        });
+
+        System.Threading.Interlocked.Exchange(ref _chatDrainQueued, 0);
+        if (!_incomingChat.IsEmpty)
+            QueueChatDrain();
     }
 
     private void DisconnectFeed()
     {
+        // Lines still waiting from the previous connection must not show up under a new channel.
+        while (_incomingChat.TryDequeue(out _))
+            System.Threading.Interlocked.Decrement(ref _incomingChatCount);
+
         if (_twitchActive)
         {
             _irc.MessageReceived -= OnIrcMessageReceived;
