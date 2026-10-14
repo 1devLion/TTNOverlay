@@ -26,6 +26,7 @@ internal static partial class FrStrings
         SettingsGeneralEntries,
         SettingsHotkeysEntries,
         SettingsTwitchApiEntries,
+        SettingsKickApiEntries,
         SettingsStreamlabsEntries,
         SettingsAlertsEntries,
         SettingsAudioEntries,

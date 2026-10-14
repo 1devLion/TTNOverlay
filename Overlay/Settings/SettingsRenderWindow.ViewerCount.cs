@@ -265,7 +265,7 @@ internal sealed partial class SettingsRenderWindow
                 new() { Label = LocalizationService.T("Settings_ViewerCountMode_Sum"), OnSelect = () => SetViewerCountDisplayMode("Sum") },
                 new() { Label = LocalizationService.T("Settings_ViewerCountMode_PerPlatform"), OnSelect = () => SetViewerCountDisplayMode("PerPlatform") },
             },
-            _fieldFormat!);
+            _fieldFormat!, _viewerCountModeFieldRect.Top);
         RequestRender();
     }
 

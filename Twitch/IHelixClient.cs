@@ -15,6 +15,8 @@ public interface IHelixClient
 
     Task<string?> GetUserIdByLoginAsync(string login, string userAccessToken);
 
+    Task<ChatSendResult> SendChatMessageAsync(string broadcasterId, string senderId, string userAccessToken, string message);
+
     Task<List<(string Id, string Login)>?> GetChattersAsync(
         string broadcasterId,
         string moderatorId,

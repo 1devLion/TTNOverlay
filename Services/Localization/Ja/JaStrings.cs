@@ -26,6 +26,7 @@ internal static partial class JaStrings
         SettingsGeneralEntries,
         SettingsHotkeysEntries,
         SettingsTwitchApiEntries,
+        SettingsKickApiEntries,
         SettingsStreamlabsEntries,
         SettingsAlertsEntries,
         SettingsAudioEntries,

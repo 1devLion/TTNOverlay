@@ -62,7 +62,7 @@ internal sealed partial class ChatRenderWindow
     private ID2D1SolidColorBrush? _moderationPillBrush;
     private const float ChatSettingPillPaddingX = 2f;
     private const float ChatSettingPillPaddingY = 3f;
-    private const float ChatSettingPillCornerRadius = 6f;
+    private const float ChatSettingPillCornerRadius = 0f;
 
     private const float ChatterActionButtonSize = 26f;
 

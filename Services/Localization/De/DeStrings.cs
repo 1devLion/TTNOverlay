@@ -27,6 +27,7 @@ internal static partial class DeStrings
         SettingsGeneralEntries,
         SettingsHotkeysEntries,
         SettingsTwitchApiEntries,
+        SettingsKickApiEntries,
         SettingsStreamlabsEntries,
         SettingsAlertsEntries,
         SettingsAudioEntries,

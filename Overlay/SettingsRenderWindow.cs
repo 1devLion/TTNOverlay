@@ -1,3 +1,4 @@
+using System.Text.Json;
 using TTNOverlay.Native;
 using TTNOverlay.Overlay.Controls;
 using TTNOverlay.Services;
@@ -51,16 +52,20 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         "Settings_Section_Streamlabs",
         "Settings_Section_Alerts",
         "Settings_Section_Audio",
+        "Settings_Section_KickApi",
         "Settings_Section_ViewerCount",
         "Settings_Section_About",
     };
 
+    /// <summary>Sidebar index of the Kick API section.</summary>
+    private const int KickApiSectionIndex = 6;
+
     /// <summary>Sidebar index of the Viewer Count section. Kept second-to-last, directly above About.</summary>
-    private const int ViewerCountSectionIndex = 6;
+    private const int ViewerCountSectionIndex = 7;
 
     /// <summary>Sidebar index of the About section. Always the last row. Keep this in sync with
     /// SectionLabelKeys above if any other section is ever appended.</summary>
-    private const int AboutSectionIndex = 7;
+    private const int AboutSectionIndex = 8;
 
     public AppSettings Settings { get; }
 
@@ -71,6 +76,13 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
     private readonly List<Rect> _sidebarRowRects = new();
 
     private Rect _saveButtonRect;
+
+    /// <summary>The settings as they were when the window opened: Save only lights up when they differ.</summary>
+    private string _openedSettingsJson = "";
+
+    private bool _saveEnabled;
+
+    private string SerializeSettings() => JsonSerializer.Serialize(Settings, SettingsJsonContext.Default.AppSettings);
     private Rect _cancelButtonRect;
 
     private float _hoverMouseX = -1f;
@@ -140,10 +152,14 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         InitGeneral();
         InitHotkeys();
         InitTwitchApi();
+        InitKickApi();
         InitViewerCount();
         InitStreamlabs();
         InitAudio();
         InitAlerts();
+
+        // After the Init* calls, which may fill in defaults: those are not "changes made by the user".
+        _openedSettingsJson = SerializeSettings();
 
         _caretBlinkTimer = new System.Threading.Timer(_ => PostToUiThread(TickCaretBlink), null, CaretBlinkIntervalMs, CaretBlinkIntervalMs);
     }
@@ -221,6 +237,8 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
             DrawAlertsSection(target, contentX, contentWidth, height);
         else if (_selectedSection == 5)
             DrawAudioSection(target, contentX, contentWidth);
+        else if (_selectedSection == KickApiSectionIndex)
+            DrawKickApiSection(target, contentX, contentWidth);
         else if (_selectedSection == ViewerCountSectionIndex)
             DrawViewerCountSection(target, contentX, contentWidth);
         else if (_selectedSection == AboutSectionIndex)
@@ -268,16 +286,37 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         _saveButtonRect = new Rect(width - Padding - FooterButtonWidth, buttonY, FooterButtonWidth, FooterButtonHeight);
         _cancelButtonRect = new Rect(_saveButtonRect.Left - FooterButtonGap - FooterButtonWidth, buttonY, FooterButtonWidth, FooterButtonHeight);
 
+        // Greyed out until something changes (the window edits a copy of the settings, so comparing it with how it
+        // opened tells). A hair of cost per frame: the settings are a couple of KB of JSON.
+        _saveEnabled = !string.Equals(SerializeSettings(), _openedSettingsJson, StringComparison.Ordinal);
+
         DrawFooterButton(target, _cancelButtonRect, LocalizationService.T("Common_Cancel"), primary: false);
-        DrawFooterButton(target, _saveButtonRect, LocalizationService.T("Common_Save"), primary: true);
+        DrawFooterButton(target, _saveButtonRect, LocalizationService.T("Common_Save"), primary: true, enabled: _saveEnabled);
     }
 
     private void DrawFooterButton(ID2D1DCRenderTarget target, Rect rect, string label, bool primary, bool enabled = true)
     {
 
+        _windowBackgroundBrushInverse ??= target.CreateSolidColorBrush(new Color4(1f, 1f, 1f, 1f));
+
+        bool hovered = enabled && Contains(rect, _hoverMouseX, _hoverMouseY);
         if (enabled)
             DrawHoverShadow(target, rect);
         target.FillRectangle(rect, !enabled ? _fieldBackgroundBrush! : primary ? _checkboxBrush! : _fieldBackgroundBrush!);
+        if (hovered)
+        {
+            // Besides the shadow, the button itself gets lighter: white over the blue one, the subtle hover fill over the plain one.
+            if (primary)
+            {
+                _windowBackgroundBrushInverse.Opacity = 0.18f;
+                target.FillRectangle(rect, _windowBackgroundBrushInverse);
+                _windowBackgroundBrushInverse.Opacity = 1f;
+            }
+            else
+            {
+                target.FillRectangle(rect, _sidebarSelectedBrush!);
+            }
+        }
         if (!primary || !enabled)
             target.DrawRectangle(rect, _fieldBorderBrush!, 1f);
 
@@ -667,7 +706,8 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         }
         if (Contains(_saveButtonRect, clientX, clientY))
         {
-            CloseKeepingChanges();
+            if (_saveEnabled)
+                CloseKeepingChanges();
             return;
         }
 
@@ -718,6 +758,12 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         if (_selectedSection == 5)
         {
             HandleAudioSectionClick(clientX, clientY);
+            return;
+        }
+
+        if (_selectedSection == KickApiSectionIndex)
+        {
+            HandleKickApiSectionClick(clientX, clientY);
             return;
         }
 
@@ -919,6 +965,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         _twitchLoginCts?.Cancel();
         _twitchLoginCts?.Dispose();
         _twitchLoginCts = null;
+        DisposeKickApi();
 
         _caretBlinkTimer?.Dispose();
         _caretBlinkTimer = null;
@@ -962,5 +1009,6 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         _scrollbarTrackBrush?.Dispose(); _scrollbarTrackBrush = null;
         _scrollbarThumbBrush?.Dispose(); _scrollbarThumbBrush = null;
         DisposeTwitchLoginButtonResources();
+        DisposeKickLoginButtonResources();
     }
 }

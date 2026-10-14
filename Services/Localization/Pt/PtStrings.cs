@@ -31,6 +31,7 @@ internal static partial class PtStrings
         SettingsGeneralEntries,
         SettingsHotkeysEntries,
         SettingsTwitchApiEntries,
+        SettingsKickApiEntries,
         SettingsStreamlabsEntries,
         SettingsAlertsEntries,
         SettingsAudioEntries,

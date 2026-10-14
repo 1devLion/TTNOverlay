@@ -12,13 +12,10 @@ namespace TTNOverlay.Overlay;
 internal sealed partial class ChatRenderWindow
 {
 
-    private void DrawModerationPanel(
-        ID2D1DCRenderTarget target,
-        float width,
-        float height,
-        float top,
-        float visibleHeight
-    )
+    /// <summary>
+    /// Brushes and text formats shared by the moderation panel and the message box at the bottom of the main chat.
+    /// </summary>
+    private void EnsureModerationDrawingResources(ID2D1DCRenderTarget target)
     {
         _moderationTextBrush ??= target.CreateSolidColorBrush(ThemeService.OverlayText);
         _moderationPillBrush ??= target.CreateSolidColorBrush(ThemeService.PureContrastTint);
@@ -38,6 +35,17 @@ internal sealed partial class ChatRenderWindow
         _moderationBodyFormat ??= CreateTitleBarFormat("Segoe UI", Vortice.DirectWrite.FontWeight.Normal, 14.5f, Vortice.DirectWrite.TextAlignment.Leading);
         _moderationBodyFormat.ParagraphAlignment = ParagraphAlignment.Near;
         _moderationBodyFormat.WordWrapping = WordWrapping.Wrap;
+    }
+
+    private void DrawModerationPanel(
+        ID2D1DCRenderTarget target,
+        float width,
+        float height,
+        float top,
+        float visibleHeight
+    )
+    {
+        EnsureModerationDrawingResources(target);
 
         float maxWidth = width - Padding * 2;
         if (maxWidth <= 0)
@@ -49,6 +57,16 @@ internal sealed partial class ChatRenderWindow
         _moderationAutoModActionRects.Clear();
         _moderationWindowPillRect = null;
         _moderationClearChatPillRect = null;
+        _moderationFilterFieldRect = null;
+        _moderationFilterClearRect = null;
+        _moderationLinksChipRect = null;
+        _moderationInputFieldRect = null;
+        _moderationSendRect = null;
+        _moderationTargetRect = null;
+
+        // AutoMod is a Twitch feature: in Kick-only mode that tab falls back to Messages.
+        if (!ModerationShowsTwitch && _moderationTab == ModerationTab.AutoMod)
+            _moderationTab = ModerationTab.Messages;
 
         float stripBottom = DrawModerationTabStrip(target, top, maxWidth);
         visibleHeight = Math.Max(0f, visibleHeight - (stripBottom - top));
@@ -63,6 +81,19 @@ internal sealed partial class ChatRenderWindow
         if (_moderationTab == ModerationTab.AutoMod)
         {
             DrawModerationAutoModTab(target, width, top, visibleHeight, maxWidth);
+            return;
+        }
+
+        // The Chatters tab's hit areas must not stay clickable behind another tab.
+        _moderationLoginActionRect = null;
+        _moderationRefreshActionRect = null;
+        _moderationKickActionRect = null;
+        _moderationChatterRowRects.Clear();
+        _moderationBannedRowRects.Clear();
+
+        if (_moderationTab == ModerationTab.Sanctions)
+        {
+            DrawModerationSanctionsTab(target, width, top, visibleHeight, maxWidth);
             return;
         }
 
@@ -99,9 +130,15 @@ internal sealed partial class ChatRenderWindow
         }
 
         float cursorY = y;
-        cursorY = DrawModerationHeaderSection(target, maxWidth, cursorY, draw);
-        cursorY = DrawChatSettingsSection(target, maxWidth, cursorY, draw);
-        cursorY = DrawChattersSection(target, maxWidth, cursorY, draw);
+        if (ModerationShowsTwitch)
+            cursorY = DrawModerationHeaderSection(target, maxWidth, cursorY, draw);
+        if (ModerationShowsKick)
+            cursorY = DrawKickStreamSection(target, maxWidth, cursorY, draw);
+        if (ModerationShowsTwitch)
+        {
+            cursorY = DrawChatSettingsSection(target, maxWidth, cursorY, draw);
+            cursorY = DrawChattersSection(target, maxWidth, cursorY, draw);
+        }
         return cursorY;
     }
 
@@ -328,51 +365,18 @@ internal sealed partial class ChatRenderWindow
                         ChatterActionButtonSize,
                         rowBottom - rowTop
                     );
+                    var chatterRowBounds = new Rect(Padding - 6f, rowTop, maxWidth + 12f, rowBottom - rowTop);
+                    float chatterHover = RegisterHover(chatterRowBounds, chatter.Id);
+                    if (chatterHover > 0f)
+                    {
+                        _moderationPillBrush!.Opacity = (ThemeService.IsDark ? 0.07f : 0.045f) * chatterHover;
+                        target.FillRectangle(chatterRowBounds, _moderationPillBrush);
+                        _moderationPillBrush.Opacity = 1f;
+                    }
+
                     DrawChatterActionButton(target, buttonRect);
                     _moderationChatterRowRects.Add((buttonRect, chatter.Id, chatter.Login));
                 }
-            }
-        }
-
-        if (_moderationBanned is { Count: > 0 })
-        {
-            cursorY += ModerationSectionSpacing;
-            cursorY = DrawModerationLine(
-                target,
-                LocalizationService.T("MainWindow_ActiveSanctions"),
-                _moderationHeaderFormat!,
-                _moderationSecondaryBrush!,
-                maxWidth,
-                cursorY,
-                draw
-            );
-            foreach (var row in _moderationBanned)
-            {
-                string expiration =
-                    row.ExpiresAt is null
-                        ? LocalizationService.T("Moderation_Permanent")
-                        : string.Format(
-                            LocalizationService.T("Moderation_UntilDate"),
-                            row.ExpiresAt.Value.ToLocalTime().ToString("dd/MM HH:mm")
-                        );
-                float rowTop = cursorY;
-                cursorY = DrawModerationLine(
-                    target,
-                    $"{row.Login} \u00b7 {expiration}",
-                    _moderationBodyFormat!,
-                    _moderationTextBrush!,
-                    maxWidth,
-                    cursorY,
-                    draw
-                );
-                if (draw)
-                    _moderationBannedRowRects.Add(
-                        (
-                            new Rect(Padding, rowTop, maxWidth, cursorY - ModerationLineSpacing - rowTop),
-                            row.Login,
-                            row.ExpiresAt is null
-                        )
-                    );
             }
         }
 

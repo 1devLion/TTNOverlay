@@ -51,6 +51,10 @@ public class ChatMessage
     public string DisplayName { get; set; } = "";
     public string Color { get; set; } = "#B0B0B0";
     public string Text { get; set; } = "";
+
+    /// <summary>Render cache, see ChatLinks.HasLink: 0 = not checked yet, 1 = the text has no link, 2 = it has one.</summary>
+    internal sbyte LinkState;
+
     public List<Badge> Badges { get; set; } = new();
     public List<EmotePosition> Emotes { get; set; } = new();
     public DateTime ReceivedAt { get; set; } = DateTime.UtcNow;
@@ -104,9 +108,15 @@ public class ChatMessage
     /// </summary>
     public string? AutoRewardType { get; set; }
 
-    /// <summary>Twitch IRC only: the PRIVMSG "id" tag (the message's UUID), needed to delete it through the moderation API.</summary>
+    /// <summary>The message's UUID (Twitch IRC "id" tag, Kick chat event "id"), needed to delete it through the moderation API.</summary>
     public string? MessageId { get; set; }
 
-    /// <summary>Twitch IRC only: the "user-id" tag of the sender, needed to warn/mute/ban them through the moderation API.</summary>
+    /// <summary>The sender's numeric user id (Twitch IRC "user-id" tag, Kick "sender.id"), needed to mute/ban them through the moderation API.</summary>
     public string? UserId { get; set; }
+
+    /// <summary>
+    /// Which chat an ordinary message was received from (Twitch or Kick). Set by the feed handlers; null for events and
+    /// system lines. Separate from <see cref="Platform"/>, which classifies events and drives their styling.
+    /// </summary>
+    public Platform? SourcePlatform { get; set; }
 }

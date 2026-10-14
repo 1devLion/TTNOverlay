@@ -27,6 +27,7 @@ internal static partial class ZhStrings
         SettingsGeneralEntries,
         SettingsHotkeysEntries,
         SettingsTwitchApiEntries,
+        SettingsKickApiEntries,
         SettingsStreamlabsEntries,
         SettingsAlertsEntries,
         SettingsAudioEntries,

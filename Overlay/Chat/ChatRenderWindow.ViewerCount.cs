@@ -20,7 +20,7 @@ internal sealed partial class ChatRenderWindow
     private const float ViewerCountBaseFontSize = 13f;
     private const float ViewerCountBasePaddingX = 6f;
     private const float ViewerCountBasePaddingY = 3f;
-    private const float ViewerCountBaseCornerRadius = 4f;
+    private const float ViewerCountBaseCornerRadius = 0f;
     private const float ViewerCountBadgeMarginTop = 4f;
     private const float ViewerCountBadgeMarginRight = 4f;
     private const float ViewerCountIconGap = 4f;

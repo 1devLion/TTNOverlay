@@ -11,6 +11,13 @@ internal sealed partial class ChatRenderWindow
 
     private void HandleModerationRowClick(int clientX, int clientY)
     {
+        if (HandleModerationInputClick(clientX, clientY))
+            return;
+
+        HandleModerationModeClick(clientX, clientY, out bool modeHandled);
+        if (modeHandled)
+            return;
+
         foreach (var (bounds, tab) in _moderationTabRects)
         {
             if (Contains(bounds, clientX, clientY))
@@ -29,6 +36,18 @@ internal sealed partial class ChatRenderWindow
         if (_moderationTab == ModerationTab.AutoMod)
         {
             HandleAutoModTabClick(clientX, clientY);
+            return;
+        }
+
+        if (_moderationTab == ModerationTab.Sanctions)
+        {
+            HandleSanctionsTabClick(clientX, clientY);
+            return;
+        }
+
+        if (_moderationKickActionRect is { } kickRect && Contains(kickRect, clientX, clientY))
+        {
+            HandleKickPanelLoginAction();
             return;
         }
 
@@ -74,14 +93,6 @@ internal sealed partial class ChatRenderWindow
             }
         }
 
-        foreach (var (bounds, login, isPermanent) in _moderationBannedRowRects)
-        {
-            if (Contains(bounds, clientX, clientY))
-            {
-                _ = UnbanRowAsync(login, isPermanent);
-                return;
-            }
-        }
     }
 
     private void OpenChatterActionsDropdown(Rect anchor, string chatterId, string login)
@@ -105,7 +116,7 @@ internal sealed partial class ChatRenderWindow
         },
     };
 
-        OpenModerationDropdown(anchor.Left, anchor.Bottom, items);
+        OpenModerationDropdown(anchor, items);
     }
 
     private void OpenMuteDurationDropdown(Rect anchor, string chatterId, string login)
@@ -131,7 +142,7 @@ internal sealed partial class ChatRenderWindow
             );
         }
 
-        OpenModerationDropdown(anchor.Left, anchor.Bottom, items);
+        OpenModerationDropdown(anchor, items);
     }
 
     private async Task TimeoutChatterAsync(string chatterId, string login, int seconds)
@@ -146,9 +157,12 @@ internal sealed partial class ChatRenderWindow
 
         PostToUiThread(() =>
         {
-            _moderationStatusText = string.Format(
-                ok ? LocalizationService.T("Moderation_Muted") : LocalizationService.T("Moderation_MuteFailed"),
-                login
+            ReportModerationResult(
+                string.Format(
+                    ok ? LocalizationService.T("Moderation_Muted") : LocalizationService.T("Moderation_MuteFailed"),
+                    login
+                ),
+                ok
             );
             RequestRender();
         });
@@ -186,9 +200,12 @@ internal sealed partial class ChatRenderWindow
 
             PostToUiThread(() =>
             {
-                _moderationStatusText = string.Format(
-                    ok ? LocalizationService.T("Moderation_Banned") : LocalizationService.T("Moderation_BanFailed"),
-                    loginInner
+                ReportModerationResult(
+                    string.Format(
+                        ok ? LocalizationService.T("Moderation_Banned") : LocalizationService.T("Moderation_BanFailed"),
+                        loginInner
+                    ),
+                    ok
                 );
                 RequestRender();
             });
@@ -213,9 +230,12 @@ internal sealed partial class ChatRenderWindow
 
         PostToUiThread(() =>
         {
-            _moderationStatusText = string.Format(
-                ok ? LocalizationService.T("Moderation_Warned") : LocalizationService.T("Moderation_WarnFailed"),
-                login
+            ReportModerationResult(
+                string.Format(
+                    ok ? LocalizationService.T("Moderation_Warned") : LocalizationService.T("Moderation_WarnFailed"),
+                    login
+                ),
+                ok
             );
             RequestRender();
         });
@@ -262,19 +282,22 @@ internal sealed partial class ChatRenderWindow
                 if (ok && _moderationLog.ClearUserStateByLogin(loginInner) > 0 && ModerationMessagesVisible)
                     RequestRender();
 
-                _moderationStatusText = string.Format(
+                ReportModerationResult(
+                    string.Format(
+                        ok
+                            ? (
+                                isPermanentInner
+                                    ? LocalizationService.T("Moderation_Unbanned")
+                                    : LocalizationService.T("Moderation_UnmutedRow")
+                            )
+                            : (
+                                isPermanentInner
+                                    ? LocalizationService.T("Moderation_UnbanFailed")
+                                    : LocalizationService.T("Moderation_UnmuteRowFailed")
+                            ),
+                        loginInner
+                    ),
                     ok
-                        ? (
-                            isPermanentInner
-                                ? LocalizationService.T("Moderation_Unbanned")
-                                : LocalizationService.T("Moderation_UnmutedRow")
-                        )
-                        : (
-                            isPermanentInner
-                                ? LocalizationService.T("Moderation_UnbanFailed")
-                                : LocalizationService.T("Moderation_UnmuteRowFailed")
-                        ),
-                    loginInner
                 );
                 RequestRender();
             });

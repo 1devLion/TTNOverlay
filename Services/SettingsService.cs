@@ -75,6 +75,12 @@ public class AppSettings
     /// <summary>How far back (minutes) the moderation panel's Messages tab shows chat. Chosen from the tab itself.</summary>
     public int ModerationMessagesWindowMinutes { get; set; } = 10;
 
+    /// <summary>
+    /// Which platform(s) the moderation panel manages: "Multichat" (both), "Kick" or "Twitch". Independent of
+    /// <see cref="ChatSourceMode"/>, which only decides what the overlay shows.
+    /// </summary>
+    public string ModerationPlatformMode { get; set; } = "Multichat";
+
     public bool EnableIrcEventGif { get; set; } = true;
 
     public bool HighQualityMedia { get; set; } = false;
@@ -121,6 +127,16 @@ public class AppSettings
     public string ModeratorRefreshToken { get; set; } = "";
     public string ModeratorLogin { get; set; } = "";
     public string ModeratorUserId { get; set; } = "";
+
+    public string KickRefreshToken { get; set; } = "";
+    public string KickLogin { get; set; } = "";
+    public string KickUserId { get; set; } = "";
+
+    /// <summary>
+    /// The scopes this app asked Kick for at login. Kick lets the user untick some on its consent screen, so a missing
+    /// granted scope is only a problem when it was added to the app after the login (then a new login is requested).
+    /// </summary>
+    public string KickRequestedScopes { get; set; } = "";
 
     public bool EnableDebugMode { get; set; } = false;
 

@@ -225,11 +225,27 @@ internal sealed partial class ChatRenderWindow
         float width = client.Right - client.Left;
         float height = client.Bottom - client.Top;
 
+        if (_showingModeration && !_moderationFrameLogged)
+        {
+            _moderationFrameLogged = true;
+            DebugLog.Write(
+                $"OnRender (moderation, first frame): client={width}x{height} tab={_moderationTab} mode={ModerationMode} bordersHidden={_bordersHidden} clickThrough={_clickThroughEnabled}"
+            );
+        }
+
         if (width <= 0 || height <= 0)
+        {
+            if (_showingModeration)
+                DebugLog.Write($"OnRender: empty client rect {width}x{height}, nothing drawn");
             return;
+        }
 
         _hitTestCatcherBrush ??= target.CreateSolidColorBrush(new Color4(0f, 0f, 0f, 1f / 255f));
         target.FillRectangle(new Rect(0f, 0f, width, height), _hitTestCatcherBrush);
+        BeginLinkFrame();
+        _chatInputRowShown = false;
+        _chatInputStripShownHeight = 0f;
+        _hoverTargets.Clear();
 
         if (_showingModeration)
             target.FillRectangle(new Rect(0f, 0f, width, height), _moderationBackgroundBrush);
@@ -250,12 +266,29 @@ internal sealed partial class ChatRenderWindow
 
         if (_showingModeration)
         {
-            DrawModerationPanel(target, width, height, y, visibleHeight);
-            DrawModerationDropdown(target);
+            try
+            {
+                DrawModerationPanel(target, width, height, y, visibleHeight);
+                DrawModerationDropdown(target);
+                if (!_moderationDrawLogged)
+                {
+                    _moderationDrawLogged = true;
+                    DebugLog.Write($"OnRender: moderation panel drawn (top={y}, visibleHeight={visibleHeight})");
+                }
+            }
+            catch (Exception ex)
+            {
+                // Without this a failure in the panel aborts the whole frame and nothing at all is drawn.
+                ReportRenderFailure("moderation panel", ex);
+            }
         }
         else
         {
             _welcomeLoginButtonRect = null;
+
+            // The message box takes the bottom of the chat when it is available (see ChatInputAvailable).
+            float inputStrip = ChatInputStripHeightIfVisible();
+            visibleHeight = Math.Max(0f, visibleHeight - inputStrip);
 
             IReadOnlyList<ChatMessage> activeList = _showingEvents ? _dashboardEvents : _messages;
 
@@ -296,6 +329,7 @@ internal sealed partial class ChatRenderWindow
 
             float startY = y - overflow + scrollOffset;
 
+            SetLinkClip(y, y + visibleHeight);
             target.PushAxisAlignedClip(new Rect(0f, y, width, visibleHeight), AntialiasMode.PerPrimitive);
             try
             {
@@ -324,6 +358,16 @@ internal sealed partial class ChatRenderWindow
             {
                 target.PopAxisAlignedClip();
             }
+
+            try
+            {
+                DrawChatInputStrip(target, width, height, inputStrip);
+                DrawModerationDropdown(target);
+            }
+            catch (Exception ex)
+            {
+                ReportRenderFailure("chat message box", ex);
+            }
         }
 
         if (!_clickThroughEnabled && !_bordersHidden)
@@ -334,6 +378,13 @@ internal sealed partial class ChatRenderWindow
             );
         }
 
+        DrawToasts(target, width, height);
+        DrawLinkTooltip(target, width, height);
+        DrawTitleBarTooltip(target, width, height);
+
+        // The list may have scrolled under a still mouse: pick the box under it again with this frame's rectangles.
+        UpdateHoverFromMouse(_linkMouseX, _linkMouseY);
+
         float flashOpacity = CurrentFlashOpacity();
         if (flashOpacity > 0f)
         {
@@ -343,6 +394,10 @@ internal sealed partial class ChatRenderWindow
             target.FillRectangle(new Rect(0f, 0f, width, height), _flashBrush);
         }
     }
+
+    // Diagnostics: log the first moderation frame of each time the panel is opened.
+    private bool _moderationFrameLogged;
+    private bool _moderationDrawLogged;
 
     private const float UnboundedLayoutHeight = float.MaxValue;
 
@@ -478,6 +533,8 @@ internal sealed partial class ChatRenderWindow
         {
             DrawBadges(target, msg.Badges, x, badgesY, draw: true);
             DrawTextWithOutline(target, new Vector2(usernameX, y), usernameLayout, usernameBrush);
+            if (!string.IsNullOrEmpty(msg.Username))
+                AddUserHit(usernameX, y, (float)usernameLayout.Metrics.Width, usernameLineHeight, msg.Username);
         }
         float afterUsername = y + usernameLineHeight + UsernameToBodySpacing;
         float line1Width = badgesWidth + (float)usernameLayout.Metrics.Width;
@@ -539,7 +596,7 @@ internal sealed partial class ChatRenderWindow
     )
     {
         var fmt = format ?? _bodyFormat!;
-        if (msg.Emotes.Count == 0)
+        if (msg.Emotes.Count == 0 && !ChatLinks.HasLink(msg))
         {
             var bodyLayout = GetOrCreateBodyLayout(msg, fmt, maxWidth);
             if (draw)
@@ -564,7 +621,10 @@ internal sealed partial class ChatRenderWindow
         IDWriteTextFormat format
     )
     {
-        float lineHeight = Math.Max(format.FontSize * BodyLineHeightFactor, EmoteSize);
+        // Without emotes (a message that is only here because it has a link) lines are as tall as in the plain layout.
+        float lineHeight = msg.Emotes.Count > 0
+            ? Math.Max(format.FontSize * BodyLineHeightFactor, EmoteSize)
+            : format.FontSize * BodyLineHeightFactor;
         float cursorX = x;
         float cursorY = y;
         float maxLineWidth = 0f;
@@ -602,7 +662,8 @@ internal sealed partial class ChatRenderWindow
                     ref cursorX,
                     ref cursorY,
                     ref maxLineWidth,
-                    format
+                    format,
+                    ChatLinks.TryGetUrl(word, out string linkUrl) ? linkUrl : null
                 );
         }
 
@@ -645,6 +706,7 @@ internal sealed partial class ChatRenderWindow
             layout.Dispose();
         _wordLayoutCache.Clear();
         _wordLayoutCacheOrder.Clear();
+        _splitPiecesCache.Clear();
     }
 
     private void DrawWordToken(
@@ -658,7 +720,8 @@ internal sealed partial class ChatRenderWindow
         ref float cursorX,
         ref float cursorY,
         ref float maxLineWidth,
-        IDWriteTextFormat format
+        IDWriteTextFormat format,
+        string? linkUrl = null
     )
     {
         if (word.Length == 0)
@@ -667,6 +730,27 @@ internal sealed partial class ChatRenderWindow
         var wordLayout = GetOrCreateWordLayout(word, format);
         float wordWidth = (float)wordLayout.Metrics.WidthIncludingTrailingWhitespace;
 
+        // A word wider than the whole line (a long URL) is broken into pieces that fit instead of running off the window.
+        if (wordWidth > maxWidth && maxWidth > 20f && word.Length > 1)
+        {
+            foreach (var piece in GetPiecesThatFit(word, format, maxWidth))
+                DrawWordToken(
+                    target,
+                    piece,
+                    x,
+                    maxWidth,
+                    lineHeight,
+                    brush,
+                    draw,
+                    ref cursorX,
+                    ref cursorY,
+                    ref maxLineWidth,
+                    format,
+                    linkUrl
+                );
+            return;
+        }
+
         if (cursorX + wordWidth > x + maxWidth && cursorX > x)
         {
             cursorX = x;
@@ -674,7 +758,23 @@ internal sealed partial class ChatRenderWindow
         }
 
         if (draw)
-            DrawTextWithOutline(target, new Vector2(cursorX, cursorY), wordLayout, brush);
+        {
+            if (linkUrl is not null)
+            {
+                // Links: blue, underlined, and clickable with Ctrl (the hit area is recorded for this frame).
+                var linkBrush = GetLinkBrush(target, ChatLinkColor);
+                float textWidth = (float)wordLayout.Metrics.Width;
+                float textHeight = (float)wordLayout.Metrics.Height;
+                DrawTextWithOutline(target, new Vector2(cursorX, cursorY), wordLayout, linkBrush);
+                float lineY = cursorY + textHeight - 3f;
+                target.DrawLine(new Vector2(cursorX, lineY), new Vector2(cursorX + textWidth, lineY), linkBrush, 1f);
+                AddLinkHit(cursorX, cursorY, textWidth, textHeight, linkUrl);
+            }
+            else
+            {
+                DrawTextWithOutline(target, new Vector2(cursorX, cursorY), wordLayout, brush);
+            }
+        }
 
         maxLineWidth = Math.Max(maxLineWidth, cursorX + (float)wordLayout.Metrics.Width - x);
         cursorX += wordWidth;

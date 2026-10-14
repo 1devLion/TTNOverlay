@@ -127,6 +127,14 @@ internal sealed partial class ChatRenderWindow
 
     private void ConnectFeed()
     {
+        // The panel's own connections are decided against what the overlay shows, so rebuild them around the feed.
+        StopModerationSources();
+        ConnectFeedCore();
+        EnsureModerationSources();
+    }
+
+    private void ConnectFeedCore()
+    {
         var (twitchChannel, kickChannel, connectTwitch, connectKick) = ResolveFeedTargets();
 
         if (!connectTwitch && !connectKick)
@@ -261,6 +269,10 @@ internal sealed partial class ChatRenderWindow
         _kick.Connected += OnKickConnected;
         _kick.Disconnected += OnKickDisconnected;
         _kick.Error += OnKickError;
+        _kick.MessageDeleted += OnKickMessageDeleted;
+        _kick.UserBanned += OnKickUserBanned;
+        _kick.UserUnbanned += OnKickUserUnbanned;
+        _kick.ChatCleared += OnKickChatCleared;
 
         _ = TryConnectKickAsync(channelSlug);
     }
@@ -342,6 +354,7 @@ internal sealed partial class ChatRenderWindow
 
     private void OnKickMessageReceived(ChatMessage msg)
     {
+        msg.SourcePlatform = Platform.Kick;
         AddPlatformBadgeIfMultichat(msg, Platform.Kick);
         OnChatMessageReceived(msg);
     }
@@ -362,6 +375,7 @@ internal sealed partial class ChatRenderWindow
 
     private void OnIrcMessageReceived(ChatMessage msg)
     {
+        msg.SourcePlatform = Platform.Twitch;
         AddPlatformBadgeIfMultichat(msg, Platform.Twitch);
         OnChatMessageReceived(msg);
     }
@@ -512,6 +526,10 @@ internal sealed partial class ChatRenderWindow
             _kick.Connected -= OnKickConnected;
             _kick.Disconnected -= OnKickDisconnected;
             _kick.Error -= OnKickError;
+            _kick.MessageDeleted -= OnKickMessageDeleted;
+            _kick.UserBanned -= OnKickUserBanned;
+            _kick.UserUnbanned -= OnKickUserUnbanned;
+            _kick.ChatCleared -= OnKickChatCleared;
             _ = _kick.DisposeAsync().AsTask();
             _kickActive = false;
         }
@@ -529,6 +547,9 @@ internal sealed partial class ChatRenderWindow
             RemoveMessageCaches(msg);
         _messages.Clear();
         ClearModerationLog();
+
+        // Who is banned or timed out is a fact about the channel that was open, not about the new one.
+        _kickSanctions.Clear();
 
         _badgeUrls = null;
         _thirdPartyEmotes = null;
@@ -569,6 +590,10 @@ internal sealed partial class ChatRenderWindow
             _kick.Connected -= OnKickConnected;
             _kick.Disconnected -= OnKickDisconnected;
             _kick.Error -= OnKickError;
+            _kick.MessageDeleted -= OnKickMessageDeleted;
+            _kick.UserBanned -= OnKickUserBanned;
+            _kick.UserUnbanned -= OnKickUserUnbanned;
+            _kick.ChatCleared -= OnKickChatCleared;
             await _kick.DisposeAsync();
             _kickActive = false;
         }

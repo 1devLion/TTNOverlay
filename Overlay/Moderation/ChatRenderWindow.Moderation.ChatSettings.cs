@@ -117,7 +117,7 @@ internal sealed partial class ChatRenderWindow
             }
         }
 
-        OpenModerationDropdown(anchor.Left, anchor.Bottom, items);
+        OpenModerationDropdown(anchor, items);
     }
 
     /// <summary>
@@ -179,8 +179,9 @@ internal sealed partial class ChatRenderWindow
 
         PostToUiThread(() =>
         {
-            _moderationStatusText = LocalizationService.T(
-                ok ? "Moderation_ChatSettingsSaved" : "Moderation_ChatSettingsSaveFailed"
+            ReportModerationResult(
+                LocalizationService.T(ok ? "Moderation_ChatSettingsSaved" : "Moderation_ChatSettingsSaveFailed"),
+                ok
             );
             if (ok)
                 _moderationChatSettings = updated;

@@ -1,17 +1,17 @@
-## v1.6.0: AutoMod Review
+## v1.7.0: Platform Icons and Automatic Re-login
 
-**The moderation panel has a new AutoMod tab to allow or reject messages held by AutoMod, with a pending counter and multi-moderator sync.**
+**The title bar now shows the Twitch and Kick logos next to their connection status, and the app asks you to log in again by itself when a new feature needs new Twitch permissions.**
 
-This release adds an AutoMod tab to the moderation panel, where you can review messages that AutoMod or blocked terms are holding, and allow or reject them without leaving the overlay. It also keeps the queue in sync across moderators, shows a pending counter and a chat alert, and adds the new permission Twitch requires for AutoMod actions.
+This release replaces the "T" and "K" letters in the main bar with the real platform logos, fixes the login notice in the moderation panel (it did not wrap on narrow overlays and showed up twice), and adds a check on startup that detects when your Twitch session is missing a permission the app now needs.
 
 ### What's new?
 
-* **AutoMod tab**: each held message appears with its time, author, text, reason (category and level, or "blocked term"), and the **Allow** and **Reject** buttons
-* **Covers AutoMod and blocked terms**: the tab lists both messages held by AutoMod and messages caught by blocked terms
-* **Pending counter**: the tab shows `AutoMod (3)` while there are pending messages, so you can see at a glance if anything needs review
-* **Chat alert**: when the queue goes from empty to non-empty, a notice appears in chat, useful if the moderation panel is closed
-* **Multi-moderator sync**: if another moderator resolves a message, or it expires, it disappears from your list automatically
-* **Works for any moderator**: the AutoMod tab is available to any moderator, not only the channel owner. The queue holds up to 50 messages
-* **Localized status and errors**: status and error messages are available in all 8 supported languages
-* **Responsive tabs**: with three tabs, the tab bar wraps to a second row on narrow overlays so it does not get cut off
-* **Re-login required for AutoMod actions**: Twitch requires the new `moderator:manage:automod` permission. Log out and log in with Twitch once more from Settings or the moderation panel. Everything else keeps working without it
+* **Platform logos in the title bar**: the Twitch and Kick logos replace the "T" and "K" letters, each followed by its colored connection status dot
+* **Theme-aware Twitch logo**: the Twitch logo switches between its light and dark versions with dark/light mode. Kick always uses its colored logo, which reads well on both themes
+* **Automatic re-login on new permissions**: on startup the app checks that your Twitch session includes every permission the current version needs. If any is missing, it logs you out and shows a notice with a **Log in** button, instead of failing later with a permission error
+* **No false logouts**: if Twitch cannot be reached when the check runs, nothing happens and it is retried on the next launch
+* **Future-proof**: new features that need extra Twitch permissions trigger the same prompt automatically, with no manual steps
+* **Responsive login notice**: the "log in with the moderator account" message in the moderation panel now wraps to the available width and reflows when you resize the overlay, in all three tabs
+* **No more duplicated message**: in the Messages and AutoMod tabs, the login notice no longer appears twice
+* **Localized prompt**: the new re-login notice is available in all 8 supported languages
+* **Re-login required once**: if your current Twitch session was created before a permission was added, you will see the new prompt the first time you open this version. Log in again and everything keeps working as before

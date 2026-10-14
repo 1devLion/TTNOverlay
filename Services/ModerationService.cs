@@ -279,6 +279,19 @@ public class ModerationService : IModerationService
         return await _helix.DeleteChatMessagesAsync(broadcasterId, _settings.ModeratorUserId, token, messageId);
     }
 
+    public async Task<ChatSendResult> SendChatMessageAsync(string channelLogin, string text)
+    {
+        var token = await GetAccessTokenAsync();
+        if (token is null)
+            return ChatSendResult.MissingPermission;
+
+        var broadcasterId = await ResolveBroadcasterIdAsync(channelLogin, token);
+        if (broadcasterId is null)
+            return ChatSendResult.Failed;
+
+        return await _helix.SendChatMessageAsync(broadcasterId, _settings.ModeratorUserId, token, text);
+    }
+
     private async Task<string?> ResolveBroadcasterIdAsync(string channelLogin, string token)
     {
         if (_broadcasterIds.TryGetValue(channelLogin, out var cached))

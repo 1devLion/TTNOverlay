@@ -69,6 +69,7 @@ internal static class Program
         finally
         {
             SharedGraphicsResources.Shutdown();
+            DebugLog.Shutdown();
         }
     }
 

@@ -55,13 +55,17 @@ internal sealed partial class ChatRenderWindow
 
             PostToUiThread(() =>
             {
-                _moderationStatusText = LocalizationService.T("Moderation_LoginFailed");
+                ReportModerationResult(LocalizationService.T("Moderation_LoginFailed"), ok: false);
                 RequestRender();
             });
             return;
         }
 
-        PostToUiThread(ConnectEventSubIfEligible);
+        PostToUiThread(() =>
+        {
+            ConnectEventSubIfEligible();
+            EnsureModerationSources();
+        });
         await RefreshModerationStateAsync();
     }
 
@@ -84,7 +88,7 @@ internal sealed partial class ChatRenderWindow
             if (string.IsNullOrWhiteSpace(refreshToken))
             {
                 DisconnectEventSub();
-                ClearModerationLog();
+                ClearModerationLog(TTNOverlay.Models.Platform.Twitch);
                 _moderationChatters = new();
                 _moderationBanned = null;
             }
@@ -93,6 +97,7 @@ internal sealed partial class ChatRenderWindow
                 ConnectEventSubIfEligible();
             }
 
+            EnsureModerationSources();
             if (_showingModeration)
                 _ = RefreshModerationStateAsync();
             RequestRender();
@@ -103,7 +108,7 @@ internal sealed partial class ChatRenderWindow
     {
         _moderation?.Logout();
         DisconnectEventSub();
-        ClearModerationLog();
+        ClearModerationLog(TTNOverlay.Models.Platform.Twitch);
         _moderationChatters = new();
         _moderationBanned = null;
 

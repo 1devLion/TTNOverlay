@@ -93,7 +93,7 @@ internal sealed partial class SettingsRenderWindow
                 new() { Label = LocalizationService.T("Settings_Streamlabs_SourceIrcOnly"), OnSelect = () => { _eventAlertSource = "IrcOnly"; Settings.EventAlertSource = "IrcOnly"; } },
                 new() { Label = LocalizationService.T("Settings_Streamlabs_SourceStreamlabsOnly"), OnSelect = () => { _eventAlertSource = "StreamlabsOnly"; Settings.EventAlertSource = "StreamlabsOnly"; } },
             },
-            _fieldFormat!);
+            _fieldFormat!, _eventAlertSourceFieldRect.Top);
         RequestRender();
     }
 

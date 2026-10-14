@@ -633,7 +633,7 @@ internal sealed partial class SettingsRenderWindow
             new() { Label = LocalizationService.T("Settings_Alerts_ColorMode_Original"), OnSelect = () => SetEventColorMode(key, "Original") },
             new() { Label = LocalizationService.T("Settings_Alerts_ColorMode_Custom"), OnSelect = () => SetEventColorMode(key, "Custom") },
         };
-        _eventColorModeDropdown.Open(anchorRect.Left, anchorRect.Bottom, client.Right - client.Left, client.Bottom - client.Top, items, _fieldFormat!);
+        _eventColorModeDropdown.Open(anchorRect.Left, anchorRect.Bottom, client.Right - client.Left, client.Bottom - client.Top, items, _fieldFormat!, anchorRect.Top);
         RequestRender();
     }
 

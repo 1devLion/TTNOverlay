@@ -25,7 +25,7 @@ internal sealed partial class ChatRenderWindow
             {
                 // Same cleanup as a manual logout (the service already cleared the stored session).
                 DisconnectEventSub();
-                ClearModerationLog();
+                ClearModerationLog(TTNOverlay.Models.Platform.Twitch);
                 _moderationChatters = new();
                 _moderationBanned = null;
                 _moderationChatSettings = null;

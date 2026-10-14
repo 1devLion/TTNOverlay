@@ -207,26 +207,33 @@ internal sealed partial class ChatRenderWindow
             {
                 case AutoModDecisionResult.Ok:
                     _autoModQueue.Remove(message.MessageId);
-                    _moderationStatusText = string.Format(
-                        LocalizationService.T(allow ? "Moderation_AutoModAllowed" : "Moderation_AutoModDenied"),
-                        name
+                    ReportModerationResult(
+                        string.Format(
+                            LocalizationService.T(allow ? "Moderation_AutoModAllowed" : "Moderation_AutoModDenied"),
+                            name
+                        ),
+                        ok: true
                     );
                     break;
 
                 case AutoModDecisionResult.AlreadyResolved:
                     _autoModQueue.Remove(message.MessageId);
-                    _moderationStatusText = string.Format(
-                        LocalizationService.T("Moderation_AutoModAlreadyResolved"),
-                        name
+                    _moderationStatusText = IdleModerationStatus();
+                    ShowToast(
+                        string.Format(LocalizationService.T("Moderation_AutoModAlreadyResolved"), name),
+                        ToastKind.Info
                     );
                     break;
 
                 case AutoModDecisionResult.MissingPermission:
-                    _moderationStatusText = LocalizationService.T("Moderation_AutoModNeedsRelogin");
+                    ReportModerationResult(LocalizationService.T("Moderation_AutoModNeedsRelogin"), ok: false);
                     break;
 
                 default:
-                    _moderationStatusText = string.Format(LocalizationService.T("Moderation_AutoModFailed"), name);
+                    ReportModerationResult(
+                        string.Format(LocalizationService.T("Moderation_AutoModFailed"), name),
+                        ok: false
+                    );
                     break;
             }
 

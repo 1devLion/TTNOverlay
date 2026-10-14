@@ -143,6 +143,7 @@ internal static class Win32
     public const int SW_SHOW = 5;
     public const int IDC_ARROW = 32512;
     public const int IDC_SIZENWSE = 32642;
+    public const int IDC_HAND = 32649;
 
     public const uint LWA_ALPHA = 0x2;
 

@@ -84,5 +84,18 @@ public static class DebugLog
         Flush();
         _writer?.Dispose();
         _writer = null;
+
+        // The log is only worth keeping when debug mode is on; otherwise it holds nothing the user asked for.
+        if (!Enabled)
+        {
+            try
+            {
+                File.Delete(FilePath);
+            }
+            catch
+            {
+                // Best effort: a locked or missing file is not a problem at exit.
+            }
+        }
     }
 }

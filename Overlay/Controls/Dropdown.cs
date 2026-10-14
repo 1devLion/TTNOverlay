@@ -35,7 +35,7 @@ public sealed class Dropdown
 
     public float Width { get; set; } = 200f;
 
-    public void Open(float anchorX, float anchorY, float clientWidth, float clientHeight, List<Item> items, IDWriteTextFormat itemFormat)
+    public void Open(float anchorX, float anchorY, float clientWidth, float clientHeight, List<Item> items, IDWriteTextFormat itemFormat, float? anchorTop = null)
     {
         if (items.Count == 0)
             return;
@@ -47,7 +47,14 @@ public sealed class Dropdown
 
         float height = items.Count * ItemHeight;
         float x = Math.Min(anchorX, Math.Max(0f, clientWidth - Width));
-        float y = Math.Min(anchorY, Math.Max(0f, clientHeight - height));
+        // Below the field when it fits; otherwise above it (never on top of the field); as a last resort, clamped.
+        float y;
+        if (anchorTop is not { } top || anchorY + height <= clientHeight)
+            y = Math.Min(anchorY, Math.Max(0f, clientHeight - height));
+        else if (top - height >= 0f)
+            y = top - height;
+        else
+            y = Math.Max(0f, Math.Min(anchorY, clientHeight - height));
 
         _bounds = new Rect(x, y, Width, height);
         _itemRects.Clear();

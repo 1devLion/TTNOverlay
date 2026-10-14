@@ -258,7 +258,7 @@ internal sealed partial class SettingsRenderWindow
                 new() { Label = "Dark", OnSelect = () => { Settings.Theme = "Dark"; ThemeService.Apply("Dark"); } },
                 new() { Label = "Light", OnSelect = () => { Settings.Theme = "Light"; ThemeService.Apply("Light"); } },
             },
-            _fieldFormat!);
+            _fieldFormat!, _themeFieldRect.Top);
         RequestRender();
     }
 
@@ -272,7 +272,7 @@ internal sealed partial class SettingsRenderWindow
                 new() { Label = LocalizationService.T("Settings_ChatSource_Kick"), OnSelect = () => SetChatSourceMode("Kick") },
                 new() { Label = LocalizationService.T("Settings_ChatSource_Multichat"), OnSelect = () => SetChatSourceMode("Multichat") },
             },
-            _fieldFormat!);
+            _fieldFormat!, _chatSourceFieldRect.Top);
         RequestRender();
     }
 
@@ -298,7 +298,7 @@ internal sealed partial class SettingsRenderWindow
                 new() { Label = "Spanish", OnSelect = () => { Settings.Language = "Spanish"; LocalizationService.Instance.SetLanguage(AppLanguage.Spanish); } },
                 new() { Label = "简体中文", OnSelect = () => { Settings.Language = "简体中文"; LocalizationService.Instance.SetLanguage(AppLanguage.简体中文); } },
             },
-            _fieldFormat!);
+            _fieldFormat!, _languageFieldRect.Top);
         RequestRender();
     }
 }

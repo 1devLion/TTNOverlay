@@ -29,7 +29,7 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
     private const int ExpandedTitleBarHeight = 40;
 
     private const float MentionPaddingX = 4f;
-    private const float MentionCornerRadius = 4f;
+    private const float MentionCornerRadius = 0f;
     private const float MentionBorderThickness = 1f;
 
     private readonly MessageBuffer _messages = new();
@@ -109,6 +109,7 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
     {
         DebugLog.Write("ChatRenderWindow: OnCreated");
         ModerationService.SessionChanged += OnModeratorSessionChanged;
+        TTNOverlay.Kick.KickSessionService.SessionChanged += OnKickSessionChanged;
         Win32.RegisterHotKey(
             Hwnd,
             ToggleClickThroughHotkeyId,
@@ -119,6 +120,7 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
         SetupViewerCountWidget();
         ConnectFeed();
         _ = CheckModeratorScopesAsync();
+        _ = CheckKickScopesAsync();
         ConnectTrayAndHotkeys();
         EnsureExpirySweepTimerRunning();
         EnsureMediaStatsTimerRunning();
@@ -267,6 +269,9 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
         _systemFormat?.Dispose();
         _systemFormat = null;
         DisposeTwitchButtonResources();
+        DisposeMessageInputResources();
+        DisposeToastResources();
+        DisposeLinkResources();
 
         InvalidateWordLayoutCache();
         InvalidateBodyLayoutCache();
@@ -286,6 +291,7 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
     protected override void OnDestroyed()
     {
         ModerationService.SessionChanged -= OnModeratorSessionChanged;
+        TTNOverlay.Kick.KickSessionService.SessionChanged -= OnKickSessionChanged;
         LocalizationService.Instance.LanguageChanged -= OnLanguageChanged;
         DisconnectFeed();
         DisconnectTrayAndHotkeys();
@@ -323,6 +329,9 @@ internal sealed partial class ChatRenderWindow : OverlayWindowBase
         _bodyFormat?.Dispose();
         _systemFormat?.Dispose();
         DisposeTwitchButtonResources();
+        DisposeMessageInputResources();
+        DisposeToastResources();
+        DisposeLinkResources();
         InvalidateWordLayoutCache();
         InvalidateBodyLayoutCache();
         InvalidateUsernameLayoutCache();

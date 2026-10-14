@@ -214,7 +214,7 @@ internal sealed partial class SettingsRenderWindow
             });
         }
 
-        _audioDeviceDropdown.Open(_audioDeviceFieldRect.Left, _audioDeviceFieldRect.Bottom, client.Right - client.Left, client.Bottom - client.Top, items, _fieldFormat!);
+        _audioDeviceDropdown.Open(_audioDeviceFieldRect.Left, _audioDeviceFieldRect.Bottom, client.Right - client.Left, client.Bottom - client.Top, items, _fieldFormat!, _audioDeviceFieldRect.Top);
         RequestRender();
     }
 
@@ -245,7 +245,7 @@ internal sealed partial class SettingsRenderWindow
         if (isCustomSound)
             items.Add(new Dropdown.Item { Label = LocalizationService.T("MainWindow_Custom"), OnSelect = () => { } });
 
-        dropdown.Open(anchorRect.Left, anchorRect.Bottom, client.Right - client.Left, client.Bottom - client.Top, items, _fieldFormat!);
+        dropdown.Open(anchorRect.Left, anchorRect.Bottom, client.Right - client.Left, client.Bottom - client.Top, items, _fieldFormat!, anchorRect.Top);
         RequestRender();
     }
 

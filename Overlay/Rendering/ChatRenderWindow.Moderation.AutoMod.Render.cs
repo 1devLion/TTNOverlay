@@ -19,6 +19,11 @@ internal sealed partial class ChatRenderWindow
     private bool IsModerationLoginPromptStatus() =>
         string.Equals(_moderationStatusText, LocalizationService.T("Moderation_LoginPrompt"), StringComparison.Ordinal);
 
+    /// <summary>True when the general status line is a Twitch-only notice (login prompt, or the integration is turned off).</summary>
+    private bool IsTwitchUnavailableStatus() =>
+        IsModerationLoginPromptStatus()
+        || string.Equals(_moderationStatusText, LocalizationService.T("Moderation_TwitchDisabled"), StringComparison.Ordinal);
+
     /// <summary>Tab label; the AutoMod tab shows how many messages are waiting.</summary>
     private string ModerationTabLabel(ModerationTab tab, string labelKey) =>
         tab == ModerationTab.AutoMod && _autoModQueue.Count > 0

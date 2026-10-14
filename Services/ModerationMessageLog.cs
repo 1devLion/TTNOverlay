@@ -1,3 +1,5 @@
+using TTNOverlay.Models;
+
 namespace TTNOverlay.Services;
 
 /// <summary>What Twitch told us happened to a chatter (CLEARCHAT with a target user).</summary>
@@ -21,7 +23,8 @@ internal sealed class ModerationLogEntry
         string displayName,
         string text,
         DateTime receivedAtUtc,
-        bool isProtected
+        bool isProtected,
+        Platform platform = Platform.Twitch
     )
     {
         MessageId = messageId;
@@ -31,13 +34,20 @@ internal sealed class ModerationLogEntry
         Text = text;
         ReceivedAtUtc = receivedAtUtc;
         IsProtected = isProtected;
+        Platform = platform;
     }
+
+    /// <summary>Which chat the message came from (Twitch or Kick). User ids are only unique within one platform.</summary>
+    public Platform Platform { get; }
 
     public string MessageId { get; }
     public string UserId { get; }
     public string Login { get; }
     public string DisplayName { get; }
     public string Text { get; }
+
+    /// <summary>Render cache, see ChatLinks.HasLink: 0 = not checked yet, 1 = the text has no link, 2 = it has one.</summary>
+    internal sbyte LinkState;
 
     /// <summary>Arrival time. Kept non-decreasing across the log by <see cref="ModerationMessageLog.Add"/>.</summary>
     public DateTime ReceivedAtUtc { get; internal set; }
@@ -84,7 +94,12 @@ internal sealed class ModerationMessageLog
 
     // Ids of users whose rows carry a muted/banned tag. Lets the per-message hot path ask "is this user flagged?"
     // in O(1) and only scan the log when the answer is yes.
+    // Twitch and Kick user ids are separate id spaces (both numeric), so each platform has its own set.
     private readonly HashSet<string> _flaggedUserIds = new(StringComparer.Ordinal);
+    private readonly HashSet<string> _flaggedKickUserIds = new(StringComparer.Ordinal);
+
+    private HashSet<string> FlaggedFor(Platform platform) =>
+        platform == Platform.Kick ? _flaggedKickUserIds : _flaggedUserIds;
 
     public ModerationMessageLog(int capacity = DefaultCapacity, TimeSpan? retention = null)
     {
@@ -169,13 +184,13 @@ internal sealed class ModerationMessageLog
     }
 
     /// <summary>CLEARCHAT with a target user: Twitch purges that user's messages (timeout or ban).</summary>
-    public int MarkUserState(string userId, ModerationUserState state)
+    public int MarkUserState(string userId, ModerationUserState state, Platform platform = Platform.Twitch)
     {
         int changed = 0;
         for (int i = 0; i < _count; i++)
         {
             var entry = this[i];
-            if (string.Equals(entry.UserId, userId, StringComparison.Ordinal))
+            if (entry.Platform == platform && string.Equals(entry.UserId, userId, StringComparison.Ordinal))
             {
                 entry.UserState = state;
                 entry.InvalidateLayout();
@@ -185,10 +200,11 @@ internal sealed class ModerationMessageLog
 
         if (changed > 0)
         {
+            var flagged = FlaggedFor(platform);
             if (state == ModerationUserState.None)
-                _flaggedUserIds.Remove(userId);
+                flagged.Remove(userId);
             else
-                _flaggedUserIds.Add(userId);
+                flagged.Add(userId);
         }
         return changed;
     }
@@ -197,10 +213,10 @@ internal sealed class ModerationMessageLog
     /// Removes the muted/banned tag from a user's rows. Free when the user isn't flagged, so it is safe to call for
     /// every incoming message: someone who can write again is no longer banned or timed out.
     /// </summary>
-    public int ClearUserState(string userId) =>
-        _flaggedUserIds.Contains(userId) ? MarkUserState(userId, ModerationUserState.None) : 0;
+    public int ClearUserState(string userId, Platform platform = Platform.Twitch) =>
+        FlaggedFor(platform).Contains(userId) ? MarkUserState(userId, ModerationUserState.None, platform) : 0;
 
-    /// <summary>Same as <see cref="ClearUserState"/> but by login, for unbans started from the panel's banned list.</summary>
+    /// <summary>Same as <see cref="ClearUserState"/> but by login, for unbans started from the panel's banned list (Twitch only).</summary>
     public int ClearUserStateByLogin(string login)
     {
         if (_flaggedUserIds.Count == 0)
@@ -210,7 +226,11 @@ internal sealed class ModerationMessageLog
         for (int i = _count - 1; i >= 0; i--)
         {
             var entry = this[i];
-            if (entry.UserState != ModerationUserState.None && string.Equals(entry.Login, login, StringComparison.OrdinalIgnoreCase))
+            if (
+                entry.Platform == Platform.Twitch
+                && entry.UserState != ModerationUserState.None
+                && string.Equals(entry.Login, login, StringComparison.OrdinalIgnoreCase)
+            )
             {
                 userId = entry.UserId;
                 break;
@@ -223,32 +243,38 @@ internal sealed class ModerationMessageLog
     /// Drops the tag from every flagged user who is no longer in <paramref name="stillRestrictedUserIds"/> (the
     /// current banned/timed-out list). Catches unbans and expired timeouts done outside the app.
     /// </summary>
-    public int ReconcileUserStates(HashSet<string> stillRestrictedUserIds)
+    public int ReconcileUserStates(HashSet<string> stillRestrictedUserIds, Platform platform = Platform.Twitch)
     {
-        if (_flaggedUserIds.Count == 0)
+        var flaggedIds = FlaggedFor(platform);
+        if (flaggedIds.Count == 0)
             return 0;
 
         List<string>? stale = null;
-        foreach (var id in _flaggedUserIds)
+        foreach (var id in flaggedIds)
             if (!stillRestrictedUserIds.Contains(id))
                 (stale ??= new List<string>()).Add(id);
 
         int changed = 0;
         if (stale is not null)
             foreach (var id in stale)
-                changed += MarkUserState(id, ModerationUserState.None);
+                changed += MarkUserState(id, ModerationUserState.None, platform);
 
         // Ids with no rows left in the log (evicted) can't be tagged anymore.
-        _flaggedUserIds.IntersectWith(stillRestrictedUserIds);
+        flaggedIds.IntersectWith(stillRestrictedUserIds);
         return changed;
     }
 
-    /// <summary>CLEARCHAT without a target: the whole chat was cleared.</summary>
-    public void MarkAllDeleted()
+    /// <summary>
+    /// CLEARCHAT without a target: the whole chat was cleared. With <paramref name="platform"/> only that platform's
+    /// rows are marked (the other chat was not cleared); null marks everything.
+    /// </summary>
+    public void MarkAllDeleted(Platform? platform = null)
     {
         for (int i = 0; i < _count; i++)
         {
             var entry = this[i];
+            if (platform is not null && entry.Platform != platform)
+                continue;
             entry.IsDeleted = true;
             entry.InvalidateLayout();
         }
@@ -258,13 +284,22 @@ internal sealed class ModerationMessageLog
     /// Collects the ids of one user's messages that can still be deleted (not already deleted) from
     /// <paramref name="cutoffUtc"/> on, oldest first.
     /// </summary>
-    public int CollectDeletableMessageIds(string userId, DateTime cutoffUtc, List<string> into)
+    public int CollectDeletableMessageIds(
+        string userId,
+        DateTime cutoffUtc,
+        List<string> into,
+        Platform platform = Platform.Twitch
+    )
     {
         int added = 0;
         for (int i = FirstIndexAtOrAfter(cutoffUtc); i < _count; i++)
         {
             var entry = this[i];
-            if (entry.IsDeleted || !string.Equals(entry.UserId, userId, StringComparison.Ordinal))
+            if (
+                entry.IsDeleted
+                || entry.Platform != platform
+                || !string.Equals(entry.UserId, userId, StringComparison.Ordinal)
+            )
                 continue;
             into.Add(entry.MessageId);
             added++;
@@ -278,6 +313,30 @@ internal sealed class ModerationMessageLog
         _head = 0;
         _count = 0;
         _flaggedUserIds.Clear();
+        _flaggedKickUserIds.Clear();
+    }
+
+    /// <summary>Removes one platform's rows (on logout of that platform) and keeps the other's.</summary>
+    public void ClearPlatform(Platform platform)
+    {
+        var keep = new List<ModerationLogEntry>(_count);
+        for (int i = 0; i < _count; i++)
+        {
+            var entry = this[i];
+            if (entry.Platform != platform)
+                keep.Add(entry);
+        }
+
+        var otherFlagged = new List<string>(FlaggedFor(platform == Platform.Kick ? Platform.Twitch : Platform.Kick));
+
+        Clear();
+        foreach (var entry in keep)
+            Add(entry);
+
+        // The kept platform's muted/banned user ids survive, so its rows still lose their tag when the user writes again.
+        var restore = FlaggedFor(platform == Platform.Kick ? Platform.Twitch : Platform.Kick);
+        foreach (var id in otherFlagged)
+            restore.Add(id);
     }
 
     private void DropOldest()

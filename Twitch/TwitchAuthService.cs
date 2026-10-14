@@ -33,6 +33,7 @@ public static partial class TwitchAuthService
         "channel:read:redemptions",
         "moderator:manage:chat_messages",
         "moderator:manage:automod",
+        "user:write:chat",
     };
 
     private static readonly string Scopes = string.Join(' ', RequiredScopes);
@@ -292,9 +293,7 @@ public static partial class TwitchAuthService
     {
         try
         {
-            var html = success
-                ? "<html><body style='font-family:sans-serif;text-align:center;margin-top:80px'><h2>Listo, ya pod\u00e9s cerrar esta pesta\u00f1a.</h2></body></html>"
-                : "<html><body style='font-family:sans-serif;text-align:center;margin-top:80px'><h2>No se pudo iniciar sesi\u00f3n. Pod\u00e9s cerrar esta pesta\u00f1a.</h2></body></html>";
+            var html = AuthBrowserPage.Build(success);
             var buffer = Encoding.UTF8.GetBytes(html);
             context.Response.ContentType = "text/html; charset=utf-8";
             context.Response.ContentLength64 = buffer.Length;

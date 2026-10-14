@@ -21,6 +21,18 @@ public enum ModerationDeleteResult
     Failed,
 }
 
+/// <summary>Outcome of sending a chat message as the logged-in moderator.</summary>
+public enum ChatSendResult
+{
+    Ok,
+
+    /// <summary>401/403: the session lacks the write-chat permission (it logged in before that scope was added).</summary>
+    MissingPermission,
+
+    /// <summary>Network error, message refused (AutoMod, slow mode, banned...) or anything else unexpected.</summary>
+    Failed,
+}
+
 /// <summary>Outcome of allowing/denying a message held by AutoMod.</summary>
 public enum AutoModDecisionResult
 {
@@ -64,7 +76,7 @@ internal readonly record struct ModerationActionOutcome(ModerationDeleteResult? 
 internal readonly record struct BulkDeleteOutcome(int Deleted, int Rejected, int Failed, bool MissingPermission);
 
 /// <summary>
-/// Runs moderation actions against an <see cref="IModerationService"/>. Kept free of any UI so the sequencing and
+/// Runs moderation actions against an <see cref="IChatModerationActions"/> (Twitch or Kick). Kept free of any UI so the sequencing and
 /// failure handling can be unit-tested.
 /// </summary>
 internal static class ModerationActionRunner
@@ -77,7 +89,7 @@ internal static class ModerationActionRunner
     /// instead of the sum. A failed delete (message already gone, too old, or from another mod) never blocks the
     /// sanction, which is usually the part the moderator actually cares about.
     /// </summary>
-    public static async Task<ModerationActionOutcome> RunAsync(IModerationService service, ModerationActionRequest request)
+    public static async Task<ModerationActionOutcome> RunAsync(IChatModerationActions service, ModerationActionRequest request)
     {
         Task<ModerationDeleteResult>? delete = request.MessageIdToDelete is null
             ? null
@@ -102,7 +114,7 @@ internal static class ModerationActionRunner
     /// <paramref name="onMessageDeleted"/> is invoked once per successfully deleted message, from a worker thread.
     /// </summary>
     public static async Task<BulkDeleteOutcome> DeleteManyAsync(
-        IModerationService service,
+        IChatModerationActions service,
         string channel,
         IReadOnlyList<string> messageIds,
         Action<string>? onMessageDeleted = null,

@@ -171,7 +171,7 @@ internal sealed partial class ChatRenderWindow
             _ => _connectionDotConnectingBrush,
         };
 
-    private const float TitleBarHoverCornerRadius = 4f;
+    private const float TitleBarHoverCornerRadius = 0f;
 
     private static void DrawTitleBarHoverBackground(
         ID2D1DCRenderTarget target,
@@ -193,6 +193,35 @@ internal sealed partial class ChatRenderWindow
         };
         target.FillRoundedRectangle(roundedRect, brush);
         brush.Opacity = 1f;
+    }
+
+    private void DrawTitleBarTooltip(ID2D1DCRenderTarget target, float width, float height)
+    {
+        if (_bordersHidden || _hoveredButton == TitleBarButton.None || _dropdownOpen)
+            return;
+
+        var (settingsRect, bordersRect, closeRect) = GetTitleBarButtonRects(width, TitleBarHeight);
+        Rect rect;
+        string key;
+        switch (_hoveredButton)
+        {
+            case TitleBarButton.Settings:
+                rect = settingsRect;
+                key = "TitleBar_SettingsTooltip";
+                break;
+            case TitleBarButton.Borders:
+                rect = bordersRect;
+                key = "TitleBar_ClickThroughTooltip";
+                break;
+            default:
+                rect = closeRect;
+                key = "TitleBar_CloseTooltip";
+                break;
+        }
+
+        float anchorX = (rect.Left + rect.Right) / 2f;
+        float anchorY = rect.Bottom + 4f;
+        DrawTooltip(target, LocalizationService.T(key), width, height, (boxWidth, _) => (anchorX - boxWidth / 2f, anchorY));
     }
 
     private void DrawTitleBarSymbol(ID2D1DCRenderTarget target, Rect rect, string symbol)
@@ -313,6 +342,18 @@ internal sealed partial class ChatRenderWindow
             return;
         }
 
+        // Message box at the bottom of the main chat (a click anywhere else takes the keyboard out of it).
+        if (!_showingModeration && HandleModerationInputClick(clientX, clientY))
+            return;
+
+        // Ctrl + Click on a link (chat or Messages tab).
+        if (TryOpenLinkAt(clientX, clientY))
+            return;
+
+        // A name in the main chat: that user's messages.
+        if (!_showingModeration && TryOpenUserHistoryAt(clientX, clientY))
+            return;
+
         if (_showingModeration)
         {
             HandleModerationRowClick(clientX, clientY);
@@ -326,8 +367,13 @@ internal sealed partial class ChatRenderWindow
     protected override void OnClientMouseMove(int clientX, int clientY)
     {
         if (HandleModerationDropdownMouseMove(clientX, clientY))
+        {
+            ClearLinkHover();
             return;
+        }
 
+        HandleLinkMouseMove(clientX, clientY);
+        UpdateHoverFromMouse(clientX, clientY);
         HandleModerationRowMouseMove(clientX, clientY);
 
         bool newWelcomeLoginHovered = !_showingModeration
@@ -364,6 +410,9 @@ internal sealed partial class ChatRenderWindow
 
     protected override void OnClientMouseLeave()
     {
+        ClearLinkHover();
+        ClearHover();
+
         if (_welcomeLoginButtonHovered)
         {
             _welcomeLoginButtonHovered = false;
@@ -412,6 +461,7 @@ internal sealed partial class ChatRenderWindow
         bool moving = StepTowards(ref _settingsHoverProgress, _hoveredButton == TitleBarButton.Settings ? 1f : 0f, t);
         moving |= StepTowards(ref _bordersHoverProgress, _hoveredButton == TitleBarButton.Borders ? 1f : 0f, t);
         moving |= StepTowards(ref _closeHoverProgress, _hoveredButton == TitleBarButton.Close ? 1f : 0f, t);
+        moving |= StepGenericHover(t);
         moving |= StepTowards(
             ref _followerButtonHoverProgress,
             _hoveredChatSettingButton == ModerationChatSettingField.Follower ? 1f : 0f,

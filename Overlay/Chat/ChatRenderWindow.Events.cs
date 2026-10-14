@@ -14,7 +14,7 @@ internal sealed partial class ChatRenderWindow
 {
     private const float EventBannerPaddingX = 8f;
     private const float EventBannerPaddingY = 4f;
-    private const float EventBannerCornerRadius = 6f;
+    private const float EventBannerCornerRadius = 0f;
 
     private AppSettings _settings = SettingsService.Load();
 

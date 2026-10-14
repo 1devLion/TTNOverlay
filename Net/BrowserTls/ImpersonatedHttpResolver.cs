@@ -24,6 +24,56 @@ namespace TTNOverlay.Net.BrowserTls
         /// <returns>The response body as a string, or null on failure.</returns>
         public static async Task<string?> GetAsync(string host, string path)
         {
+            var result = await SendAsync(host, Encoding.ASCII.GetBytes(BuildRequest(host, path)));
+            return result.Body;
+        }
+
+        /// <summary>
+        /// Sends a JSON POST the way Kick's web client does (fetch from a kick.com page), and returns the HTTP status
+        /// with the response body. The body is null when the request could not be made at all.
+        /// </summary>
+        /// <param name="host">The target host name.</param>
+        /// <param name="path">The request path.</param>
+        /// <param name="json">The JSON body.</param>
+        /// <param name="origin">Value for the Origin header (and Referer), e.g. https://kick.com.</param>
+        public static Task<(int Status, string? Body)> PostJsonAsync(string host, string path, string json, string origin)
+        {
+            byte[] body = Encoding.UTF8.GetBytes(json);
+
+            var sb = new StringBuilder();
+            sb.Append($"POST {path} HTTP/1.1\r\n");
+            sb.Append($"Host: {host}\r\n");
+            sb.Append($"Content-Length: {body.Length}\r\n");
+            foreach (var (name, value) in ChromeFingerprintProfile.OrderedHeaders)
+            {
+                // Only what a page's fetch() sends: the navigation-only headers (Accept, Sec-Fetch-*, Upgrade-...) are replaced.
+                if (
+                    name.StartsWith("sec-ch-ua", StringComparison.OrdinalIgnoreCase)
+                    || name.Equals("User-Agent", StringComparison.OrdinalIgnoreCase)
+                    || name.Equals("Accept-Encoding", StringComparison.OrdinalIgnoreCase)
+                    || name.Equals("Accept-Language", StringComparison.OrdinalIgnoreCase)
+                )
+                    sb.Append($"{name}: {value}\r\n");
+            }
+            sb.Append("Accept: application/json, text/plain, */*\r\n");
+            sb.Append("Content-Type: application/json\r\n");
+            sb.Append($"Origin: {origin}\r\n");
+            sb.Append($"Referer: {origin}/\r\n");
+            sb.Append("Sec-Fetch-Site: same-site\r\n");
+            sb.Append("Sec-Fetch-Mode: cors\r\n");
+            sb.Append("Sec-Fetch-Dest: empty\r\n");
+            sb.Append("Connection: close\r\n");
+            sb.Append("\r\n");
+
+            byte[] head = Encoding.ASCII.GetBytes(sb.ToString());
+            byte[] request = new byte[head.Length + body.Length];
+            Buffer.BlockCopy(head, 0, request, 0, head.Length);
+            Buffer.BlockCopy(body, 0, request, head.Length, body.Length);
+            return SendAsync(host, request);
+        }
+
+        private static async Task<(int Status, string? Body)> SendAsync(string host, byte[] requestBytes)
+        {
             TcpClient? tcp = null;
             TlsClientProtocol? protocol = null;
 
@@ -42,13 +92,11 @@ namespace TTNOverlay.Net.BrowserTls
                 if (!client.ServerCertificateValid)
                 {
                     DebugLog.Write("ImpersonatedHttpResolver: invalid certificate, aborting");
-                    return null;
+                    return (0, null);
                 }
 
                 var tlsStream = protocol.Stream;
 
-                string request = BuildRequest(host, path);
-                byte[] requestBytes = Encoding.ASCII.GetBytes(request);
                 await tlsStream.WriteAsync(requestBytes, 0, requestBytes.Length);
                 await tlsStream.FlushAsync();
 
@@ -65,13 +113,13 @@ namespace TTNOverlay.Net.BrowserTls
                     DebugLog.Write("ImpersonatedHttpResolver: closing without close_notify (expected), using what has already been read");
                 }
 
-                string body = ParseBody(response.ToArray());
-                return body;
+                string body = ParseBody(response.ToArray(), out int status);
+                return (status, body);
             }
             catch (Exception ex)
             {
                 DebugLog.Write($"ImpersonatedHttpResolver: EXCEPTION: {ex}");
-                return null;
+                return (0, null);
             }
             finally
             {
@@ -96,7 +144,7 @@ namespace TTNOverlay.Net.BrowserTls
             return sb.ToString();
         }
 
-        private static string ParseBody(byte[] raw)
+        private static string ParseBody(byte[] raw, out int status)
         {
             string headerText = Encoding.ASCII.GetString(raw, 0, System.Math.Min(raw.Length, 4096));
             int headerEnd = IndexOfDoubleCrlf(raw);
@@ -105,6 +153,10 @@ namespace TTNOverlay.Net.BrowserTls
 
             string statusLine = headerText.Split("\r\n")[0];
             DebugLog.Write($"ImpersonatedHttpResolver: response -> {statusLine}");
+
+            // "HTTP/1.1 200 OK" -> 200 (0 when the line is not like that).
+            string[] statusParts = statusLine.Split(' ');
+            status = statusParts.Length > 1 && int.TryParse(statusParts[1], out int parsedStatus) ? parsedStatus : 0;
 
             byte[] bodyBytes = new byte[raw.Length - headerEnd - 4];
             Array.Copy(raw, headerEnd + 4, bodyBytes, 0, bodyBytes.Length);

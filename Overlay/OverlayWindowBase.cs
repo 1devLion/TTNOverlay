@@ -286,6 +286,9 @@ public abstract class OverlayWindowBase : IDisposable
                     Win32.SetCursor(Win32.LoadCursor(IntPtr.Zero, Win32.IDC_SIZENWSE));
                     return (IntPtr)1;
                 }
+
+                if (unchecked((short)(lParam.ToInt64() & 0xFFFF)) == Win32.HTCLIENT && OnSetCursor())
+                    return (IntPtr)1;
                 break;
 
             case Win32.WM_PAINT:
@@ -483,6 +486,9 @@ public abstract class OverlayWindowBase : IDisposable
     protected virtual void OnClientMouseMove(int clientX, int clientY) { }
 
     protected virtual void OnClientMouseLeave() { }
+
+    /// <summary>Lets a window pick the cursor over its client area. Return true after calling SetCursor.</summary>
+    protected virtual bool OnSetCursor() => false;
 
     protected virtual void OnMouseWheel(int delta, int clientX, int clientY) { }
 

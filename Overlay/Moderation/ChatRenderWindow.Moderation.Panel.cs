@@ -16,6 +16,12 @@ internal sealed partial class ChatRenderWindow
 
     private void ToggleModerationPanel()
     {
+        DebugLog.Write(
+            $"ToggleModerationPanel: enabled={_settings.EnableModerationPanel} showing={_showingModeration} events={_showingEvents} clickThrough={_clickThroughEnabled}"
+        );
+        _moderationFrameLogged = false;
+        _moderationDrawLogged = false;
+
         if (!_settings.EnableModerationPanel)
             return;
 
@@ -29,6 +35,8 @@ internal sealed partial class ChatRenderWindow
 
         _moderation ??= new ModerationService(_settings);
         SetView(showEvents: false, showModeration: true);
+        EnsureModerationSources();
+        _ = RefreshKickGrantedScopesAsync();
         _ = RefreshModerationStateAsync();
     }
 
@@ -51,6 +59,8 @@ internal sealed partial class ChatRenderWindow
     private void ExitModerationLayout()
     {
         CloseModerationDropdown();
+        ReleaseModerationInput();
+        StopModerationSources();
 
         _moderationChatters = new();
         _moderationBanned = null;
@@ -80,5 +90,12 @@ internal sealed partial class ChatRenderWindow
         }
     }
 
-    private void DisconnectModeration() => _moderation = null;
+    private void DisconnectModeration()
+    {
+        _moderation = null;
+
+        // The Kick services hold the settings object they were built with; rebuild them against the current one.
+        _kickSession = null;
+        _kickModeration = null;
+    }
 }

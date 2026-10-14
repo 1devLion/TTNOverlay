@@ -16,6 +16,12 @@ internal sealed partial class ChatRenderWindow
     {
         public string Label = "";
         public Action OnSelect = () => { };
+
+        /// <summary>False greys the item out and makes it unclickable (a Kick permission is missing).</summary>
+        public bool Enabled = true;
+
+        public bool NeedsKickDelete;
+        public bool NeedsKickBan;
     }
 
     private bool _dropdownOpen;
@@ -48,11 +54,16 @@ internal sealed partial class ChatRenderWindow
         (MaxTimeoutSeconds, "MainWindow_14Days"),
     };
 
+    /// <summary>Opens the list under the anchor, or above it when there is no room below (never over the anchor).</summary>
+    private void OpenModerationDropdown(Rect anchor, List<ModerationDropdownItem> items, float? widthOverride = null) =>
+        OpenModerationDropdown(anchor.Left, anchor.Bottom, items, widthOverride, anchor.Top);
+
     private void OpenModerationDropdown(
         float anchorX,
         float anchorY,
         List<ModerationDropdownItem> items,
-        float? widthOverride = null
+        float? widthOverride = null,
+        float? anchorTop = null
     )
     {
         if (items.Count == 0)
@@ -73,7 +84,13 @@ internal sealed partial class ChatRenderWindow
         float clientHeight = client.Bottom - client.Top;
 
         float x = Math.Min(anchorX, Math.Max(0f, clientWidth - width));
-        float y = Math.Min(anchorY, Math.Max(0f, clientHeight - height));
+        float y;
+        if (anchorTop is not { } top || anchorY + height <= clientHeight)
+            y = Math.Min(anchorY, Math.Max(0f, clientHeight - height));
+        else if (top - height >= 0f)
+            y = top - height;
+        else
+            y = Math.Max(0f, Math.Min(anchorY, clientHeight - height));
 
         _dropdownBounds = new Rect(x, y, width, height);
         _dropdownItemRects.Clear();
@@ -107,6 +124,8 @@ internal sealed partial class ChatRenderWindow
             if (Contains(_dropdownItemRects[i], clientX, clientY))
             {
                 var item = _dropdownItems[i];
+                if (!item.Enabled)
+                    return true; // greyed out: swallow the click and keep the menu open
                 CloseModerationDropdown();
                 item.OnSelect();
                 return true;
@@ -152,6 +171,13 @@ internal sealed partial class ChatRenderWindow
             RequestRender();
         }
 
+        bool newKickHovered = _moderationKickActionRect is { } kickRect && Contains(kickRect, clientX, clientY);
+        if (newKickHovered != _moderationKickButtonHovered)
+        {
+            _moderationKickButtonHovered = newKickHovered;
+            RequestRender();
+        }
+
         ModerationChatSettingField? newHovered = null;
         foreach (var (bounds, field) in _moderationChatSettingButtonRects)
         {
@@ -183,7 +209,7 @@ internal sealed partial class ChatRenderWindow
         for (int i = 0; i < _dropdownItemRects.Count; i++)
         {
             var rect = _dropdownItemRects[i];
-            if (i == _dropdownHoveredIndex)
+            if (i == _dropdownHoveredIndex && _dropdownItems[i].Enabled)
                 target.FillRectangle(rect, _dropdownHoverBrush);
 
             using var layout = DWriteFactory.CreateTextLayout(
@@ -192,7 +218,11 @@ internal sealed partial class ChatRenderWindow
                 Math.Max(1f, rect.Width - DropdownPaddingX * 2),
                 rect.Height
             );
-            target.DrawTextLayout(new Vector2(rect.Left + DropdownPaddingX, rect.Top), layout, _moderationTextBrush!);
+            target.DrawTextLayout(
+                new Vector2(rect.Left + DropdownPaddingX, rect.Top),
+                layout,
+                _dropdownItems[i].Enabled ? _moderationTextBrush! : _moderationSecondaryBrush!
+            );
 
             if (i > 0)
                 target.DrawLine(new Vector2(rect.Left, rect.Top), new Vector2(rect.Right, rect.Top), _dropdownBorderBrush);
