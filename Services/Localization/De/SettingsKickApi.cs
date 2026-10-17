@@ -21,5 +21,6 @@ internal static partial class DeStrings
         ["Kick_SanctionsEmpty"] = "Keine Sanktionen erfasst.",
         ["Auth_BrowserSuccess"] = "Fertig, du kannst diesen Tab jetzt schließen.",
         ["Auth_BrowserFailed"] = "Anmeldung fehlgeschlagen. Du kannst diesen Tab schließen.",
+        ["Auth_BrowserSuccessTitle"] = "Anmeldung erfolgreich",
     };
 }

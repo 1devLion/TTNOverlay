@@ -6,7 +6,7 @@ internal static partial class JaStrings
     {
         ["Settings_Section_KickApi"] = "Kick API",
         ["Settings_KickApi_LoginInfo"] = "Kickでログインすると、チャットでKickのモデレーションツールを使用できます。",
-        ["Settings_KickApi_Connected"] = "{0} としてログイン中",
+        ["Settings_KickApi_Connected"] = "{0} として接続中",
         ["Settings_KickApi_NotLoggedIn"] = "Kickにログインしていません。",
         ["Settings_KickApi_OpeningBrowser"] = "ブラウザを開いてログインしています...",
         ["Settings_KickApi_LoginFailed"] = "ログインに失敗しました。もう一度お試しください。",
@@ -21,5 +21,6 @@ internal static partial class JaStrings
         ["Kick_SanctionsEmpty"] = "記録された処分はありません。",
         ["Auth_BrowserSuccess"] = "完了しました。このタブは閉じて大丈夫です。",
         ["Auth_BrowserFailed"] = "ログインに失敗しました。このタブは閉じて大丈夫です。",
+        ["Auth_BrowserSuccessTitle"] = "ログインしました",
     };
 }

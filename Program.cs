@@ -10,9 +10,10 @@ namespace TTNOverlay;
 internal static class Program
 {
     [STAThread]
-    private static void Main()
+    private static void Main(string[] args)
     {
         VelopackApp.Build().Run();
+        WaitForPreviousInstance(args);
 
         DebugLog.Write("App starting. Log in: " + DebugLog.FilePath);
 
@@ -70,6 +71,27 @@ internal static class Program
         {
             SharedGraphicsResources.Shutdown();
             DebugLog.Shutdown();
+        }
+    }
+
+    /// <summary>
+    /// After "Restart now" the new process starts while the old one is still closing: wait for it, so the two never
+    /// share the settings file or the debug log.
+    /// </summary>
+    private static void WaitForPreviousInstance(string[] args)
+    {
+        int i = Array.IndexOf(args, "--restarted-from");
+        if (i < 0 || i + 1 >= args.Length || !int.TryParse(args[i + 1], out int pid))
+            return;
+
+        try
+        {
+            using var previous = System.Diagnostics.Process.GetProcessById(pid);
+            previous.WaitForExit(15000);
+        }
+        catch
+        {
+            // It is already gone.
         }
     }
 

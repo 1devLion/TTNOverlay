@@ -152,8 +152,15 @@ internal sealed partial class ChatRenderWindow
 
         wnd.TestFlashRequested += (hex, alpha) => PostToUiThread(() => TestFlashAlert(hex, alpha));
 
+        // "Update now" in the About section: the same prompt and progress dialogs as the startup check.
+        wnd.UpdateRequested += () =>
+            PostToUiThread(() => _ = UpdateService.CheckForUpdateAndPromptAsync(ShowConfirmDialog, ShowUpdateProgressDialog));
+
         wnd.Destroyed += () =>
         {
+            // Read now: the window is disposed right after this handler returns.
+            bool restartRequested = wnd.RestartRequested;
+
             PostToUiThread(() =>
             {
                 _settingsWindowOpen = false;
@@ -209,11 +216,36 @@ internal sealed partial class ChatRenderWindow
                     _settings.BordersHotkeyKey,
                     _settings.EnableGlobalHotkeys
                 );
+
+                // Everything is saved by now: start the app again (debug mode only takes effect on startup).
+                if (restartRequested)
+                    RestartApplication();
             });
         };
 
         wnd.Create(title, x, y, width, height);
         wnd.RunMessageLoop();
+    }
+
+    private void RestartApplication()
+    {
+        try
+        {
+            string? exe = Environment.ProcessPath;
+            if (string.IsNullOrEmpty(exe))
+                return;
+
+            System.Diagnostics.Process.Start(
+                new System.Diagnostics.ProcessStartInfo(exe, $"--restarted-from {Environment.ProcessId}") { UseShellExecute = true }
+            );
+        }
+        catch (Exception ex)
+        {
+            DebugLog.WriteException("RestartApplication", ex);
+            return;
+        }
+
+        ExitApplication();
     }
 
     private void ExitApplication()

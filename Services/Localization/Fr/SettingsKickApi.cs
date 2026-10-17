@@ -21,5 +21,6 @@ internal static partial class FrStrings
         ["Kick_SanctionsEmpty"] = "Aucune sanction enregistrée.",
         ["Auth_BrowserSuccess"] = "C'est fait, vous pouvez fermer cet onglet.",
         ["Auth_BrowserFailed"] = "Échec de la connexion. Vous pouvez fermer cet onglet.",
+        ["Auth_BrowserSuccessTitle"] = "Connexion réussie",
     };
 }

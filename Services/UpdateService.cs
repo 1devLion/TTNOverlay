@@ -12,14 +12,54 @@ internal static class UpdateService
 {
     private const string RepoUrl = "https://github.com/1devLion/TTNOverlay";
 
+    private static UpdateManager CreateUpdateManager()
+    {
+        var localOverride = Environment.GetEnvironmentVariable("TTNOVERLAY_UPDATE_SOURCE");
+        return string.IsNullOrEmpty(localOverride)
+            ? new UpdateManager(new GithubSource(RepoUrl, accessToken: null, prerelease: false))
+            : new UpdateManager(localOverride);
+    }
+
+    internal enum UpdateCheckState
+    {
+        UpToDate,
+        Available,
+        NotInstalled,
+        Failed,
+    }
+
+    internal readonly record struct UpdateCheckResult(UpdateCheckState State, string Version);
+
+    /// <summary>
+    /// Only asks whether a newer version exists (no dialogs, nothing downloaded). Used by the "Check for updates"
+    /// button of the settings window.
+    /// </summary>
+    public static async Task<UpdateCheckResult> CheckForUpdateAsync()
+    {
+        try
+        {
+            var mgr = CreateUpdateManager();
+            if (!mgr.IsInstalled)
+                return new UpdateCheckResult(UpdateCheckState.NotInstalled, "");
+
+            var newVersion = await mgr.CheckForUpdatesAsync();
+            DebugLog.Write("Update (manual): CheckForUpdatesAsync returned " + (newVersion?.TargetFullRelease.Version.ToString() ?? "null"));
+            return newVersion is null
+                ? new UpdateCheckResult(UpdateCheckState.UpToDate, "")
+                : new UpdateCheckResult(UpdateCheckState.Available, newVersion.TargetFullRelease.Version.ToString());
+        }
+        catch (Exception ex)
+        {
+            DebugLog.WriteException("UpdateService.CheckForUpdateAsync", ex);
+            return new UpdateCheckResult(UpdateCheckState.Failed, "");
+        }
+    }
+
     public static async Task CheckForUpdateAndPromptAsync(Action<string, string, string?, Action<bool>> showConfirmDialog, Func<string, UpdateProgressDialogWindow> showProgressDialog)
     {
         try
         {
-            var localOverride = Environment.GetEnvironmentVariable("TTNOVERLAY_UPDATE_SOURCE");
-            var mgr = string.IsNullOrEmpty(localOverride)
-            ? new UpdateManager(new GithubSource(RepoUrl, accessToken: null, prerelease: false))
-            : new UpdateManager(localOverride);
+            var mgr = CreateUpdateManager();
 
             if (!mgr.IsInstalled)
                 return;

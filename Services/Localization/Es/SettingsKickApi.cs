@@ -21,5 +21,6 @@ internal static partial class EsStrings
         ["Kick_SanctionsEmpty"] = "No hay sanciones registradas.",
         ["Auth_BrowserSuccess"] = "Listo, ya podés cerrar esta pestaña.",
         ["Auth_BrowserFailed"] = "No se pudo iniciar sesión. Podés cerrar esta pestaña.",
+        ["Auth_BrowserSuccessTitle"] = "Sesión iniciada",
     };
 }

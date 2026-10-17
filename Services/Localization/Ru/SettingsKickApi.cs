@@ -6,7 +6,7 @@ internal static partial class RuStrings
     {
         ["Settings_Section_KickApi"] = "Kick API",
         ["Settings_KickApi_LoginInfo"] = "Войдите через Kick, чтобы использовать инструменты модерации Kick в чате.",
-        ["Settings_KickApi_Connected"] = "Вы вошли как {0}",
+        ["Settings_KickApi_Connected"] = "Подключено как {0}",
         ["Settings_KickApi_NotLoggedIn"] = "Вы не вошли через Kick.",
         ["Settings_KickApi_OpeningBrowser"] = "Открываем браузер для входа...",
         ["Settings_KickApi_LoginFailed"] = "Не удалось войти. Попробуйте ещё раз.",
@@ -21,5 +21,6 @@ internal static partial class RuStrings
         ["Kick_SanctionsEmpty"] = "Санкций нет.",
         ["Auth_BrowserSuccess"] = "Готово, можете закрыть эту вкладку.",
         ["Auth_BrowserFailed"] = "Не удалось войти. Можете закрыть эту вкладку.",
+        ["Auth_BrowserSuccessTitle"] = "Вход выполнен",
     };
 }

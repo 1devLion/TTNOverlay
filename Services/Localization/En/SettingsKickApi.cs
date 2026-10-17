@@ -21,5 +21,6 @@ internal static partial class EnStrings
         ["Kick_SanctionsEmpty"] = "No sanctions recorded.",
         ["Auth_BrowserSuccess"] = "All set, you can close this tab now.",
         ["Auth_BrowserFailed"] = "Login failed. You can close this tab.",
+        ["Auth_BrowserSuccessTitle"] = "You're logged in",
     };
 }

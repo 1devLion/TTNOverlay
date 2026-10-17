@@ -21,5 +21,6 @@ internal static partial class PtStrings
         ["Kick_SanctionsEmpty"] = "Nenhuma sanção registrada.",
         ["Auth_BrowserSuccess"] = "Pronto, você já pode fechar esta aba.",
         ["Auth_BrowserFailed"] = "Falha ao entrar. Você pode fechar esta aba.",
+        ["Auth_BrowserSuccessTitle"] = "Login concluído",
     };
 }

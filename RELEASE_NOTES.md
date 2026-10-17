@@ -1,8 +1,8 @@
-## v1.8.0: Kick Chat, AutoMod Review, User Message History and Quick Replies
+## v1.9.0: Kick Chat, AutoMod Review, User Message History and Quick Replies
 
 **You can now log in with Kick, review the messages held by AutoMod, write to Twitch, Kick or both from the main chat, and look up everything a specific user has said, including every link sent.**
 
-This release brings Kick up to the level of Twitch in the moderation panel (login, sanctions, sending messages), adds an AutoMod tab to review held messages, reworks the Messages tab around specific users, makes links clickable, and fixes Kick chat after Kick retired the connection the app used. It also gives the whole interface a more consistent look.
+This release brings Kick up to the level of Twitch in the moderation panel (login, sanctions, sending messages), adds an AutoMod tab to review held messages, reworks the Messages tab around specific users, makes links clickable, and fixes Kick chat after Kick retired the connection the app used. It also adds an update check and a restart prompt for debug mode to Settings, and gives the whole interface a more consistent look.
 
 ### What's new?
 
@@ -16,6 +16,11 @@ This release brings Kick up to the level of Twitch in the moderation panel (logi
 * **Messages by user**: the Messages tab now works on specific users. Search by nick, or turn on **Links** to see every message sent with a link, from everyone or from one user
 * **Click a name to see their messages**: clicking a user's name in the main chat opens the Messages tab already filtered by that user
 * **Clickable links**: links show in blue and underlined and open with Ctrl + Click, with a hint on hover. Very long links now wrap instead of overflowing the window
+* **Check for updates**: a new button in Settings > About looks for a new version on demand, and offers **Update now** when there is one
+* **Restart prompt for debug mode**: turning debug mode on or off now asks whether to restart now or later, since it only applies on startup
+* **Debug log location**: Settings > About shows where the debug log is, with a **Go to** button that opens it in Explorer
+* **Kick API next to Twitch API**: the Kick API section now sits right under the Twitch API in Settings
+* **Simpler login page**: the page that opens in the browser after logging in with Twitch or Kick is now a plain message, in all 8 languages
 * **Animated notices**: copy, ban, mute, delete, AutoMod decisions and similar actions show a small notice that slides up and fades out after 3 seconds, in a plain black/white style that follows the theme. Errors are marked with an X
 * **Title bar tooltips**: Settings, Hide bar (click-through) and Close now explain themselves on hover, in all 8 languages
 * **Hover everywhere**: tabs, buttons, list rows and text fields in the moderation panel light up under the mouse

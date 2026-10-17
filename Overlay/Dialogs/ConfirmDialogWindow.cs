@@ -19,7 +19,7 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
     private const float TitleGap = 10f;
     private const float MessageGap = 20f;
     private const float ButtonHeight = 28f;
-    private const float ButtonWidth = 90f;
+    private const float ButtonWidth = 124f;
 
     protected override int ResizeGripSize => 0;
     protected override int TitleBarHeight => 0;
@@ -28,6 +28,7 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
     private readonly string _title;
     private readonly string _message;
     private readonly string _confirmText;
+    private readonly string _cancelText;
     private readonly IntPtr _ownerHwnd;
     private bool _confirmed;
     private readonly bool _destructive;
@@ -60,12 +61,13 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
     private IDWriteTextFormat? _messageFormat;
     private IDWriteTextFormat? _buttonFormat;
 
-    public ConfirmDialogWindow(string title, string message, string? confirmText, IntPtr ownerHwnd, bool destructive = true) : base("TTNOverlayConfirmDialogWndClass")
+    public ConfirmDialogWindow(string title, string message, string? confirmText, IntPtr ownerHwnd, bool destructive = true, string? cancelText = null) : base("TTNOverlayConfirmDialogWndClass")
     {
         _destructive = destructive;
         _title = title;
         _message = message;
         _confirmText = confirmText ?? LocalizationService.T("Common_Confirm");
+        _cancelText = cancelText ?? LocalizationService.T("Common_Cancel");
         _ownerHwnd = ownerHwnd;
     }
 
@@ -85,7 +87,8 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
         string message,
         string? confirmText,
         Action<bool> callback,
-        bool destructive = true)
+        bool destructive = true,
+        string? cancelText = null)
     {
         DebugLog.Write($"ConfirmDialogWindow.Show: entrando, message.Length={message.Length}");
 
@@ -95,7 +98,7 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
         Win32.TryGetCenteredPosition(ownerHwnd, FixedWidth, 180, out int x, out int y);
         DebugLog.Write($"ConfirmDialogWindow.Show: centered on screen, x={x} y={y}");
 
-        var wnd = new ConfirmDialogWindow(title, message, confirmText, ownerHwnd, destructive);
+        var wnd = new ConfirmDialogWindow(title, message, confirmText, ownerHwnd, destructive, cancelText);
         wnd.ResultReady += callback;
         wnd.Destroyed += () => postToOwnerUiThread(wnd.Dispose);
 
@@ -218,7 +221,7 @@ internal sealed class ConfirmDialogWindow : OverlayWindowBase
         DrawHoverShadow(target, _cancelButtonRect);
         target.FillRectangle(_cancelButtonRect, _fieldBackgroundBrush!);
         target.DrawRectangle(_cancelButtonRect, _fieldBorderBrush!, 1f);
-        using (var cancelLabel = DWriteFactory.CreateTextLayout(LocalizationService.T("Common_Cancel"), _buttonFormat!, ButtonWidth, ButtonHeight))
+        using (var cancelLabel = DWriteFactory.CreateTextLayout(_cancelText, _buttonFormat!, ButtonWidth, ButtonHeight))
             target.DrawTextLayout(new Vector2(_cancelButtonRect.Left, _cancelButtonRect.Top), cancelLabel, _textBrush!);
 
         DrawHoverShadow(target, _confirmButtonRect);

@@ -49,16 +49,22 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         "Settings_Section_General",
         "Settings_Section_Hotkeys",
         "Settings_Section_TwitchApi",
+        "Settings_Section_KickApi",
         "Settings_Section_Streamlabs",
         "Settings_Section_Alerts",
         "Settings_Section_Audio",
-        "Settings_Section_KickApi",
         "Settings_Section_ViewerCount",
         "Settings_Section_About",
     };
 
-    /// <summary>Sidebar index of the Kick API section.</summary>
-    private const int KickApiSectionIndex = 6;
+    // Sidebar indexes, in the order of SectionLabelKeys above (Kick API sits right under Twitch API).
+    private const int GeneralSectionIndex = 0;
+    private const int HotkeysSectionIndex = 1;
+    private const int TwitchApiSectionIndex = 2;
+    private const int KickApiSectionIndex = 3;
+    private const int StreamlabsSectionIndex = 4;
+    private const int AlertsSectionIndex = 5;
+    private const int AudioSectionIndex = 6;
 
     /// <summary>Sidebar index of the Viewer Count section. Kept second-to-last, directly above About.</summary>
     private const int ViewerCountSectionIndex = 7;
@@ -225,17 +231,17 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         if (contentWidth <= 0)
             return;
 
-        if (_selectedSection == 0)
+        if (_selectedSection == GeneralSectionIndex)
             DrawGeneralSection(target, contentX, contentWidth, height);
-        else if (_selectedSection == 1)
+        else if (_selectedSection == HotkeysSectionIndex)
             DrawHotkeysSection(target, contentX, contentWidth);
-        else if (_selectedSection == 2)
+        else if (_selectedSection == TwitchApiSectionIndex)
             DrawTwitchApiSection(target, contentX, contentWidth);
-        else if (_selectedSection == 3)
+        else if (_selectedSection == StreamlabsSectionIndex)
             DrawStreamlabsSection(target, contentX, contentWidth);
-        else if (_selectedSection == 4)
+        else if (_selectedSection == AlertsSectionIndex)
             DrawAlertsSection(target, contentX, contentWidth, height);
-        else if (_selectedSection == 5)
+        else if (_selectedSection == AudioSectionIndex)
             DrawAudioSection(target, contentX, contentWidth);
         else if (_selectedSection == KickApiSectionIndex)
             DrawKickApiSection(target, contentX, contentWidth);
@@ -542,7 +548,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
         if (AnyDropdownOpen())
             return;
 
-        if (_selectedSection == 5)
+        if (_selectedSection == AudioSectionIndex)
         {
             if (_enableMessageAlert && Contains(_messageVolumeSliderRect, clientX, clientY))
             {
@@ -557,7 +563,7 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
             return;
         }
 
-        if (_selectedSection != 0 && _selectedSection != 3 && _selectedSection != ViewerCountSectionIndex)
+        if (_selectedSection != GeneralSectionIndex && _selectedSection != StreamlabsSectionIndex && _selectedSection != ViewerCountSectionIndex)
             return;
 
         bool shift = (Win32.GetKeyState(Win32.VK_SHIFT) & 0x8000) != 0;
@@ -731,31 +737,31 @@ internal sealed partial class SettingsRenderWindow : OverlayWindowBase
             }
         }
 
-        if (_selectedSection == 1)
+        if (_selectedSection == HotkeysSectionIndex)
         {
             HandleHotkeysSectionClick(clientX, clientY);
             return;
         }
 
-        if (_selectedSection == 2)
+        if (_selectedSection == TwitchApiSectionIndex)
         {
             HandleTwitchApiSectionClick(clientX, clientY);
             return;
         }
 
-        if (_selectedSection == 3)
+        if (_selectedSection == StreamlabsSectionIndex)
         {
             HandleStreamlabsSectionClick(clientX, clientY);
             return;
         }
 
-        if (_selectedSection == 4)
+        if (_selectedSection == AlertsSectionIndex)
         {
             HandleAlertsSectionClick(clientX, clientY);
             return;
         }
 
-        if (_selectedSection == 5)
+        if (_selectedSection == AudioSectionIndex)
         {
             HandleAudioSectionClick(clientX, clientY);
             return;

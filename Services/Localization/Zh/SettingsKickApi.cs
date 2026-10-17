@@ -6,7 +6,7 @@ internal static partial class ZhStrings
     {
         ["Settings_Section_KickApi"] = "Kick API",
         ["Settings_KickApi_LoginInfo"] = "使用 Kick 登录，即可在聊天中使用 Kick 的管理工具。",
-        ["Settings_KickApi_Connected"] = "已登录为 {0}",
+        ["Settings_KickApi_Connected"] = "已连接为 {0}",
         ["Settings_KickApi_NotLoggedIn"] = "尚未使用 Kick 登录。",
         ["Settings_KickApi_OpeningBrowser"] = "正在打开浏览器进行登录...",
         ["Settings_KickApi_LoginFailed"] = "登录失败，请重试。",
@@ -21,5 +21,6 @@ internal static partial class ZhStrings
         ["Kick_SanctionsEmpty"] = "暂无处罚记录。",
         ["Auth_BrowserSuccess"] = "已完成，现在可以关闭此标签页。",
         ["Auth_BrowserFailed"] = "登录失败。可以关闭此标签页。",
+        ["Auth_BrowserSuccessTitle"] = "登录成功",
     };
 }

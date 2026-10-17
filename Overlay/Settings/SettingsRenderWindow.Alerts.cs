@@ -681,7 +681,7 @@ internal sealed partial class SettingsRenderWindow
             return;
         }
 
-        if (_selectedSection != 4 || _alertsScroll.Overflow <= 0f)
+        if (_selectedSection != AlertsSectionIndex || _alertsScroll.Overflow <= 0f)
             return;
         _alertsScroll.ApplyWheel(delta / 120f * stepPerNotch, invert: true);
         RequestRender();
